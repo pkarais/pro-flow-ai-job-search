@@ -2,6 +2,9 @@
 node_modules/
 bun.lock
 **/.next/
+**/dist/
+**/next-env.d.ts
+**/*.tsbuildinfo
 
 # Python
 __pycache__/

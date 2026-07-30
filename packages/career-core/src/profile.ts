@@ -3,7 +3,7 @@ import {
   nonEmptyTextSchema,
   provenanceSchema,
   recordIdSchema,
-} from "./common.ts";
+} from "./common.js";
 
 export const factSchema = <T extends z.ZodType>(valueSchema: T) =>
   z
@@ -134,7 +134,7 @@ export const candidateProfileSchema = z
 
 export type Fact<T> = {
   value: T;
-  provenance: import("./common.ts").Provenance;
+  provenance: import("./common.js").Provenance;
 };
 export type CandidateProfile = z.infer<typeof candidateProfileSchema>;
 export type CareerEntry = z.infer<typeof careerEntrySchema>;

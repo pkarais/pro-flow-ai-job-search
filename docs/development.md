@@ -31,3 +31,20 @@ npm run typecheck
 The package contains schemas and service contracts only. It must not contain
 real candidate data, secrets, provider credentials, or generated application
 documents.
+
+## Web shell
+
+Install and verify the isolated Next.js application:
+
+```powershell
+Set-Location apps/web
+npm install
+npm run lint
+npm test
+npm run typecheck
+npm run build
+```
+
+During Phase 2 the web shell uses validated neutral fixtures only. It does not
+read or write personal career data, call an AI provider, or execute job-search
+tools.

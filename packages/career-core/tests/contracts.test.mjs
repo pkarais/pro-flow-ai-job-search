@@ -9,7 +9,7 @@ import {
   isReadyForSubmission,
   opportunitySchema,
   provenanceSchema,
-} from "../src/index.ts";
+} from "../dist/index.js";
 
 const evidence = {
   sourceId: "fixture_source",

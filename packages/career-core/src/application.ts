@@ -3,7 +3,7 @@ import {
   isoDateTimeSchema,
   nonEmptyTextSchema,
   recordIdSchema,
-} from "./common.ts";
+} from "./common.js";
 
 export const factualClaimSchema = z
   .object({

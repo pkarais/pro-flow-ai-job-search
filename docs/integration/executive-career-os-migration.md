@@ -235,16 +235,36 @@ Phase 4, after the read-only importer proves the required data shape.
 
 ### Phase 2: Isolated web shell
 
-1. Create `apps/web`.
-2. Port only approved UI/configuration components.
-3. Use fixtures; do not write canonical data.
-4. Add lint, typecheck, test, and build scripts.
+Status: **Complete**
 
-Gate:
+Completed:
 
-- Existing Pro-Flow checks pass.
-- Web lint, typecheck, tests, and production build pass.
-- Original Executive Career OS still runs independently.
+- Created the isolated Next.js App Router application in `apps/web`.
+- Read and followed the documentation shipped with the installed Next.js 16
+  framework before implementing the shell.
+- Applied a tokenized visual system, reusable UI roles, accessible navigation,
+  explicit loading/error/not-found states, responsive layouts, reduced-motion
+  handling, and mobile safe-area behavior.
+- Connected the shell to the built `@pro-flow/career-core` package.
+- Added a documented Turbopack monorepo root so linked shared packages resolve
+  through the supported framework mechanism.
+- Added validated neutral fixtures and a fixture-only boundary test.
+- Added independent lint, test, typecheck, and production-build commands.
+- Patched the dependency tree through compatible version updates and scoped
+  overrides; no automatic breaking audit downgrade was used.
+- Performed local runtime and desktop/mobile visual inspection.
+
+Gate result:
+
+- 132 existing Pro-Flow Python tests pass.
+- 8 career-core contract tests and typecheck pass.
+- 5 web-shell tests, ESLint, typecheck, and production build pass.
+- NPM audit reports zero known vulnerabilities for the web package.
+- Security guards and skill linting pass.
+- The shell returns HTTP 200 from the production server.
+- No personal data, AI providers, portal tools, or filesystem writes are
+  connected.
+- The protected Executive Career OS repository remains independent.
 
 ### Phase 3: Read-only evidence import
 
@@ -367,11 +387,11 @@ The integration is considered seamless when:
 
 ## Next action
 
-Proceed to Phase 2:
+Proceed to Phase 3:
 
-1. Read and follow the current Next.js documentation shipped with Executive
-   Career OS.
-2. Create an isolated `apps/web` application.
-3. Port only approved UI/configuration components.
-4. Connect the web shell to `@pro-flow/career-core` using neutral fixtures.
-5. Add web lint, typecheck, tests, and production-build checks.
+1. Define the read-only Executive Career OS source manifest.
+2. Implement a provenance-aware Markdown evidence importer.
+3. Detect missing, empty, conflicting, and verification-required evidence.
+4. Expose imported facts through a server-only preview service.
+5. Display the preview and conflicts in the web review interface.
+6. Keep canonical profile writes disabled until Phase 4.

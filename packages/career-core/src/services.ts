@@ -2,9 +2,9 @@ import type {
   ApplicationPackage,
   ClaimReview,
   ReadinessCheck,
-} from "./application.ts";
-import type { CandidateProfile } from "./profile.ts";
-import type { FitAssessment, Opportunity } from "./opportunity.ts";
+} from "./application.js";
+import type { CandidateProfile } from "./profile.js";
+import type { FitAssessment, Opportunity } from "./opportunity.js";
 
 export type ImportedFact = {
   id: string;

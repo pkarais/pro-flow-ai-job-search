@@ -2,11 +2,11 @@ import { z } from "zod";
 import {
   applicationStatusSchema,
   readinessCheckSchema,
-} from "./application.ts";
+} from "./application.js";
 import {
   isoDateTimeSchema,
   recordIdSchema,
-} from "./common.ts";
+} from "./common.js";
 
 export const workflowStateSchema = z
   .object({
