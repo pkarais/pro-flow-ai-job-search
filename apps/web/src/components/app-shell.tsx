@@ -1,7 +1,9 @@
-import { navigationItems } from "@/lib/navigation";
-import { CompassIcon, FileIcon, ShieldIcon, SparkIcon } from "./icons";
-
-const navIcons = [CompassIcon, FileIcon, SparkIcon, FileIcon, CompassIcon, SparkIcon];
+import { ShieldIcon } from "./icons";
+import {
+  MobileNavigation,
+  PrimaryNavigation,
+  WorkspaceModeBadge,
+} from "./navigation-chrome";
 
 export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
@@ -16,21 +18,7 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
           </span>
         </a>
 
-        <nav className="desktop-nav">
-          {navigationItems.map((item, index) => {
-            const Icon = navIcons[index];
-            return (
-              <a
-                className={index === 0 ? "nav-link nav-link--active" : "nav-link"}
-                href={item.href}
-                key={item.href}
-              >
-                <Icon />
-                <span>{item.label}</span>
-              </a>
-            );
-          })}
-        </nav>
+        <PrimaryNavigation />
 
         <div className="privacy-note">
           <ShieldIcon />
@@ -47,26 +35,12 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
             <span className="environment-dot" aria-hidden="true" />
             Guided workspace
           </div>
-          <span className="fixture-pill">Demo data</span>
+          <WorkspaceModeBadge />
         </header>
         <main id="main-content">{children}</main>
       </div>
 
-      <nav className="mobile-nav" aria-label="Mobile navigation">
-        {navigationItems.slice(0, 5).map((item, index) => {
-          const Icon = navIcons[index];
-          return (
-            <a
-              className={index === 0 ? "mobile-nav-link mobile-nav-link--active" : "mobile-nav-link"}
-              href={item.href}
-              key={item.href}
-            >
-              <Icon />
-              <span>{item.shortLabel}</span>
-            </a>
-          );
-        })}
-      </nav>
+      <MobileNavigation />
     </div>
   );
 }

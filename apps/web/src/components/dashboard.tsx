@@ -4,6 +4,7 @@ import {
   fixtureReadinessChecks,
   fixtureWorkflow,
 } from "@/lib/fixtures";
+import Link from "next/link";
 import { ArrowIcon, CheckIcon, CompassIcon, FileIcon, SparkIcon } from "./icons";
 import { SectionHeading, StatusBadge, SurfaceCard } from "./ui";
 
@@ -27,9 +28,9 @@ export function Dashboard() {
             interviews, and the decisions that connect them.
           </p>
           <div className="welcome-actions">
-            <a className="button button--primary" href="#career">
-              Continue setup <ArrowIcon />
-            </a>
+            <Link className="button button--primary" href="/career/import-review">
+              Review evidence <ArrowIcon />
+            </Link>
             <a className="button button--secondary" href="#workflow">
               See how it works
             </a>
@@ -55,9 +56,9 @@ export function Dashboard() {
               <span style={{ width: `${completionPercent}%` }} />
             </div>
           </div>
-          <a className="text-link" href="#career">
-            Review missing details <ArrowIcon />
-          </a>
+          <Link className="text-link" href="/career/import-review">
+            Review imported evidence <ArrowIcon />
+          </Link>
         </SurfaceCard>
       </section>
 
@@ -105,9 +106,9 @@ export function Dashboard() {
               );
             })}
           </div>
-          <a className="button button--secondary button--full" href="#workflow">
-            Open career profile <ArrowIcon />
-          </a>
+          <Link className="button button--secondary button--full" href="/career/import-review">
+            Open evidence review <ArrowIcon />
+          </Link>
         </SurfaceCard>
 
         <SurfaceCard className="principles-card">

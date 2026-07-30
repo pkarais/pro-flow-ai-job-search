@@ -1,6 +1,6 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 
-type StatusTone = "complete" | "current" | "pending" | "neutral";
+type StatusTone = "complete" | "current" | "pending" | "neutral" | "danger";
 
 export function StatusBadge({
   children,

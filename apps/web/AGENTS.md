@@ -11,5 +11,7 @@ The shared domain contracts live in `../../packages/career-core`. This web app
 must consume those contracts rather than create competing profile, opportunity,
 application, or workflow types.
 
-Phase 2 is fixture-only. Do not read or write personal candidate data, execute
-job-search tools, call AI providers, or access application archives.
+Phase 3 permits read-only access to the explicitly allowlisted Executive Career
+OS evidence files through the server-only importer. Do not add profile writes,
+mutation endpoints, arbitrary file paths, job-search execution, AI providers,
+or application archive access.

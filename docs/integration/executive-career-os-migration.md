@@ -268,16 +268,38 @@ Gate result:
 
 ### Phase 3: Read-only evidence import
 
-1. Implement provenance-aware Executive Markdown import.
-2. Validate and display imported facts.
-3. Surface conflicts and verification requirements.
-4. Do not modify Pro-Flow profile files yet.
+Status: **Complete**
 
-Gate:
+Completed:
 
-- Every imported fact retains a source.
-- Uncertain facts remain uncertain.
-- No importer writes outside its approved destination.
+- Added shared runtime schemas for source manifests, source summaries, imported
+  facts, issues, and explicitly read-only preview results.
+- Defined 12 allowlisted Executive Career OS evidence sources covering career
+  knowledge and project evidence.
+- Implemented a read-only Markdown importer with source-boundary enforcement.
+- Preserved relative source path, source section, target profile path,
+  verification requirements, conflicts, and claim-usage restrictions.
+- Added missing, empty, unreadable, and path-escape handling.
+- Added a server-only preview service configured through
+  `EXECUTIVE_CAREER_OS_PATH`.
+- Added guided configured, unconfigured, and connection-error UI states.
+- Added an evidence review route with source coverage, attention queue,
+  provenance, and read-only messaging.
+- Added route-aware desktop/mobile navigation and workspace-mode labeling.
+- Tested the importer against neutral temporary fixtures and the protected live
+  Executive Career OS checkout.
+
+Gate result:
+
+- All 12 live sources load through the explicit allowlist.
+- 74 live evidence items retain source provenance.
+- 11 source-marked uncertainties remain verification items.
+- Zero blocking live-source issues were found.
+- Path traversal is rejected.
+- Missing and empty sources become blocking preview issues.
+- The result schema requires `readOnly: true`.
+- No importer or UI mutation operation exists.
+- The protected source repository remains unchanged.
 
 ### Phase 4: Canonical profile and guided review
 
@@ -387,11 +409,11 @@ The integration is considered seamless when:
 
 ## Next action
 
-Proceed to Phase 3:
+Proceed to Phase 4:
 
-1. Define the read-only Executive Career OS source manifest.
-2. Implement a provenance-aware Markdown evidence importer.
-3. Detect missing, empty, conflicting, and verification-required evidence.
-4. Expose imported facts through a server-only preview service.
-5. Display the preview and conflicts in the web review interface.
-6. Keep canonical profile writes disabled until Phase 4.
+1. Finalize the versioned private canonical profile format.
+2. Add atomic writes, backups, and schema migration safeguards.
+3. Add explicit confirm, correct, and reject decisions to the review workflow.
+4. Generate deterministic Pro-Flow compatibility views.
+5. Prove lossless round trips before updating the repository source-of-truth
+   guidance.

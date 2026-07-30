@@ -18,6 +18,10 @@ export function ArrowIcon(props: IconProps) {
   return <svg {...defaults} {...props}><path d="M5 12h14M13 6l6 6-6 6" /></svg>;
 }
 
+export function AlertIcon(props: IconProps) {
+  return <svg {...defaults} {...props}><path d="M12 3 2.8 20h18.4z" /><path d="M12 9v4M12 17h.01" /></svg>;
+}
+
 export function CheckIcon(props: IconProps) {
   return <svg {...defaults} {...props}><path d="m5 12 4 4L19 6" /></svg>;
 }

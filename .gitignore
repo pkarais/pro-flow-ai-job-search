@@ -5,6 +5,9 @@ bun.lock
 **/dist/
 **/next-env.d.ts
 **/*.tsbuildinfo
+**/.env
+**/.env.local
+**/.env.*.local
 
 # Python
 __pycache__/

@@ -48,3 +48,15 @@ npm run build
 During Phase 2 the web shell uses validated neutral fixtures only. It does not
 read or write personal career data, call an AI provider, or execute job-search
 tools.
+
+### Read-only Executive Career OS preview
+
+Copy `apps/web/.env.example` to `apps/web/.env.local` and set:
+
+```text
+EXECUTIVE_CAREER_OS_PATH=C:\absolute\path\to\executive-career-os
+```
+
+Then open `/career/import-review`. The server reads only the 12 relative paths
+in `src/server/evidence/source-manifest.ts`. Phase 3 exposes no save operation,
+mutation endpoint, arbitrary-path input, AI call, or job-tool execution.

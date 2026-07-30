@@ -20,6 +20,16 @@ test("the shell exposes the complete planned primary navigation", () => {
   );
 });
 
+test("career navigation opens the evidence review route", () => {
+  const career = navigationItems.find((item) => item.label === "My Career");
+  assert.equal(career?.href, "/career/import-review");
+});
+
+test("home navigation is a real route rather than a page-local anchor", () => {
+  const home = navigationItems.find((item) => item.label === "Home");
+  assert.equal(home?.href, "/");
+});
+
 test("every workflow stage has user-facing guidance", () => {
   assert.equal(fixtureWorkflow.length, 4);
   assert.ok(fixtureWorkflow.every((step) => step.label && step.detail));

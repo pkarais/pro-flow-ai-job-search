@@ -6,6 +6,7 @@ import {
   canTransition,
   candidateProfileSchema,
   factualClaimSchema,
+  evidenceImportResultSchema,
   isReadyForSubmission,
   opportunitySchema,
   provenanceSchema,
@@ -54,6 +55,19 @@ test("a neutral candidate fixture passes the canonical profile schema", () => {
 
 test("verified facts require evidence", () => {
   const result = provenanceSchema.safeParse({ status: "verified", evidence: [] });
+  assert.equal(result.success, false);
+});
+
+test("evidence previews are explicitly read-only", () => {
+  const result = evidenceImportResultSchema.safeParse({
+    importedAt: "2026-07-30T12:00:00-04:00",
+    sourceCount: 0,
+    loadedSourceCount: 0,
+    sources: [],
+    facts: [],
+    issues: [],
+    readOnly: false,
+  });
   assert.equal(result.success, false);
 });
 

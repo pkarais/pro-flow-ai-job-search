@@ -3,25 +3,9 @@ import type {
   ClaimReview,
   ReadinessCheck,
 } from "./application.js";
+import type { EvidenceImportResult } from "./evidence.js";
 import type { CandidateProfile } from "./profile.js";
 import type { FitAssessment, Opportunity } from "./opportunity.js";
-
-export type ImportedFact = {
-  id: string;
-  path: string;
-  value: unknown;
-  sourceId: string;
-  sourcePath: string;
-  status: "needs_review" | "conflicting";
-  conflictNote?: string;
-};
-
-export type EvidenceImportResult = {
-  importedAt: string;
-  sourceCount: number;
-  facts: ImportedFact[];
-  warnings: string[];
-};
 
 export type GeneratedArtifact = {
   kind: "resume_source" | "resume_pdf" | "cover_letter_source" | "cover_letter_pdf" | "ats_text";
