@@ -1,0 +1,2 @@
+# Development/test dependency used by tools/lint_skills.py.
+PyYAML>=6.0,<7.0

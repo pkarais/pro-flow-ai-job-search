@@ -16,9 +16,10 @@ coupling the web interface to arbitrary shell commands.
 | Executive Career OS | `master` | `4afde6d` | Clean; 12 tests and TypeScript typecheck passed |
 | Pro-Flow AI Job Search | `feature-pro-flow-career-os` | `9bf9a65` | Clean; Python source compilation passed |
 
-Pro-Flow's full Python test baseline is pending because `pytest` is not
-installed in the active Python environment. This must be resolved before
-behavioral integration begins.
+Pro-Flow's Python suite uses the standard-library `unittest` runner rather than
+requiring `pytest`. The complete baseline passes with 132 tests. Development
+commands and the PyYAML lint dependency are documented in
+`docs/development.md`.
 
 ## Integration rules
 
@@ -206,18 +207,31 @@ Rollback: return Executive Career OS to `4afde6d` and Pro-Flow to `9bf9a65`.
 
 ### Phase 1: Documentation and contracts
 
-Status: **In progress**
+Status: **Complete**
 
-1. Complete this manifest.
-2. Restore Pro-Flow's executable test baseline.
-3. Define shared schemas and service interfaces.
-4. Decide the private canonical-data location and backup policy.
+Completed:
 
-Gate:
+- Created and validated this manifest.
+- Established `python -m unittest discover -s tests -v` as the executable
+  Pro-Flow test baseline.
+- Added `requirements-dev.txt` and documented development checks.
+- Created the standalone `packages/career-core` package.
+- Defined evidence, profile, opportunity, fit, application, workflow, and
+  readiness schemas.
+- Defined provider, repository, generation, document, and job-source service
+  interfaces.
+- Added neutral contract fixtures and tests without importing personal data.
 
-- Both original projects remain clean and runnable.
-- Shared contracts have unit tests.
-- No personal data is copied into tracked web assets.
+Gate result:
+
+- 132 Pro-Flow Python tests pass.
+- 8 career-core contract tests pass.
+- career-core TypeScript typecheck passes.
+- Security guards and skill linting pass.
+- No personal data was copied into the package or tracked web assets.
+
+The final canonical-data location and backup implementation remains gated for
+Phase 4, after the read-only importer proves the required data shape.
 
 ### Phase 2: Isolated web shell
 
@@ -353,10 +367,11 @@ The integration is considered seamless when:
 
 ## Next action
 
-Proceed to Phase 1 implementation:
+Proceed to Phase 2:
 
-1. Restore Pro-Flow's Python test baseline by documenting/installing its test
-   dependency.
-2. Create the initial `packages/career-core` contract package.
-3. Define schemas and service interfaces only; do not import personal data yet.
-
+1. Read and follow the current Next.js documentation shipped with Executive
+   Career OS.
+2. Create an isolated `apps/web` application.
+3. Port only approved UI/configuration components.
+4. Connect the web shell to `@pro-flow/career-core` using neutral fixtures.
+5. Add web lint, typecheck, tests, and production-build checks.
