@@ -1,0 +1,362 @@
+# Executive Career OS Integration Manifest
+
+## Purpose
+
+This manifest controls the migration of reusable parts of
+`C:\Users\pjkar\executive-career-os` into Pro-Flow AI Job Search.
+
+The integration must produce one guided product without breaking either source
+project, duplicating authoritative career facts, exposing private data, or
+coupling the web interface to arbitrary shell commands.
+
+## Protected baselines
+
+| Project | Branch | Protected commit | Baseline state |
+|---|---|---|---|
+| Executive Career OS | `master` | `4afde6d` | Clean; 12 tests and TypeScript typecheck passed |
+| Pro-Flow AI Job Search | `feature-pro-flow-career-os` | `9bf9a65` | Clean; Python source compilation passed |
+
+Pro-Flow's full Python test baseline is pending because `pytest` is not
+installed in the active Python environment. This must be resolved before
+behavioral integration begins.
+
+## Integration rules
+
+1. Pro-Flow is the destination repository. Executive Career OS remains an
+   independently recoverable source project.
+2. Do not merge Git histories or copy `.git`, `.env`, `.env.local`,
+   `node_modules`, `.next`, generated output, or TypeScript build metadata.
+3. Migrate in small, testable slices. Existing Pro-Flow commands remain
+   operational until their UI-backed replacements pass equivalent checks.
+4. The browser never receives provider keys, arbitrary filesystem access, or
+   arbitrary command execution.
+5. Career facts have one authoritative representation. Compatibility Markdown
+   is generated from that record rather than maintained independently.
+6. Imported facts retain source provenance, verification state, conflicts, and
+   usage restrictions.
+7. Employer-facing documents never expose internal source paths or review
+   metadata.
+8. Unsupported requirements remain gaps or review items. They never become
+   résumé or cover-letter claims.
+9. The application remains local-first until authentication, remote storage,
+   access control, and privacy requirements are deliberately implemented.
+10. Each phase has a completion gate and rollback point.
+
+## Proposed target structure
+
+```text
+pro-flow-ai-job-search/
+├── apps/
+│   └── web/                         # Guided Next.js interface
+├── packages/
+│   └── career-core/                 # Shared schemas and domain logic
+├── career-data/                     # Private canonical user data (gitignored)
+├── docs/
+│   └── integration/                 # Migration records and decisions
+├── .agents/skills/                  # Existing portal adapters/CLIs
+├── .claude/                         # Existing methodology and compatibility
+├── documents/                       # Private evidence and application archives
+├── cv/                              # CV templates and generated artifacts
+└── cover_letters/                   # Letter templates and generated artifacts
+```
+
+The target structure is provisional until the shared data contract is
+implemented. Creating this manifest does not change Pro-Flow's current
+single-source-of-truth rules.
+
+## Integration seams
+
+The projects connect through explicit contracts rather than direct knowledge of
+one another's internal files.
+
+| Seam | Responsibility | Initial implementation |
+|---|---|---|
+| Career profile provider | Load and save verified user facts | Filesystem adapter with schema validation |
+| Evidence importer | Import source material with provenance | Read-only Executive Career OS Markdown importer |
+| Workflow service | Coordinate guided stages and readiness gates | Typed service functions |
+| AI provider | Generate structured, evidence-grounded results | Adapt OpenAI Responses API integration |
+| Job source provider | Normalize portal results | Wrappers around existing `.agents/skills` CLIs |
+| Artifact store | Persist jobs, reviews, documents, and outcomes | Pro-Flow application archive directories |
+| Document engine | Render and compile CV/letter artifacts | Existing LaTeX templates and tools |
+| Verification engine | Factual, layout, PDF, and ATS checks | Existing Pro-Flow checks plus deterministic rules |
+| UI API | Expose safe operations to the browser | Validated server-only Next.js routes |
+
+## Source component disposition
+
+### Repository-level files
+
+| Executive source | Purpose | Proposed destination | Treatment | Privacy | Verification |
+|---|---|---|---|---|---|
+| `AGENTS.md` | Next.js version warning | `apps/web/AGENTS.md` or root guidance section | Adapt | Public | Confirm installed Next.js documentation behavior |
+| `CLAUDE.md` | Pointer to `AGENTS.md` | None initially | Retire | Public | Root Pro-Flow guidance remains authoritative |
+| `README.md` | Executive app setup and limitations | `apps/web/README.md` | Rewrite | Public | Match hybrid scripts and data model |
+| `package.json` | Web dependencies and scripts | `apps/web/package.json` | Adapt | Public | Install, test, typecheck, lint, build |
+| `package-lock.json` | Dependency lock | `apps/web/package-lock.json` | Regenerate | Public | Clean install and audit |
+| `.env.example` | Provider configuration example | `apps/web/.env.example` | Adapt | Public template | Must contain names/placeholders only |
+| `.gitignore` | Web build and secret exclusions | Root `.gitignore` additions | Adapt | Public | `git check-ignore` assertions |
+| Next/TS/PostCSS/ESLint configs | Web build configuration | `apps/web/` | Adapt | Public | Typecheck, lint, build |
+| `public/*.svg` | Starter assets | None | Retire | Public | Not product-specific |
+| `src/app/favicon.ico` | Starter icon | None or temporary web asset | Retire/replace | Public | Replace during product design |
+
+### Application interface
+
+| Executive source | Purpose | Proposed destination | Treatment | Privacy | Verification |
+|---|---|---|---|---|---|
+| `src/app/page.tsx` | Single-page application shell | `apps/web/src/app/page.tsx` | Rewrite | Public | Responsive and accessible UI review |
+| `src/app/layout.tsx` | Root layout and metadata | `apps/web/src/app/layout.tsx` | Adapt | Public | Metadata, fonts, accessibility |
+| `src/app/globals.css` | Existing visual system | `apps/web/src/app/globals.css` | Selectively reuse | Public | Design tokens and responsive checks |
+| `src/components/application-form.tsx` | Opportunity entry form | Guided opportunity workflow | Adapt | Public | Client/server validation parity |
+| `src/components/output-tabs.tsx` | Generated-output navigation | Application studio | Adapt | Public | Keyboard and screen-reader behavior |
+| `src/components/output-panel.tsx` | Output display | Application studio | Adapt | Public | Long-content and error states |
+| `src/components/factual-review-panel.tsx` | Claim decisions | Shared review workspace | Reuse then extend | Private data UI | Persistence and completeness checks |
+| `src/components/copy-button.tsx` | Clipboard utility | Shared UI component | Reuse | Public | Success/failure feedback |
+| `src/components/status-banner.tsx` | Local/provider status | System status component | Rewrite | Public | Must not reveal secrets |
+
+### API and domain logic
+
+| Executive source | Purpose | Proposed destination | Treatment | Privacy | Verification |
+|---|---|---|---|---|---|
+| `src/app/api/generate/route.ts` | OpenAI structured generation | `apps/web` API plus shared generation service | Adapt | Server-only | Route, schema, provider-failure tests |
+| `src/lib/generation-schema.ts` | Input/output contracts | `packages/career-core/schemas` | Reuse and extend | Public code | Unit and compatibility tests |
+| `src/lib/career-knowledge.ts` | Required-file loader | Evidence import adapter | Rewrite | Private inputs | Missing, empty, provenance, conflict tests |
+| `src/lib/prompt-builder.ts` | Generation request builder | AI generation adapter | Rewrite | Private context | Prompt boundary and injection tests |
+| `src/lib/quality-checks.ts` | Deterministic checks | Verification engine | Reuse and extend | Public code | Unit tests for every rule |
+| `src/lib/markdown-export.ts` | Package export | Artifact/export service | Adapt | Private outputs | Snapshot and filename tests |
+
+### Tests
+
+| Executive source | Purpose | Proposed destination | Treatment | Verification |
+|---|---|---|---|---|
+| `tests/core.test.mjs` | Schema, loader, export, and quality tests | Tests alongside shared package and web API | Split and expand | Must remain green before source removal |
+
+### Career knowledge
+
+All files in this section contain personal or career evidence. They must not be
+copied into a public/static web directory.
+
+| Executive source | Canonical destination field | Treatment | Verification concerns |
+|---|---|---|---|
+| `career_os/knowledge/professional_genome.md` | Positioning and career narrative | Import for review | Separate positioning from factual claims |
+| `career_os/knowledge/verified_career_history.md` | Employment history | Import for review | Preserve uncertain dates and employer-name conflict |
+| `career_os/knowledge/biography.md` | Biography and interview narrative | Import for review | Do not automatically place in ATS résumé |
+| `career_os/knowledge/skills.md` | Skills inventory | Import and normalize | Skills do not imply credentials or recency |
+| `career_os/knowledge/education_credentials.md` | Education and credentials | Import for review | Preserve every `REQUIRES VERIFICATION` marker |
+| `career_os/knowledge/approved_metrics.md` | Metrics evidence | Import with usage policy | Never convert estimates to personal hours or outcomes |
+| `career_os/knowledge/voice_profile.md` | Writing voice | Import and reconcile | Merge with Pro-Flow writing rules |
+| `career_os/knowledge/prohibited_claims.md` | Claim restrictions | Import as validation policy | Enforce in generation and review |
+
+### Project evidence
+
+| Executive source | Canonical destination field | Treatment | Verification concerns |
+|---|---|---|---|
+| `career_os/projects/shrine_ops.md` | Project portfolio | Import for review | Separate features, repository evidence, and business outcomes |
+| `career_os/projects/hireflow_ai.md` | Project portfolio | Import for review | Do not imply recruitment outcomes |
+| `career_os/projects/podcast_automation.md` | Project portfolio | Import cautiously | Exact functions remain unverified |
+| `career_os/projects/sustainability_net_zero.md` | Project portfolio | Import for review | Do not claim implementation without evidence |
+
+### Prompts and templates
+
+| Executive source | Proposed destination | Treatment | Verification |
+|---|---|---|---|
+| `career_os/prompts/application_generator.md` | Shared generation policy | Reconcile with Pro-Flow `/apply` methodology | Conflict matrix and output tests |
+| `career_os/templates/application_package.md` | Export template | Adapt | Snapshot tests and clean employer-facing sections |
+
+## Pro-Flow component disposition
+
+| Pro-Flow component | Hybrid role | Initial treatment |
+|---|---|---|
+| `.claude/commands/setup.md` | Onboarding methodology | Preserve; expose progressively through UI |
+| `.claude/commands/scrape.md` or scraper skill | Search orchestration | Preserve; later wrap with normalized adapter |
+| `.claude/commands/rank.md` | Explainable fit ranking | Preserve; later implement domain service |
+| `.claude/commands/apply.md` | Application methodology and verification | Preserve as behavioral reference |
+| `.claude/commands/interview.md` | Interview workflow | Preserve for later UI phase |
+| `.claude/commands/outcome.md` | Pipeline outcomes and follow-up | Preserve for later UI phase |
+| `.claude/skills/job-application-assistant/` | Career methodology | Preserve; later generate compatibility views where appropriate |
+| `.agents/skills/*` | Live job-source implementations | Preserve unchanged; add adapters later |
+| `cv/` | Master and tailored CV artifacts | Preserve |
+| `cover_letters/` | Letter templates and artifacts | Preserve |
+| `documents/applications/` | Application archive | Preserve and formalize |
+| `tools/verify_pdf.py` | PDF verification | Preserve and expose through document service |
+| `tools/security_guards.py` | Security validation | Preserve and incorporate into API/workflow gates |
+| `salary_lookup.py` | Optional salary support | Preserve for later adapter |
+
+## Data classification
+
+| Class | Examples | Storage rule |
+|---|---|---|
+| Public code/configuration | Schemas, UI components, safe `.env.example` | May be tracked |
+| Private profile | Contact information, employment history, preferences | Local private data; gitignored by default |
+| Sensitive evidence | Diplomas, references, identification documents | Private `documents/`; never public/static |
+| Secrets | API keys, OAuth tokens | Environment/secret store only |
+| Generated application data | Job postings, drafts, review decisions, PDFs | Private application archive |
+| Public artifacts | User-approved résumé/letter intended for submission | Export only after readiness gate |
+
+## Migration phases and gates
+
+### Phase 0: Protection
+
+Status: **Complete**
+
+- Executive Career OS checkpoint committed.
+- Pro-Flow integration branch created.
+- Both working trees clean.
+- Secret/build exclusions verified.
+
+Rollback: return Executive Career OS to `4afde6d` and Pro-Flow to `9bf9a65`.
+
+### Phase 1: Documentation and contracts
+
+Status: **In progress**
+
+1. Complete this manifest.
+2. Restore Pro-Flow's executable test baseline.
+3. Define shared schemas and service interfaces.
+4. Decide the private canonical-data location and backup policy.
+
+Gate:
+
+- Both original projects remain clean and runnable.
+- Shared contracts have unit tests.
+- No personal data is copied into tracked web assets.
+
+### Phase 2: Isolated web shell
+
+1. Create `apps/web`.
+2. Port only approved UI/configuration components.
+3. Use fixtures; do not write canonical data.
+4. Add lint, typecheck, test, and build scripts.
+
+Gate:
+
+- Existing Pro-Flow checks pass.
+- Web lint, typecheck, tests, and production build pass.
+- Original Executive Career OS still runs independently.
+
+### Phase 3: Read-only evidence import
+
+1. Implement provenance-aware Executive Markdown import.
+2. Validate and display imported facts.
+3. Surface conflicts and verification requirements.
+4. Do not modify Pro-Flow profile files yet.
+
+Gate:
+
+- Every imported fact retains a source.
+- Uncertain facts remain uncertain.
+- No importer writes outside its approved destination.
+
+### Phase 4: Canonical profile and guided review
+
+1. Establish the private structured career record.
+2. Add atomic saves, schema validation, and backups.
+3. Add profile review/confirmation UI.
+4. Generate Pro-Flow compatibility views.
+5. Update `AGENTS.md` only after generation is proven.
+
+Gate:
+
+- Round-trip tests prevent data loss.
+- Generated views are deterministic.
+- The canonical record and generated views cannot silently drift.
+
+### Phase 5: First vertical application workflow
+
+1. Paste and validate a job description.
+2. Evaluate fit with explanations.
+3. Generate a structured package.
+4. Review every material claim.
+5. Save an application archive.
+
+Gate:
+
+- Unsupported requirements never enter public documents.
+- Employer-facing output contains no internal paths.
+- A real posting completes end-to-end.
+
+### Phase 6: Documents and readiness
+
+1. Connect CV and cover-letter templates.
+2. Compile PDFs.
+3. Run page-count, visual, and ATS checks.
+4. Implement the readiness gate.
+
+Gate:
+
+- Pro-Flow's mandatory PDF/ATS requirements remain intact.
+- Failed checks block "Ready to Submit."
+
+### Phase 7: Search, pipeline, interview, and outcomes
+
+1. Wrap portal skills behind normalized adapters.
+2. Add deduplication and ranking.
+3. Add application state transitions.
+4. Add interview preparation and outcome feedback.
+
+Gate:
+
+- Portal failures are isolated.
+- State transitions are validated.
+- Submitted artifacts remain immutable historical evidence.
+
+## Immediate conflicts to resolve
+
+| Topic | Executive behavior | Pro-Flow behavior | Resolution |
+|---|---|---|---|
+| Source of truth | `career_os` Markdown corpus | Three-source union in profile/CV/`CLAUDE.md` | Introduce one structured canonical record, then generate compatibility views |
+| Application output | Markdown package | LaTeX CV and cover letter plus PDFs | Use structured package internally; render through Pro-Flow document engine |
+| Grounding | Source file per material claim | Audit against profile union | Preserve claim provenance and validate against canonical evidence |
+| Workflow execution | Next.js API route | Agent commands/methodology | Extract stable domain services; keep commands as compatibility workflow |
+| Target roles | Hard-coded executive role enum | User-configured search profile | Store user-approved role families and allow controlled additions |
+| Review state | In-memory client decisions/download | Filesystem application archives | Persist decisions under stable application IDs |
+| AI provider | Direct OpenAI Responses API | Agent-runtime driven | Use provider adapter; do not bind core domain logic to one model |
+
+## Testing requirements
+
+Before behavior is migrated, the combined project needs:
+
+- Pro-Flow Python test dependencies and a repeatable test command.
+- Shared schema tests.
+- Import provenance and conflict tests.
+- Path traversal and filename sanitization tests.
+- Prompt-injection boundary tests for job descriptions.
+- Employer-facing source-redaction tests.
+- Atomic write and backup tests.
+- API validation and provider-error tests.
+- Workflow-state transition tests.
+- Document compilation and ATS extraction tests.
+- A fixture profile containing no real personal data for automated tests.
+
+## Rollback strategy
+
+1. Keep integration work on `feature-pro-flow-career-os`.
+2. Commit at the end of each completed phase.
+3. Do not delete source-project files as part of migration commits.
+4. Keep data migrations idempotent and versioned.
+5. Back up private canonical data before schema upgrades.
+6. Keep generated compatibility views reproducible from canonical data.
+7. If a phase fails its gate, revert only that phase's integration commit.
+
+## Definition of seamless integration
+
+The integration is considered seamless when:
+
+1. A user completes one guided onboarding process.
+2. Confirmed facts are stored once and reused everywhere.
+3. Search, fit evaluation, drafting, review, document verification,
+   application tracking, interviews, and outcomes share stable application IDs.
+4. The interface always shows the next appropriate action.
+5. Technical commands, provider details, and filesystem conventions remain
+   hidden during normal use.
+6. Every employer-facing claim is supportable.
+7. Existing Pro-Flow safety and document-quality requirements are preserved.
+8. Both original project baselines remain recoverable.
+
+## Next action
+
+Proceed to Phase 1 implementation:
+
+1. Restore Pro-Flow's Python test baseline by documenting/installing its test
+   dependency.
+2. Create the initial `packages/career-core` contract package.
+3. Define schemas and service interfaces only; do not import personal data yet.
+
