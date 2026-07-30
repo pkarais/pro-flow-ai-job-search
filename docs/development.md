@@ -65,3 +65,8 @@ In Phase 4, explicit review decisions are written under the gitignored
 `career-data/` directory. Tests use temporary directories and never touch the
 live canonical record. The generated compatibility views and manifest must pass
 hash/revision verification whenever the review page loads.
+
+Phase 5 application workflow tests also use temporary archives. To exercise the
+live workflow, confirm at least one employer-facing evidence item at
+`/career/import-review`, then open `/applications/new`. Live application
+archives remain ignored under `career-data/applications/`.

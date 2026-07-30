@@ -10,6 +10,7 @@ const navIcons = [CompassIcon, FileIcon, SparkIcon, FileIcon, CompassIcon, Spark
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
   if (href.startsWith("/career")) return pathname.startsWith("/career");
+  if (href.startsWith("/applications")) return pathname.startsWith("/applications");
   return false;
 }
 
@@ -65,7 +66,7 @@ export function WorkspaceModeBadge() {
   const pathname = usePathname();
   return (
     <span className="fixture-pill">
-      {pathname.startsWith("/career") ? "Private local review" : "Demo data"}
+      {pathname.startsWith("/career") || pathname.startsWith("/applications") ? "Private local workflow" : "Demo data"}
     </span>
   );
 }

@@ -339,11 +339,37 @@ Gate result:
 
 ### Phase 5: First vertical application workflow
 
-1. Paste and validate a job description.
-2. Evaluate fit with explanations.
-3. Generate a structured package.
-4. Review every material claim.
-5. Save an application archive.
+Status: **Implementation complete; live acceptance pending**
+
+Completed:
+
+- Added validated manual opportunity intake; posting content remains untrusted
+  data and is never treated as instructions.
+- Added deterministic fit scoring against confirmed/corrected canonical
+  evidence with visible matching terms, gaps, eligibility questions, and
+  evidence IDs.
+- Added a conservative structured positioning and cover-letter draft without
+  introducing a provider dependency.
+- Excluded policy-only voice and prohibited-claim records from employer-facing
+  claims.
+- Added explicit verify/do-not-use decisions for every drafted material claim.
+- Added fixed private application archives with server-generated IDs, strict
+  schemas, atomic writes, and optimistic revision checks.
+- Added a responsive guided application studio spanning intake, assessment,
+  draft inspection, factual review, and archive status.
+
+Gate result:
+
+- Neutral end-to-end fixture completes intake through archived factual review.
+- An unreviewed canonical profile cannot generate a draft.
+- Every draft claim carries canonical evidence IDs.
+- Unsupported posting terms remain visible gaps.
+- Policy records cannot become draft claims.
+- Stale claim decisions are rejected.
+- No employer submission, public artifact, source path, AI provider, or final
+  document generation is exposed.
+- Live acceptance with a user-selected real posting remains pending and will
+  not be simulated without the user's review decisions.
 
 Gate:
 
@@ -431,11 +457,6 @@ The integration is considered seamless when:
 
 ## Next action
 
-Proceed to Phase 5:
-
-1. Add opportunity intake and validation.
-2. Build explainable fit assessment against confirmed canonical evidence.
-3. Generate a structured draft application package.
-4. Require factual review before saving employer-facing drafts.
-5. Archive the opportunity, fit assessment, package, and reviews under a stable
-   application ID.
+Complete the Phase 5 live acceptance gate with a user-selected real posting,
+then proceed to Phase 6 document rendering, PDF/ATS checks, and the locked
+"Ready to Submit" readiness gate.

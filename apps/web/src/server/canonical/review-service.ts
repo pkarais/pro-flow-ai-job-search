@@ -24,6 +24,14 @@ function store(): CanonicalProfileStore {
   return new CanonicalProfileStore(dataRoot());
 }
 
+export async function loadCanonicalProfile(): Promise<CanonicalCareerProfile | null> {
+  return store().load();
+}
+
+export function careerDataRoot(): string {
+  return dataRoot();
+}
+
 export function summarizeCanonicalReview(
   profile: CanonicalCareerProfile | null,
   totalIfMissing = 0,

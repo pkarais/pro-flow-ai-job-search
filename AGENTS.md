@@ -29,8 +29,12 @@ Files under `career-data/compatibility/` are deterministic generated views.
 Never edit them directly. Their revision and SHA-256 hashes must match the
 canonical record; a mismatch is a blocking integrity error.
 
+The guided Phase 5 application studio consumes only confirmed/corrected
+canonical evidence and stores its private archives under
+`career-data/applications/`. Policy records such as voice rules and prohibited
+claims constrain the workflow and must never become employer-facing claims.
+
 The existing `CLAUDE.md`, `.claude/skills/job-application-assistant/`, and
-master-CV grounding union remain the active inputs for legacy agent commands
-until Phase 5 connects those workflows directly to the canonical record.
-During this transition, do not manually copy web-review decisions into legacy
-profile files or claim that the legacy `/apply` command consumed them.
+master-CV grounding union remain the active inputs for legacy agent commands.
+Do not manually copy web-review decisions into legacy profile files or claim
+that the legacy `/apply` command consumed the canonical record.

@@ -23,6 +23,13 @@ Phase 4 review decisions are stored under the repository's ignored
 The UI exposes confirm, correct, and reject decisions one evidence item at a
 time. It does not bulk-approve evidence or modify Executive Career OS.
 
+Phase 5 adds `/applications/new`, a local-first application studio. It accepts
+a pasted job description as untrusted data, compares it with reviewed
+canonical evidence, exposes supported terms and gaps, creates an evidence-linked
+draft, requires a decision on every material claim, and archives the workflow
+under `career-data/applications/`. It does not call an AI provider, submit an
+application, or create final CV/PDF artifacts.
+
 ## Commands
 
 ```powershell

@@ -481,6 +481,189 @@ h3 {
   font-size: 1.08rem;
 }
 
+.application-page {
+  width: min(100%, var(--content-width));
+  margin: 0 auto;
+  padding: clamp(var(--space-8), 5vw, var(--space-16))
+    clamp(var(--space-5), 4vw, var(--space-12))
+    calc(var(--space-16) + env(safe-area-inset-bottom));
+}
+
+.application-hero {
+  max-width: 64rem;
+}
+
+.application-hero h1 {
+  max-width: 16ch;
+  margin-top: var(--space-5);
+  font-size: clamp(2.75rem, 5vw, 5.2rem);
+}
+
+.application-hero > p:last-child {
+  max-width: 48rem;
+  margin: var(--space-6) 0 0;
+  color: var(--color-ink-muted);
+  font-size: 1.08rem;
+}
+
+.intake-card,
+.application-results {
+  margin-top: var(--space-12);
+}
+
+.intake-card,
+.draft-card,
+.fit-card,
+.claim-card,
+.archive-card {
+  padding: clamp(var(--space-5), 3vw, var(--space-8));
+}
+
+.application-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
+  margin-top: var(--space-8);
+}
+
+.application-form label {
+  display: grid;
+  gap: var(--space-2);
+  color: var(--color-ink-muted);
+  font-size: 0.84rem;
+  font-weight: 750;
+}
+
+.application-form input,
+.application-form textarea {
+  width: 100%;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  background: var(--color-white);
+  color: var(--color-ink);
+  padding: var(--space-3) var(--space-4);
+}
+
+.application-form textarea {
+  min-height: 16rem;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.application-form input:focus,
+.application-form textarea:focus {
+  border-color: var(--color-brand);
+  outline: 3px solid rgba(29, 101, 77, 0.14);
+}
+
+.form-field--wide,
+.application-form .button {
+  grid-column: 1 / -1;
+}
+
+.application-form .button {
+  justify-self: start;
+}
+
+.fit-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+.fit-card p {
+  margin: var(--space-2) 0 0;
+  color: var(--color-ink-muted);
+}
+
+.fit-score {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 3.5rem;
+  font-weight: 500;
+}
+
+.fit-score span {
+  color: var(--color-ink-muted);
+  font-family: Inter, sans-serif;
+  font-size: 0.9rem;
+}
+
+.application-section {
+  margin-top: var(--space-16);
+}
+
+.draft-grid,
+.keyword-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
+  margin-top: var(--space-8);
+}
+
+.draft-card p,
+.draft-card pre {
+  margin: var(--space-5) 0 0;
+  color: var(--color-ink-muted);
+  font-family: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.keyword-grid > div {
+  border-top: 1px solid var(--color-line);
+  padding-top: var(--space-4);
+}
+
+.keyword-grid p {
+  color: var(--color-ink-muted);
+}
+
+.claim-list {
+  display: grid;
+  gap: var(--space-4);
+  margin-top: var(--space-8);
+}
+
+.claim-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+.claim-card p {
+  margin: var(--space-4) 0 var(--space-2);
+}
+
+.claim-card small {
+  color: var(--color-ink-muted);
+  overflow-wrap: anywhere;
+}
+
+.claim-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.archive-card {
+  margin-top: var(--space-12);
+  background: var(--color-brand-soft);
+}
+
+.archive-card p:last-child {
+  color: var(--color-ink-muted);
+}
+
+.form-error {
+  margin-top: var(--space-5);
+  border-radius: var(--radius-sm);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  padding: var(--space-4);
+}
+
 .review-safety-card {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -1240,6 +1423,27 @@ h3 {
   .review-page {
     padding-top: var(--space-8);
     padding-bottom: calc(var(--mobile-nav-height) + var(--space-8) + env(safe-area-inset-bottom));
+  }
+
+  .application-page {
+    padding-top: var(--space-8);
+    padding-bottom: calc(var(--mobile-nav-height) + var(--space-8) + env(safe-area-inset-bottom));
+  }
+
+  .application-form,
+  .draft-grid,
+  .keyword-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fit-card,
+  .claim-card {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .claim-actions {
+    display: grid;
   }
 
   .review-hero h1 {

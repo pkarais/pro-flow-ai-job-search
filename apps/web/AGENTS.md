@@ -15,5 +15,8 @@ Phase 4 permits canonical evidence decisions only through the strict
 `/api/career/evidence-decision` route. Writes must remain under the fixed,
 gitignored `career-data` root, use schema validation, expected revisions,
 atomic replacement, backups, and deterministic compatibility hashes. Do not
-add arbitrary file paths, bulk acceptance, job-search execution, AI providers,
-or application archive access.
+add arbitrary file paths, bulk acceptance, job-search execution, or AI
+providers. Phase 5 application archives must remain under the fixed
+`career-data/applications` root, use validated server-generated IDs and
+optimistic revisions, and derive claims only from reviewed employer-facing
+evidence. Policy records must never be drafted as claims.
