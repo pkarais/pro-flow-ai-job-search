@@ -17,3 +17,20 @@ To prevent duplication and configuration drift across different AI agent framewo
    - Do not duplicate these rules or specifications. Treat `.claude/` files as the single source of truth.
 3. **Portal Search Skills:**
    - Job-portal search CLIs live under [.agents/skills/](.agents/skills/) in the portable Agent Skills format (with a `SKILL.md` per portal). Codex and Antigravity discover these automatically; the `/scrape` workflow in [.claude/skills/job-scraper/](.claude/skills/job-scraper/) orchestrates them.
+
+## Hybrid Career OS Transition
+
+The guided web application maintains reviewed evidence in the private,
+gitignored `career-data/canonical-career.json` file. Once that file exists, it
+is the single source of truth for decisions made through the web evidence
+review: original evidence, confirmations, corrections, and rejections.
+
+Files under `career-data/compatibility/` are deterministic generated views.
+Never edit them directly. Their revision and SHA-256 hashes must match the
+canonical record; a mismatch is a blocking integrity error.
+
+The existing `CLAUDE.md`, `.claude/skills/job-application-assistant/`, and
+master-CV grounding union remain the active inputs for legacy agent commands
+until Phase 5 connects those workflows directly to the canonical record.
+During this transition, do not manually copy web-review decisions into legacy
+profile files or claim that the legacy `/apply` command consumed them.

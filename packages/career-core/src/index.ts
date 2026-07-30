@@ -1,4 +1,5 @@
 export * from "./application.js";
+export * from "./canonical.js";
 export * from "./common.js";
 export * from "./evidence.js";
 export * from "./opportunity.js";

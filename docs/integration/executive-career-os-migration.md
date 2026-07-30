@@ -303,17 +303,39 @@ Gate result:
 
 ### Phase 4: Canonical profile and guided review
 
-1. Establish the private structured career record.
-2. Add atomic saves, schema validation, and backups.
-3. Add profile review/confirmation UI.
-4. Generate Pro-Flow compatibility views.
-5. Update `AGENTS.md` only after generation is proven.
+Status: **Complete**
 
-Gate:
+Completed:
 
-- Round-trip tests prevent data loss.
-- Generated views are deterministic.
-- The canonical record and generated views cannot silently drift.
+- Added a strict version-one canonical career schema with preserved original
+  evidence, decisions, corrections, provenance, and unique record IDs.
+- Added safe migration from the prototype version zero and explicit rejection
+  of unsupported future schema versions.
+- Added a fixed private `career-data` storage boundary.
+- Added atomic JSON replacement, optimistic revision checks, and a backup of
+  every prior canonical revision.
+- Added deterministic canonical-profile and evidence-ledger Markdown views.
+- Added a compatibility manifest containing canonical revision and SHA-256
+  hashes for both generated views.
+- Added drift verification on review-page load and after every decision.
+- Added a strict one-fact decision API with current-source matching.
+- Added guided confirm, correct, and reject controls, progress/filter states,
+  correction editing, rejection confirmation, retry/error feedback, and
+  original-evidence disclosure.
+- Updated `AGENTS.md` only after round-trip, deterministic-generation, and drift
+  tests passed.
+
+Gate result:
+
+- Canonical JSON round-trips without data loss.
+- Stale revisions are rejected.
+- Prior revisions are backed up.
+- Compatibility rendering is deterministic.
+- Revision/hash verification detects missing, changed, or stale generated
+  views.
+- Pending and rejected facts are excluded from compatibility profile output.
+- Corrected facts retain their original source value in the ledger.
+- Writes remain impossible outside the fixed private data root.
 
 ### Phase 5: First vertical application workflow
 
@@ -409,11 +431,11 @@ The integration is considered seamless when:
 
 ## Next action
 
-Proceed to Phase 4:
+Proceed to Phase 5:
 
-1. Finalize the versioned private canonical profile format.
-2. Add atomic writes, backups, and schema migration safeguards.
-3. Add explicit confirm, correct, and reject decisions to the review workflow.
-4. Generate deterministic Pro-Flow compatibility views.
-5. Prove lossless round trips before updating the repository source-of-truth
-   guidance.
+1. Add opportunity intake and validation.
+2. Build explainable fit assessment against confirmed canonical evidence.
+3. Generate a structured draft application package.
+4. Require factual review before saving employer-facing drafts.
+5. Archive the opportunity, fit assessment, package, and reviews under a stable
+   application ID.

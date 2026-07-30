@@ -448,7 +448,9 @@ h3 {
 }
 
 .review-hero h1 {
+  width: 100%;
   max-width: 17ch;
+  overflow-wrap: anywhere;
   font-size: clamp(2.75rem, 5vw, 5.2rem);
 }
 
@@ -656,6 +658,203 @@ h3 {
 .fact-copy small {
   color: var(--color-ink-muted);
   font-size: 0.72rem;
+}
+
+.decision-toolbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--space-6);
+  margin-top: var(--space-8);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: var(--space-5);
+}
+
+.decision-progress {
+  min-width: min(100%, 17rem);
+}
+
+.decision-progress > span {
+  color: var(--color-ink-muted);
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+
+.decision-progress > strong {
+  display: block;
+  margin-top: var(--space-1);
+}
+
+.decision-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.filter-button,
+.decision-button {
+  min-height: var(--touch-target);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  cursor: pointer;
+  padding: var(--space-2) var(--space-4);
+  color: var(--color-ink-muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.filter-button--active {
+  border-color: transparent;
+  background: var(--color-brand-soft);
+  color: var(--color-brand-strong);
+}
+
+.save-status {
+  min-height: 2.75rem;
+  padding-top: var(--space-3);
+}
+
+.save-status p {
+  margin: 0;
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.save-status--success {
+  background: var(--color-brand-soft);
+  color: var(--color-brand-strong);
+}
+
+.save-status--error {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.decision-row {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: rgba(255, 254, 250, 0.72);
+  padding: var(--space-5);
+}
+
+.decision-row--confirmed {
+  border-left: 4px solid var(--color-brand);
+}
+
+.decision-row--corrected {
+  border-left: 4px solid var(--color-accent);
+}
+
+.decision-row--rejected {
+  border-left: 4px solid var(--color-danger);
+  opacity: 0.78;
+}
+
+.decision-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+}
+
+.decision-button:hover,
+.filter-button:hover {
+  border-color: var(--color-brand);
+  color: var(--color-brand-strong);
+}
+
+.decision-button--confirm {
+  border-color: transparent;
+  background: var(--color-brand);
+  color: var(--color-white);
+}
+
+.decision-button--confirm:hover {
+  background: var(--color-brand-strong);
+  color: var(--color-white);
+}
+
+.decision-button--reject {
+  color: var(--color-danger);
+}
+
+.decision-button:disabled,
+.button:disabled {
+  cursor: wait;
+  opacity: 0.56;
+}
+
+.correction-panel {
+  margin-top: var(--space-5);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+  padding: var(--space-5);
+}
+
+.correction-panel label {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.correction-panel textarea {
+  width: 100%;
+  min-height: 8rem;
+  resize: vertical;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  padding: var(--space-4);
+  font: inherit;
+  line-height: 1.5;
+}
+
+.correction-panel textarea:focus {
+  border-color: var(--color-brand);
+  outline: 3px solid var(--color-brand-soft);
+}
+
+.original-evidence {
+  margin: var(--space-3) 0;
+  color: var(--color-ink-muted);
+  font-size: 0.82rem;
+}
+
+.original-evidence summary {
+  cursor: pointer;
+  font-weight: 750;
+}
+
+.original-evidence p {
+  border-left: 2px solid var(--color-line);
+  padding-left: var(--space-4);
+}
+
+.empty-review-state {
+  display: grid;
+  min-height: 18rem;
+  place-items: center;
+  align-content: center;
+  border: 1px dashed var(--color-line);
+  border-radius: var(--radius-md);
+  color: var(--color-brand);
+  text-align: center;
+}
+
+.empty-review-state h3 {
+  margin-top: var(--space-3);
+}
+
+.empty-review-state p {
+  margin: var(--space-2) 0 0;
+  color: var(--color-ink-muted);
 }
 
 .progress-row {
@@ -1050,6 +1249,20 @@ h3 {
   .fact-meta {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .decision-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .decision-filters {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .decision-actions {
+    display: grid;
   }
 
   .stat-card {

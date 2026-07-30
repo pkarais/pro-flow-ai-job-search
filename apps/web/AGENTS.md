@@ -11,7 +11,9 @@ The shared domain contracts live in `../../packages/career-core`. This web app
 must consume those contracts rather than create competing profile, opportunity,
 application, or workflow types.
 
-Phase 3 permits read-only access to the explicitly allowlisted Executive Career
-OS evidence files through the server-only importer. Do not add profile writes,
-mutation endpoints, arbitrary file paths, job-search execution, AI providers,
+Phase 4 permits canonical evidence decisions only through the strict
+`/api/career/evidence-decision` route. Writes must remain under the fixed,
+gitignored `career-data` root, use schema validation, expected revisions,
+atomic replacement, backups, and deterministic compatibility hashes. Do not
+add arbitrary file paths, bulk acceptance, job-search execution, AI providers,
 or application archive access.

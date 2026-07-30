@@ -1,7 +1,12 @@
-import type { EvidenceImportResult } from "@pro-flow/career-core";
+import type {
+  CanonicalCareerProfile,
+  CanonicalReviewSummary,
+  EvidenceImportResult,
+} from "@pro-flow/career-core";
 import Link from "next/link";
-import { AlertIcon, ArrowIcon, CheckIcon, FileIcon, ShieldIcon } from "./icons";
+import { AlertIcon, ArrowIcon, FileIcon, ShieldIcon } from "./icons";
 import { SectionHeading, StatusBadge, SurfaceCard } from "./ui";
+import { EvidenceDecisionList } from "./evidence-decision-list";
 
 const sourceStatusCopy = {
   loaded: { label: "Loaded", tone: "complete" as const },
@@ -10,7 +15,17 @@ const sourceStatusCopy = {
   unreadable: { label: "Unreadable", tone: "danger" as const },
 };
 
-export function EvidenceReview({ result }: { result: EvidenceImportResult }) {
+export function EvidenceReview({
+  result,
+  canonicalProfile,
+  reviewSummary,
+  compatibilityValid,
+}: {
+  result: EvidenceImportResult;
+  canonicalProfile: CanonicalCareerProfile | null;
+  reviewSummary: CanonicalReviewSummary;
+  compatibilityValid: boolean;
+}) {
   const conflicts = result.facts.filter((fact) => fact.status === "conflicting");
   const blocking = result.issues.filter((issue) => issue.severity === "blocking");
 
@@ -19,20 +34,20 @@ export function EvidenceReview({ result }: { result: EvidenceImportResult }) {
       <header className="review-hero">
         <div>
           <Link className="back-link" href="/"><ArrowIcon className="arrow-back" /> Back to home</Link>
-          <StatusBadge tone="current">Read-only preview</StatusBadge>
+          <StatusBadge tone="current">Guided profile review</StatusBadge>
           <p className="eyebrow">Career evidence import</p>
           <h1>Review what the source says before anything becomes your profile.</h1>
           <p className="review-lede">
             Pro-Flow found {result.facts.length} evidence items across{" "}
             {result.loadedSourceCount} of {result.sourceCount} allowlisted sources.
-            Nothing on this page can modify either project.
+            Review each item before it can become part of your working career profile.
           </p>
         </div>
         <SurfaceCard className="review-safety-card">
           <ShieldIcon />
           <div>
-            <strong>Writes are disabled</strong>
-            <p>No canonical profile, source document, or application file can be changed in Phase 3.</p>
+            <strong>Your source stays protected</strong>
+            <p>Decisions save only to Pro-Flow&apos;s private local profile. The source project is never changed.</p>
           </div>
         </SurfaceCard>
       </header>
@@ -93,27 +108,14 @@ export function EvidenceReview({ result }: { result: EvidenceImportResult }) {
         <SectionHeading
           eyebrow="Evidence preview"
           title="Facts remain tied to their source"
-          description="Items marked for verification cannot be treated as confirmed in the next phase."
+          description="Confirm accurate evidence, correct it with context, or reject it so later workflows use only approved facts."
         />
-        <div className="fact-list">
-          {result.facts.map((fact) => (
-            <article className="fact-row" key={fact.id}>
-              <div className={fact.status === "conflicting" ? "fact-state fact-state--warning" : "fact-state"}>
-                {fact.status === "conflicting" ? <AlertIcon /> : <CheckIcon />}
-              </div>
-              <div className="fact-copy">
-                <div className="fact-meta">
-                  <span>{fact.sourceSection ?? "Source evidence"}</span>
-                  <StatusBadge tone={fact.status === "conflicting" ? "pending" : "neutral"}>
-                    {fact.status === "conflicting" ? "Verify first" : "Review"}
-                  </StatusBadge>
-                </div>
-                <p>{fact.value}</p>
-                <small>{fact.sourcePath}</small>
-              </div>
-            </article>
-          ))}
-        </div>
+        <EvidenceDecisionList
+          facts={result.facts}
+          initialCompatibilityValid={compatibilityValid}
+          initialRecords={canonicalProfile?.records ?? []}
+          initialSummary={reviewSummary}
+        />
       </section>
     </div>
   );

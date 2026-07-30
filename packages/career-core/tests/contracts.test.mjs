@@ -4,7 +4,10 @@ import test from "node:test";
 import {
   applicationPackageSchema,
   canTransition,
+  canonicalCareerProfileSchema,
   candidateProfileSchema,
+  effectiveEvidenceValue,
+  evidenceDecisionRequestSchema,
   factualClaimSchema,
   evidenceImportResultSchema,
   isReadyForSubmission,
@@ -69,6 +72,60 @@ test("evidence previews are explicitly read-only", () => {
     readOnly: false,
   });
   assert.equal(result.success, false);
+});
+
+test("corrected evidence requires corrected wording", () => {
+  assert.equal(evidenceDecisionRequestSchema.safeParse({
+    factId: "fact_1",
+    expectedRevision: 1,
+    decision: "corrected",
+  }).success, false);
+});
+
+test("canonical profiles reject duplicate evidence IDs", () => {
+  const record = {
+    id: "fact_1",
+    path: "skills.example.1",
+    value: "Example skill",
+    sourceId: "fixture_source",
+    sourcePath: "fixtures/profile.md",
+    status: "needs_review",
+    decision: "pending",
+  };
+  const result = canonicalCareerProfileSchema.safeParse({
+    schemaVersion: 1,
+    candidateId: "fixture_candidate",
+    revision: 1,
+    sourceImportedAt: "2026-07-30T12:00:00-04:00",
+    createdAt: "2026-07-30T12:00:00-04:00",
+    updatedAt: "2026-07-30T12:00:00-04:00",
+    records: [record, record],
+    compatibility: { generatedFromRevision: 0 },
+  });
+  assert.equal(result.success, false);
+});
+
+test("effective evidence excludes pending and rejected facts", () => {
+  const base = {
+    id: "fact_1",
+    path: "skills.example.1",
+    value: "Original",
+    sourceId: "fixture_source",
+    sourcePath: "fixtures/profile.md",
+    status: "needs_review",
+  };
+  assert.equal(effectiveEvidenceValue({ ...base, decision: "pending" }), null);
+  assert.equal(effectiveEvidenceValue({
+    ...base,
+    decision: "rejected",
+    decidedAt: "2026-07-30T12:00:00-04:00",
+  }), null);
+  assert.equal(effectiveEvidenceValue({
+    ...base,
+    decision: "corrected",
+    correctedValue: "Corrected",
+    decidedAt: "2026-07-30T12:00:00-04:00",
+  }), "Corrected");
 });
 
 test("a current career range cannot also have an end date", () => {

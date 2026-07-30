@@ -1,4 +1,5 @@
 import { EvidenceReview } from "@/components/evidence-review";
+import { loadCanonicalReview } from "@/server/canonical/review-service";
 import { loadExecutiveEvidencePreview } from "@/server/evidence/preview-service";
 import Link from "next/link";
 
@@ -32,5 +33,13 @@ export default async function ImportReviewPage() {
     );
   }
 
-  return <EvidenceReview result={preview.result} />;
+  const canonical = await loadCanonicalReview(preview.result);
+  return (
+    <EvidenceReview
+      canonicalProfile={canonical.profile}
+      compatibilityValid={canonical.compatibilityValid}
+      result={preview.result}
+      reviewSummary={canonical.summary}
+    />
+  );
 }

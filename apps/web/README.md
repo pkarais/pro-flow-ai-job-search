@@ -10,6 +10,19 @@ providers, or execute portal tools.
 To enable the local preview, copy `.env.example` to `.env.local` and set
 `EXECUTIVE_CAREER_OS_PATH` to the absolute Executive Career OS checkout path.
 
+Phase 4 review decisions are stored under the repository's ignored
+`career-data/` directory. Each save:
+
+- validates the request and current canonical schema;
+- requires the expected revision;
+- retains original evidence and provenance;
+- backs up the previous canonical revision;
+- atomically replaces the canonical JSON record;
+- regenerates compatibility Markdown and a SHA-256 manifest.
+
+The UI exposes confirm, correct, and reject decisions one evidence item at a
+time. It does not bulk-approve evidence or modify Executive Career OS.
+
 ## Commands
 
 ```powershell

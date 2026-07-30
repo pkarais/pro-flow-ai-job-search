@@ -65,7 +65,7 @@ export function WorkspaceModeBadge() {
   const pathname = usePathname();
   return (
     <span className="fixture-pill">
-      {pathname.startsWith("/career") ? "Read-only local" : "Demo data"}
+      {pathname.startsWith("/career") ? "Private local review" : "Demo data"}
     </span>
   );
 }

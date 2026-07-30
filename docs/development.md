@@ -60,3 +60,8 @@ EXECUTIVE_CAREER_OS_PATH=C:\absolute\path\to\executive-career-os
 Then open `/career/import-review`. The server reads only the 12 relative paths
 in `src/server/evidence/source-manifest.ts`. Phase 3 exposes no save operation,
 mutation endpoint, arbitrary-path input, AI call, or job-tool execution.
+
+In Phase 4, explicit review decisions are written under the gitignored
+`career-data/` directory. Tests use temporary directories and never touch the
+live canonical record. The generated compatibility views and manifest must pass
+hash/revision verification whenever the review page loads.
