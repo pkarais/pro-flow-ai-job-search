@@ -166,6 +166,7 @@ export const companyInsightCitationSchema = z.object({
 export const companyInsightRecordSchema = z.object({
   id: recordIdSchema,
   jobId: recordIdSchema,
+  kind: z.enum(["company_overview", "direct_application"]).default("company_overview"),
   company: nonEmptyTextSchema.max(300),
   role: nonEmptyTextSchema.max(300),
   report: nonEmptyTextSchema.max(30_000),

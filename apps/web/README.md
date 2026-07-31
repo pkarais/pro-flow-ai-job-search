@@ -29,11 +29,13 @@ time and updates Pro Flow's canonical record directly.
 Phase 5 adds `/applications/new`, a local-first application studio. It accepts
 a pasted job description as untrusted data, compares it with reviewed
 canonical evidence, exposes supported terms and gaps, creates an evidence-linked
-draft, requires a decision on every material claim, and archives the workflow
+draft, requires an initial decision on every material claim, carries completed
+approval into later editorial regenerations, and archives the workflow
 under `career-data/applications/`. When configured, the server-only OpenAI
 writer creates persuasive structured drafts and attaches canonical evidence
-IDs to every candidate assertion. Failed or invalid AI output falls back to
-the deterministic local writer. The workflow never submits an application.
+IDs to every candidate assertion. Final AI writing fails closed when the
+provider is unavailable; no generic fallback is silently saved as a finished
+document. The workflow never submits an application.
 
 Set `OPENAI_API_KEY` and `OPENAI_MODEL=gpt-5.6-sol` in `.env.local`. Requests
 use `store: false`; contact fields, pending/rejected evidence, operations
@@ -63,7 +65,9 @@ errors.
 
 The current search experience is U.S.-only. `/operations` offers LinkedIn,
 Indeed, USAJOBS, Dice, Built In, and Wellfound, then opens an official recent
-job search with the selected role and U.S. location prefilled. Role choices are
+job search with the selected role and U.S. location prefilled. Four exhaustive
+regions cover all 50 states; a region reveals only its states, and Ctrl/Command
+multi-selection creates a separate portal link for each chosen state. Role choices are
 derived from reviewed canonical career evidence and prior user-selected
 application titles. Users can type an override.
 Legacy Danish and non-U.S. skills are disabled. Operations schema v5 filters
@@ -89,5 +93,29 @@ npm run build
 ```
 
 The app consumes shared contracts from `../../packages/career-core`.
+The application studio generates multiple evidence-grounded emphasis
+strategies, combines selected strategies into one editable final-polish
+instruction, and rewrites the current summary, bullets, and cover letter as a
+coordinated package. Only the newest matching company-overview insight is used
+as employer context; it never becomes candidate evidence.
 Private application revisions can be reviewed, restored, or permanently removed
-from `/applications/archive`.
+from `/applications/archive`. That route also refreshes the embedded
+`career-data/vault.sqlite` index, writes company/role/generation case folders,
+and exposes company insights and interview packs as individual Markdown/JSON
+downloads and inside the complete ZIP.
+
+Saved-job cards track completion of documents, company research, and direct
+application research. Company overviews include cited salary and role-scope
+analysis based on the complete posting and employer/site research. Direct
+application research is limited to official careers pages, forms, and
+explicitly published recruiting addresses. The `/extension` builder creates a
+localhost-only unpacked extension; the toolbar reports installation only after
+the extension checks in with the local service.
+
+`/gmail` provides optional local OAuth setup using the narrow `gmail.compose`
+scope. Pro Flow can create reviewable Gmail drafts or downloadable `.eml`
+packages with selected documents attached, but it never sends email. OAuth
+configuration and encrypted tokens remain in ignored `career-data` files.
+Email drafts require the selected current files to exist, but page-count and
+visual-readiness checks are advisory for email attachment and do not block the
+draft. Recipient addresses remain editable; research results are suggestions.

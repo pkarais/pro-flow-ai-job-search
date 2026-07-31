@@ -88,26 +88,60 @@ Open <http://localhost:3000>.
 2. Open **Find Jobs** and launch a user-initiated portal search.
 3. Save or capture one posting.
 4. Create fresh AI résumé and cover-letter writing.
-5. Review every material claim.
-6. Generate ATS and designed documents.
-7. Complete mechanical and human visual review.
-8. Continue through pipeline, Insights, and Interview.
+5. Complete the initial factual review once. Later editorial regenerations
+   retain that approval.
+6. Optionally generate AI emphasis suggestions, select a blend, and run the
+   coordinated final-polish pass using the newest matching company insights.
+7. Choose a theme and accent color, then select **Regenerate all files for this
+   version** to save ATS and designed documents.
+8. Complete mechanical and human visual review.
+9. Continue through pipeline, Insights, Interview, and Archive.
 
 Private records are written under the gitignored `career-data/` directory.
 Back it up if you want to preserve your history. Never commit it.
 
-## 6. Optional browser capture
+Opening **Archive** initializes the embedded `career-data/vault.sqlite` index
+and company-organized case folders automatically. No separate database server
+or database installation is required.
 
-1. Open `chrome://extensions` or `edge://extensions`.
-2. Enable Developer mode.
-3. Select **Load unpacked**.
-4. Choose this repository's `browser-extension` directory.
-5. Pin the extension and keep Pro Flow running on port 3000.
+## 6. Generate your local browser capture extension
+
+1. Open **Browser Extension** at the bottom of Pro Flow's left toolbar.
+2. Keep the local service URL as `http://localhost:3000`, or enter the
+   localhost port used by your fork.
+3. Give the extension a name and download its ZIP.
+4. Extract the ZIP to a permanent local folder.
+5. Open `chrome://extensions` or `edge://extensions` and enable Developer mode.
+6. Select **Load unpacked** and choose the extracted folder.
+7. Pin the extension and keep Pro Flow running on the configured local port.
+
+The generator accepts localhost addresses only. It does not publish an
+extension or configure a hosted service.
 
 See [browser-extension/README.md](browser-extension/README.md) for its privacy
 and permission model.
 
-## 7. Validate
+## 7. Connect Gmail for one-click drafts (optional)
+
+Pro Flow can create complete Gmail drafts without sending them. Open **Gmail**
+at the bottom of the left toolbar and follow the guided setup. Each local user
+creates their own Google Cloud OAuth credential:
+
+1. Enable the Gmail API in a Google Cloud project.
+2. Configure the OAuth consent screen. For a personal local installation, keep
+   the app in testing and add your Gmail address as a test user.
+3. Create a **Web application** OAuth client.
+4. Add `http://localhost:3000/api/integrations/gmail/callback` as an authorized
+   redirect URI. If Pro Flow uses another port, use that port instead.
+5. Paste the client ID and client secret into Pro Flow's Gmail setup page, save,
+   and select **Connect Gmail**.
+
+The client configuration and encrypted refresh token are stored only under the
+gitignored `career-data/` directory. Pro Flow requests the narrow
+`gmail.compose` permission, creates drafts for review, and never automatically
+sends them. Remove the local authorization with **Disconnect Gmail**.
+
+## 8. Validate
 
 ```bash
 cd apps/web

@@ -337,11 +337,27 @@ export async function transitionPipeline(dataRoot: string, input: PipelineTransi
 
 export async function createInterviewPack(dataRoot: string, input: InterviewPackRequest) {
   const request = interviewPackRequestSchema.parse(input);
+  const store = new OperationsStore(dataRoot);
+  const state = await store.load();
   const application = await new ApplicationStore(dataRoot).load(request.applicationId);
   if (!application) throw new Error("Application archive not found.");
   const claims = application.draft.claims.filter((claim) => claim.decision === "verified").map((claim) => claim.text);
   if (!claims.length) throw new Error("Interview preparation requires verified submitted claims.");
-  const generated = await generateInterviewWriting(application, request.stage);
+  const normalizedCompany = application.opportunity.companyName.trim().toLowerCase();
+  const normalizedRole = application.opportunity.positionTitle.trim().toLowerCase();
+  const matchingJobIds = new Set(state.jobs.filter((job) => job.url === application.opportunity.url
+    || (job.company.trim().toLowerCase() === normalizedCompany && job.title.trim().toLowerCase() === normalizedRole)).map((job) => job.id));
+  const relevantInsights = state.companyInsights
+    .filter((insight) => matchingJobIds.has(insight.jobId)
+      || (insight.company.trim().toLowerCase() === normalizedCompany && insight.role.trim().toLowerCase() === normalizedRole))
+    .sort((left, right) => right.generatedAt.localeCompare(left.generatedAt))
+    .filter((insight, index, all) => all.findIndex((candidate) => candidate.kind === insight.kind) === index)
+    .map((insight) => ({ kind: insight.kind, report: insight.report }));
+  const generated = await generateInterviewWriting(application, request.stage, relevantInsights);
+  const insightQuestions = [...new Set(relevantInsights.flatMap((insight) => insight.report
+    .split(/\r?\n/)
+    .map((line) => line.replace(/^\s*[-*#\d.)]+\s*/, "").replace(/\[([^\]]+)]\([^)]+\)/g, "$1").trim())
+    .filter((line) => line.endsWith("?") && line.length >= 15 && line.length <= 1_000)))].slice(0, 4);
   const fallback = {
     likelyQuestions: [
       `Why are you interested in ${application.opportunity.positionTitle} at ${application.opportunity.companyName}?`,
@@ -350,11 +366,12 @@ export async function createInterviewPack(dataRoot: string, input: InterviewPack
     ],
     bridgeAnswers: application.draft.gaps.slice(0, 4).map((gap) => `Acknowledge ${gap}, connect the closest verified experience, and explain a concrete learning path without claiming prior experience.`),
     questionsToAsk: [
+      ...insightQuestions,
       "What would success look like in the first six months?",
       "What is the biggest challenge the team is facing right now?",
       "How does the team evaluate and support professional growth?",
       "What do people who thrive on this team have in common?",
-    ],
+    ].slice(0, 8),
   };
   const content = generated.method === "ai"
     ? {
@@ -374,8 +391,6 @@ export async function createInterviewPack(dataRoot: string, input: InterviewPack
       : { method: "template" as const, note: generated.note },
     generatedAt: new Date().toISOString(),
   };
-  const store = new OperationsStore(dataRoot);
-  const state = await store.load();
   return store.save({
     ...state,
     interviews: [...state.interviews.filter((item) => !(item.applicationId === application.id && item.stage === request.stage)), pack],

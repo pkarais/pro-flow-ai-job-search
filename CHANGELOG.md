@@ -13,6 +13,44 @@ per-file diff commands.
 
 ## [Unreleased]
 
+### Added
+
+- Embedded SQLite archive index plus ordinary company/role/generation folders
+  containing portable case-file ZIPs and indexes.
+- First-class Archive and Browser Extension navigation, including a
+  localhost-only extension-package generator and installed-extension check-in.
+- Four-region, all-50-state search scoping with Ctrl/Command multi-state
+  selection and separate official portal links per state.
+- Cited direct-application research for official careers pages, forms, and
+  explicitly published recruiting addresses.
+- Company-report compensation and title/pay alignment analysis using the full
+  posting, company/site scope, responsibilities, location, and comparable roles.
+- Individual Archive downloads for company research and interview preparation
+  in Markdown and JSON, alongside complete ZIP case files.
+- Selectable AI emphasis suggestions, multi-suggestion blending, and a
+  coordinated final-polish pass across the existing summary, résumé bullets,
+  and cover letter using only the newest matching company-insights report.
+- Optional Gmail OAuth setup for creating reviewable drafts with document
+  attachments, plus downloadable `.eml` application packages.
+
+### Changed
+
+- Saved-job cards now show completed and remaining document/research actions,
+  disable completed generation actions, and link to retained outputs.
+- Company and direct-application reports are grouped separately in Insights;
+  older reports remain available and clearly identify missing salary analysis.
+- Repository-root discovery no longer depends on the directory from which the
+  local Node process was launched.
+- Completed initial factual approval now carries into later editorial
+  regenerations, approved claim cascades collapse out of the active workflow,
+  and internal save revisions are no longer presented as draft versions.
+- Archive views refresh when refocused, display the latest generated palette
+  and timestamp, and use generation-specific artifact links to prevent stale
+  browser PDF reuse.
+- Email drafting now accepts typed or pasted recipients and requires only that
+  the selected current attachments exist; page-count and visual-review checks
+  remain visible without blocking `.eml` or Gmail draft creation.
+
 ## [0.2.0-beta.1] - 2026-07-31
 
 ### Added

@@ -18,9 +18,10 @@ import {
   RevisionConflictError,
   SourceEvidenceChangedError,
 } from "./canonical-store";
+import { projectRoot } from "@/server/project-root";
 
 function dataRoot(): string {
-  return path.resolve(process.cwd(), "../..", "career-data");
+  return path.join(projectRoot(), "career-data");
 }
 
 function store(): CanonicalProfileStore {

@@ -12,6 +12,19 @@ function portalFor(url) {
   return PORTALS.find((portal) => portal.host.test(hostname))?.id;
 }
 
+async function checkInWithProFlow() {
+  try {
+    await fetch("http://localhost:3000/api/extension/status", {
+      method: "POST",
+      headers: { "x-pro-flow-extension": "installed-v1" }
+    });
+  } catch {}
+}
+
+chrome.runtime.onInstalled.addListener(() => void checkInWithProFlow());
+chrome.runtime.onStartup.addListener(() => void checkInWithProFlow());
+void checkInWithProFlow();
+
 chrome.action.onClicked.addListener(async (tab) => {
   if (!tab.id || !tab.url?.startsWith("http")) return;
   try {
@@ -31,6 +44,7 @@ chrome.action.onClicked.addListener(async (tab) => {
       body: JSON.stringify({ ...result, portal })
     });
     if (!response.ok) throw new Error("Pro Flow rejected the captured posting.");
+    await checkInWithProFlow();
     await chrome.action.setBadgeText({ tabId: tab.id, text: "OK" });
     await chrome.action.setBadgeBackgroundColor({ tabId: tab.id, color: "#16794b" });
     await chrome.action.setTitle({ tabId: tab.id, title: `Captured: ${result.company} — ${result.title}` });

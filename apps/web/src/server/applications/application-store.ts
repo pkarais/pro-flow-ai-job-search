@@ -80,13 +80,19 @@ export class ApplicationStore {
     const current = await this.load(request.applicationId);
     if (!current) throw new Error("Application archive not found.");
     if (current.revision !== request.expectedRevision) throw new RevisionConflictError(current.revision);
-    if (draft.claims.some((claim) => claim.decision !== "pending")) {
-      throw new Error("A regenerated draft must return every new claim to factual review.");
+    const previouslyVerifiedEvidence = new Set<string>();
+    for (const claim of current.draft.claims.filter((item) => item.decision === "verified")) {
+      claim.evidenceIds.forEach((id) => previouslyVerifiedEvidence.add(id));
     }
+    if (draft.claims.some((claim) => claim.decision === "do_not_use"
+      || (claim.decision === "verified" && current.status !== "review_complete" && !claim.evidenceIds.every((id) => previouslyVerifiedEvidence.has(id))))) {
+      throw new Error("A regenerated claim can retain approval only when its section and evidence basis were already verified.");
+    }
+    const complete = draft.claims.every((claim) => claim.decision !== "pending");
     const next = archivedApplicationSchema.parse({
       ...current,
       revision: current.revision + 1,
-      status: "factual_review",
+      status: complete ? "review_complete" : "factual_review",
       draft,
       draftHistory: [
         ...(current.draftHistory ?? []),
@@ -94,6 +100,62 @@ export class ApplicationStore {
       ].slice(-20),
       updatedAt: now.toISOString(),
     });
+    await atomicWrite(this.file(next.id), `${JSON.stringify(next, null, 2)}\n`);
+    return next;
+  }
+
+  async carryForwardPriorApprovals(applicationId: string, expectedRevision: number, now = new Date()): Promise<ArchivedApplication> {
+    const current = await this.load(applicationId);
+    if (!current) throw new Error("Application archive not found.");
+    if (current.revision !== expectedRevision) throw new RevisionConflictError(current.revision);
+    const prior = current.draftHistory?.at(-1);
+    if (!prior) throw new Error("No previous draft is available for approval comparison.");
+    const previouslyVerifiedEvidence = new Set(prior.draft.claims
+      .filter((claim) => claim.decision === "verified")
+      .flatMap((claim) => claim.evidenceIds));
+    const priorPackageWasApproved = prior.draft.claims.every((claim) => claim.decision !== "pending");
+    const claims = current.draft.claims.map((claim) => claim.decision === "pending"
+      && (priorPackageWasApproved || claim.evidenceIds.every((id) => previouslyVerifiedEvidence.has(id)))
+      ? { ...claim, decision: "verified" as const, reviewedAt: now.toISOString() }
+      : claim);
+    const complete = claims.every((claim) => claim.decision !== "pending");
+    const next = archivedApplicationSchema.parse({
+      ...current,
+      revision: current.revision + 1,
+      status: complete ? "review_complete" : "factual_review",
+      draft: { ...current.draft, claims },
+      updatedAt: now.toISOString(),
+    });
+    await atomicWrite(this.file(next.id), `${JSON.stringify(next, null, 2)}\n`);
+    return next;
+  }
+
+  async restoreDraftVersion(applicationId: string, expectedRevision: number, draftRevision: number, now = new Date()): Promise<ArchivedApplication> {
+    const current = await this.load(applicationId);
+    if (!current) throw new Error("Application archive not found.");
+    if (current.revision !== expectedRevision) throw new RevisionConflictError(current.revision);
+    const selected = current.draftHistory?.find((entry) => entry.revision === draftRevision);
+    if (!selected) throw new Error("Saved draft version not found.");
+    const remaining = (current.draftHistory ?? []).filter((entry) => entry.revision !== draftRevision);
+    const complete = selected.draft.claims.every((claim) => claim.decision !== "pending");
+    const next = archivedApplicationSchema.parse({
+      ...current,
+      revision: current.revision + 1,
+      status: complete ? "review_complete" : "factual_review",
+      draft: selected.draft,
+      draftHistory: [...remaining, { revision: current.revision, archivedAt: now.toISOString(), draft: current.draft }].slice(-20),
+      updatedAt: now.toISOString(),
+    });
+    await atomicWrite(this.file(next.id), `${JSON.stringify(next, null, 2)}\n`);
+    return next;
+  }
+
+  async deleteDraftVersion(applicationId: string, expectedRevision: number, draftRevision: number, now = new Date()): Promise<ArchivedApplication> {
+    const current = await this.load(applicationId);
+    if (!current) throw new Error("Application archive not found.");
+    if (current.revision !== expectedRevision) throw new RevisionConflictError(current.revision);
+    if (!current.draftHistory?.some((entry) => entry.revision === draftRevision)) throw new Error("Saved draft version not found.");
+    const next = archivedApplicationSchema.parse({ ...current, revision: current.revision + 1, draftHistory: current.draftHistory.filter((entry) => entry.revision !== draftRevision), updatedAt: now.toISOString() });
     await atomicWrite(this.file(next.id), `${JSON.stringify(next, null, 2)}\n`);
     return next;
   }

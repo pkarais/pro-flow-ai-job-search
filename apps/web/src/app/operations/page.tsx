@@ -33,6 +33,7 @@ export default async function OperationsPage() {
       initialState={state}
       searchDefaults={searchDefaults}
       aiMarketInsight={aiMarketInsight}
+      view="discovery"
     />
   );
 }

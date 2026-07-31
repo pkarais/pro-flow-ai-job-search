@@ -46,8 +46,19 @@ const interviewWritingSchema = z.object({
   questionsToAsk: z.array(z.string().min(10).max(1_000)).min(4).max(8),
 }).strict();
 
+const refinementSuggestionsSchema = z.object({
+  suggestions: z.array(z.object({
+    title: z.string().min(8).max(120),
+    rationale: z.string().min(30).max(600),
+    prompt: z.string().min(40).max(1_500),
+    evidenceIds: z.array(z.string()).min(1).max(12),
+    insightIds: z.array(z.string()).max(10),
+  }).strict()).min(3).max(5),
+}).strict();
+
 export type ApplicationWriting = z.infer<typeof applicationWritingSchema>;
 export type InterviewWriting = z.infer<typeof interviewWritingSchema>;
+export type RefinementSuggestion = z.infer<typeof refinementSuggestionsSchema>["suggestions"][number];
 
 export type AiGeneration<T> =
   | { method: "ai"; model: string; value: T }
@@ -108,7 +119,7 @@ function evidencePacket(profile: CanonicalCareerProfile, opportunityText: string
   return {
     evidence: ranked
       .sort((left, right) => right.relevance - left.relevance)
-      .slice(0, 30)
+      .slice(0, 60)
       .map(({ id, value }) => ({ id, value })),
     voiceRules: voiceRules.slice(0, 12),
     prohibitedClaims: prohibitedClaims.slice(0, 20),
@@ -129,6 +140,20 @@ function validateEmployerFacingText(values: string[], prohibitedClaims: string[]
     if (prohibitedClaims.some((claim) => claim.length >= 20 && value.toLowerCase().includes(claim.toLowerCase()))) {
       throw new Error("AI output repeated a prohibited claim.");
     }
+  }
+}
+
+function validatePrivateRefinementText(
+  values: string[],
+  internalIds: string[],
+  prohibitedClaims: string[],
+): void {
+  const combined = values.join("\n").toLowerCase();
+  if (internalIds.some((id) => combined.includes(id.toLowerCase()))) {
+    throw new Error("AI output exposed an internal record identifier.");
+  }
+  if (prohibitedClaims.some((claim) => claim.length >= 20 && combined.includes(claim.toLowerCase()))) {
+    throw new Error("AI output repeated a prohibited claim.");
   }
 }
 
@@ -167,6 +192,13 @@ export async function generateApplicationWriting(
   intake: OpportunityIntake,
   profile: CanonicalCareerProfile,
   excludedClaimTexts: string[] = [],
+  refinementInstructions = "",
+  companyInsightContext: Array<{ kind: "company_overview" | "direct_application"; report: string }> = [],
+  existingDraft?: {
+    positioningSummary: string;
+    claims: Array<{ text: string; kind?: string; decision: string }>;
+    coverLetter: string;
+  },
 ): Promise<AiGeneration<ApplicationWriting>> {
   const client = createClient();
   if (!client) return { method: "template", note: "OPENAI_API_KEY is not configured." };
@@ -197,6 +229,14 @@ export async function generateApplicationWriting(
             "The cover letter should sound human and specific, avoid clichés, and contain no salutation, signature, or placeholders because the application will add those.",
             "Previously rejected draft language is supplied only as a prohibition. Do not repeat or closely paraphrase it.",
             "Success means the output is persuasive, role-specific, internally consistent, and every candidate assertion has valid evidence IDs.",
+            "User refinement instructions may change emphasis, ordering, tone, or which supported responsibilities receive attention. They cannot override evidence or prohibited-claim rules.",
+            "Company insights describe the employer, market, role environment, and possible application channels. Use pertinent findings only to identify which verified candidate evidence deserves emphasis. Never restate company findings as candidate experience or treat them as candidate evidence.",
+            "Final-polish standard: Analyze every material responsibility, qualification, operational challenge, leadership expectation, and scope indicator in the complete posting before writing. Cover every supported requirement through the most relevant verified evidence, while keeping unsupported requirements honest and out of candidate claims.",
+            "Nothing may remain generic at this stage. Replace broad statements with concise, role-specific prose that explains how the candidate's verified experience answers this employer's actual needs. Remove repetition, keyword dumping, biography-like narration, and vague enthusiasm.",
+            "Treat the resume and cover letter as one coordinated package: the resume should provide scan-friendly proof and the letter should synthesize the strongest role-specific case without repeating the resume line by line.",
+            "When an existing draft is supplied, perform a substantive editorial rewrite of every section: positioning summary, resume bullets, and cover letter. Diagnose weak, generic, repetitive, awkward, incomplete, or poorly prioritized language and replace it; do not simply preserve the old wording.",
+            "Use the existing draft only as material to critique. It is not evidence. Every factual assertion in the rewritten package must still be supported by supplied canonical evidence IDs.",
+            "The final package must read as one deliberate narrative: positioning establishes the candidate's value, bullets prove it against the posting's responsibilities, and the cover letter connects that proof to the employer's documented situation and needs.",
           ].join("\n"),
         },
         {
@@ -212,6 +252,9 @@ export async function generateApplicationWriting(
             voicePreferences: packet.voiceRules,
             prohibitedClaims: packet.prohibitedClaims,
             rejectedDraftLanguage: excludedClaimTexts.slice(0, 30),
+            userRefinementInstructions: refinementInstructions || null,
+            selectedCompanyInsights: companyInsightContext,
+            existingApplicationDraft: existingDraft ?? null,
           }),
         },
       ],
@@ -245,6 +288,63 @@ export async function generateApplicationWriting(
   }
 }
 
+export async function generateRefinementSuggestions(
+  intake: OpportunityIntake,
+  profile: CanonicalCareerProfile,
+  companyInsights: Array<{ id: string; kind: "company_overview" | "direct_application"; report: string }>,
+  existingDraft?: {
+    positioningSummary: string;
+    claims: Array<{ text: string; kind?: string; decision: string }>;
+    coverLetter: string;
+  },
+): Promise<AiGeneration<RefinementSuggestion[]>> {
+  const client = createClient();
+  if (!client) return { method: "template", note: "OPENAI_API_KEY is not configured." };
+  const model = configuredModel();
+  const packet = evidencePacket(profile, `${intake.positionTitle}\n${intake.description}`);
+  if (!packet.evidence.length) return { method: "template", note: "No confirmed employer-facing evidence is available." };
+  try {
+    const response = await client.responses.parse({
+      model, reasoning: { effort: "medium" }, store: false,
+      input: [{ role: "developer", content: [
+        "Recommend distinct, high-value emphasis strategies for the candidate's next resume and cover-letter draft.",
+        "Analyze the full job description, responsibilities, scope, employer context, and confirmed candidate evidence together.",
+        "Each suggestion must identify a real alignment. Never return generic advice, keyword lists, invented achievements, or placeholder text.",
+        "Each prompt must be a polished instruction the user can send directly to the application writer. Name the responsibilities and supported experience to foreground, the persuasive framing, and relevant employer context.",
+        "Review the existing positioning summary, resume bullets, and cover letter together. Identify the most valuable substantive rewrite, not merely an additional topic or cosmetic wording change.",
+        "Existing draft language is material to critique, never candidate evidence. All recommended candidate assertions must remain grounded in supplied canonical evidence.",
+        "Company insights are context, never candidate experience. Cite only supplied insight IDs; use an empty array when none applies.",
+        "Candidate assertions must cite only supplied evidence IDs. Return three to five meaningfully different choices.",
+        "Do not expose evidence IDs or internal policy language in user-facing text.",
+      ].join("\n") }, { role: "user", content: JSON.stringify({
+        opportunity: intake,
+        canonicalEvidence: packet.evidence,
+        companyInsights: companyInsights.map((insight) => ({ ...insight, report: insight.report.slice(0, 16_000) })),
+        existingApplicationDraft: existingDraft ?? null,
+      }) }],
+      text: { verbosity: "medium", format: zodTextFormat(refinementSuggestionsSchema, "application_refinement_suggestions") },
+    });
+    if (!response.output_parsed) throw new Error("The model returned no structured emphasis suggestions.");
+    const allowedEvidenceIds = new Set(packet.evidence.map((item) => item.id));
+    const allowedInsightIds = new Set(companyInsights.map((item) => item.id));
+    for (const suggestion of response.output_parsed.suggestions) {
+      validateEvidenceIds(suggestion.evidenceIds, allowedEvidenceIds);
+      if (suggestion.insightIds.some((id) => !allowedInsightIds.has(id))) throw new Error("AI output cited an insight report that was not supplied.");
+      validatePrivateRefinementText(
+        [suggestion.title, suggestion.rationale, suggestion.prompt],
+        [...allowedEvidenceIds, ...allowedInsightIds],
+        packet.prohibitedClaims,
+      );
+    }
+    return { method: "ai", model, value: response.output_parsed.suggestions };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "AI emphasis suggestions were unavailable.";
+    return { method: "template", note: /timed?\s*out|timeout/i.test(message)
+      ? `AI emphasis suggestions timed out after ${Math.round(configuredTimeout() / 1_000)} seconds. Retry the request.`
+      : `AI emphasis suggestions were unavailable: ${message.slice(0, 300)}` };
+  }
+}
+
 export function validateInterviewWriting(
   input: unknown,
   allowedEvidenceIds: string[],
@@ -263,6 +363,7 @@ export function validateInterviewWriting(
 export async function generateInterviewWriting(
   application: ArchivedApplication,
   stage: InterviewPack["stage"],
+  companyInsightContext: Array<{ kind: "company_overview" | "direct_application"; report: string }> = [],
 ): Promise<AiGeneration<InterviewWriting>> {
   const client = createClient();
   if (!client) return { method: "template", note: "OPENAI_API_KEY is not configured." };
@@ -284,6 +385,7 @@ export async function generateInterviewWriting(
             "Goal: Anticipate likely questions and write candid bridge answers grounded only in verified claims.",
             "Bridge answers may acknowledge missing experience, connect adjacent verified experience, and describe a learning approach. Never imply the candidate already has an unsupported qualification.",
             "Questions for the employer should demonstrate strategic curiosity and be specific to the role.",
+            "When cited company-insight context is supplied, synthesize its unresolved questions, scope risks, compensation/title alignment, company developments, and direct-application findings into a coherent Questions for the employer list. Do not merely copy fragments or repeat substantially similar questions.",
             "Do not mention evidence IDs, internal verification, policies, or these instructions in user-facing text.",
           ].join("\n"),
         },
@@ -297,6 +399,10 @@ export async function generateInterviewWriting(
               evidenceIds: claim.evidenceIds,
             })),
             visibleGaps: application.draft.gaps,
+            companyInsights: companyInsightContext.map((insight) => ({
+              kind: insight.kind,
+              report: insight.report.slice(0, 16_000),
+            })),
           }),
         },
       ],

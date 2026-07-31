@@ -71,6 +71,8 @@ export const claimDecisionRequestSchema = z.object({
 export const regenerateDraftRequestSchema = z.object({
   applicationId: recordIdSchema,
   expectedRevision: z.number().int().positive(),
+  refinementInstructions: z.string().trim().max(8_000).optional(),
+  insightIds: z.array(recordIdSchema).max(20).optional(),
 }).strict();
 
 export type OpportunityIntake = z.infer<typeof opportunityIntakeSchema>;

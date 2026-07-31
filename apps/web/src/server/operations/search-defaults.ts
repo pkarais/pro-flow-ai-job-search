@@ -82,10 +82,6 @@ export function deriveSearchDefaults(
     locations: unique([
       ...userSelectedLocations,
       ...locations,
-      "New York, NY",
-      "New Jersey",
-      "Pennsylvania",
-      "East Coast, United States",
       "United States",
     ], 20),
     source: profile ? "reviewed_profile" : preview ? "import_preview" : "fallback",
