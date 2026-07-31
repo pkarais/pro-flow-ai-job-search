@@ -32,7 +32,7 @@ must review claims, inspect documents, and perform every external action.
 Required:
 
 - Git;
-- Node.js 20 or newer;
+- Node.js 22 or newer;
 - npm 10 or newer;
 - Google Chrome or Microsoft Edge for designed PDF rendering and the optional
   capture extension;
