@@ -1,323 +1,135 @@
-# Setup Guide
+# Pro Flow Career OS setup
 
-Step-by-step instructions for getting the AI Job Search framework running.
+This is the quick-start guide for the **0.2 local-first public beta**. The
+complete workflow, customization, privacy, backup, and troubleshooting guide is
+in [docs/USER_GUIDE.md](docs/USER_GUIDE.md).
 
-## 1. Prerequisites
+> **Do not deploy this beta to a public URL.** It has no login system or
+> multi-user data isolation and stores sensitive career data on the local
+> filesystem. Run it only on a trusted computer at `localhost`.
 
-### Claude Code
+## Requirements
 
-Install Claude Code (Anthropic's CLI for Claude):
+- Git
+- Node.js 20+
+- npm 10+
+- Chrome or Edge
+- OpenAI API key
+- For final PDF readiness: `lualatex`, `xelatex`, `pdfinfo`, and `pdftotext`
+- Optional for retained legacy tools: Python 3.10+ and Bun
 
-```bash
-npm install -g @anthropic-ai/claude-code
-```
-
-You'll need an Anthropic API key or a Claude Pro/Team subscription. See the [Claude Code docs](https://docs.anthropic.com/en/docs/claude-code) for details.
-
-### Python
-
-Python 3.10+ is required for the salary lookup tool. Check with:
-
-```bash
-python3 --version
-```
-
-On Windows, `py --version` is often the most reliable check. If your system exposes Python as `python` instead of `python3`, use `python` in the commands below.
-
-### Bun (for job search tools)
-
-The job portal CLIs (four Danish portals plus the country-agnostic `linkedin-search` and `freehire-search` tools) are written in TypeScript and run with Bun.
-
-- macOS/Linux:
+## 1. Clone
 
 ```bash
-curl -fsSL https://bun.sh/install | bash
+git clone https://github.com/pkarais/pro-flow-ai-job-search.git
+cd pro-flow-ai-job-search
 ```
 
-- Windows PowerShell:
+If this is your fork, replace `pkarais` with your GitHub account and retain the
+maintained project as upstream:
+
+```bash
+git remote add upstream https://github.com/pkarais/pro-flow-ai-job-search.git
+```
+
+## 2. Install
+
+Stop any running Pro Flow development server before installing. On Windows, a
+running Next.js process can lock its native compiler and cause `npm ci` to fail
+with `EPERM`.
+
+```bash
+cd packages/career-core
+npm ci
+npm run build
+cd ../../apps/web
+npm ci
+```
+
+## 3. Configure
+
+Windows PowerShell:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -c "irm https://bun.sh/install.ps1 | iex"
+Copy-Item .env.example .env.local
 ```
 
-If you prefer a package manager, `winget install Oven-sh.Bun` also works on Windows.
-
-### LaTeX (for compiling CVs and cover letters)
-
-Install a LaTeX distribution to compile the generated `.tex` files to PDF:
-
-- **Windows:** [MiKTeX](https://miktex.org/download)
-- **macOS:** [MacTeX](https://tug.org/mactex/)
-- **Linux:** `sudo apt install texlive-full` or `sudo dnf install texlive-scheme-full`
-
-The CV compiles with `lualatex` (pdflatex often fails on modern MiKTeX installs with `fontawesome5` font-expansion errors). The cover letter compiles with `xelatex` because `cover.cls` requires `fontspec` for its custom Lato/Raleway fonts.
-
-#### Minimal TeX install: TinyTeX/BasicTeX
-
-Full TeX distributions work out of the box, but minimal distributions need a few extra packages before the stock templates compile.
-
-On macOS, a user-level TinyTeX install avoids a system-wide installer and does not require `sudo`:
+macOS or Linux:
 
 ```bash
-curl -fsSL https://yihui.org/tinytex/install-bin-unix.sh -o /tmp/tinytex-install-bin-unix.sh
-sh /tmp/tinytex-install-bin-unix.sh /tmp --no-path
-export PATH="$HOME/Library/TinyTeX/bin/universal-darwin:$PATH"
+cp .env.example .env.local
 ```
 
-Then install the template dependencies:
+Edit `apps/web/.env.local`:
+
+```text
+OPENAI_API_KEY=your-key-here
+OPENAI_MODEL=gpt-5.6-sol
+OPENAI_INSIGHTS_MODEL=gpt-5.6-sol
+OPENAI_REQUEST_TIMEOUT_MS=120000
+```
+
+Leave the `PRO_FLOW_*_PATH` values empty when the document commands are already
+on `PATH`. Otherwise provide their absolute executable paths.
+
+## 4. Start
+
+From `apps/web`:
 
 ```bash
-tlmgr install \
-  moderncv fontawesome5 fontawesome6 academicons import luatexbase pgf \
-  titlesec textpos xltxtra xunicode cite realscripts needspace
+npm run dev
 ```
 
-For BasicTeX/MacTeX, make sure the TeX binary directory is on `PATH` first (for example via `/Library/TeX/texbin`), then run the same `tlmgr install ...` command.
+Open <http://localhost:3000>.
 
-Quick smoke tests after setup:
+## 5. First-use sequence
+
+1. Open **Career** and establish reviewed canonical evidence.
+2. Open **Find Jobs** and launch a user-initiated portal search.
+3. Save or capture one posting.
+4. Create fresh AI résumé and cover-letter writing.
+5. Review every material claim.
+6. Generate ATS and designed documents.
+7. Complete mechanical and human visual review.
+8. Continue through pipeline, Insights, and Interview.
+
+Private records are written under the gitignored `career-data/` directory.
+Back it up if you want to preserve your history. Never commit it.
+
+## 6. Optional browser capture
+
+1. Open `chrome://extensions` or `edge://extensions`.
+2. Enable Developer mode.
+3. Select **Load unpacked**.
+4. Choose this repository's `browser-extension` directory.
+5. Pin the extension and keep Pro Flow running on port 3000.
+
+See [browser-extension/README.md](browser-extension/README.md) for its privacy
+and permission model.
+
+## 7. Validate
 
 ```bash
-cd cv && lualatex -interaction=nonstopmode -halt-on-error main_example.tex && cd ..
+cd apps/web
+npm run typecheck
+npm run lint
+npm test
+npm run build
 
-SMOKE_DIR="$(mktemp -d /tmp/ai-job-cover-smoke.XXXXXX)"
-cp -R cover_letters/cover.cls cover_letters/OpenFonts "$SMOKE_DIR/"
-cat >"$SMOKE_DIR/cover_smoke.tex" <<'EOF'
-\documentclass[]{cover}
-\begin{document}
-\namesection{Test}{Candidate}{test@example.com}
-\companyname{Example Company}
-\companyaddress{123 Hiring Street\\Example City}
-\currentdate{\today}
-\lettercontent{Dear Hiring Manager,}
-\lettercontent{This smoke test verifies that xelatex can load cover.cls and the bundled fonts.}
-\closing{Sincerely,}
-\signature{Test Candidate}
-\end{document}
-EOF
-(cd "$SMOKE_DIR" && xelatex -interaction=nonstopmode -halt-on-error cover_smoke.tex)
+cd ../../packages/career-core
+npm run typecheck
+npm test
+
+cd ../..
+python tools/lint_skills.py
+python tools/security_guards.py
+python -m unittest discover -s tests -t . -v
 ```
 
-#### Windows: Basic MiKTeX
+## Help and customization
 
-The full MiKTeX installer bundles every CTAN package and works out of the box, but the smaller [Basic MiKTeX](https://miktex.org/download) installer (`basic-miktex-*.exe`) only ships a minimal package set and needs a couple of one-time settings before the stock templates compile.
-
-By default, MiKTeX installs missing packages on demand but pops up a GUI prompt for each one — which blocks non-interactive terminals (including Claude Code's Bash tool). Turn that into a silent auto-install instead:
-
-```powershell
-initexmf --admin --set-config-value=[MPM]AutoInstall=1
-initexmf --set-config-value=[MPM]AutoInstall=1
-```
-
-(Run the first line from an elevated/Admin PowerShell if you installed MiKTeX for all users; the second line covers a per-user install. Only one will apply depending on how you installed it — running both is harmless.)
-
-If you'd rather not rely on on-the-fly installs at all (for example, for a fully offline compile later), pre-install the same package set the macOS TinyTeX section above lists, using MiKTeX's package manager:
-
-```powershell
-mpm --admin --install=moderncv --install=fontawesome5 --install=fontawesome6 --install=academicons --install=import --install=luatexbase --install=pgf --install=titlesec --install=textpos --install=xltxtra --install=xunicode --install=cite --install=realscripts --install=needspace
-```
-
-Drop `--admin` if MiKTeX is installed for the current user only. If a package name doesn't resolve, `mpm --find=<name>` searches the repository for the correct name.
-
-Quick smoke tests after setup (PowerShell):
-
-```powershell
-Set-Location cv; lualatex -interaction=nonstopmode -halt-on-error main_example.tex; Set-Location ..
-
-$SmokeDir = New-Item -ItemType Directory -Path (Join-Path $env:TEMP "ai-job-cover-smoke-$(Get-Random)")
-Copy-Item cover_letters\cover.cls, cover_letters\OpenFonts -Destination $SmokeDir -Recurse
-@'
-\documentclass[]{cover}
-\begin{document}
-\namesection{Test}{Candidate}{test@example.com}
-\companyname{Example Company}
-\companyaddress{123 Hiring Street\\Example City}
-\currentdate{\today}
-\lettercontent{Dear Hiring Manager,}
-\lettercontent{This smoke test verifies that xelatex can load cover.cls and the bundled fonts.}
-\closing{Sincerely,}
-\signature{Test Candidate}
-\end{document}
-'@ | Set-Content (Join-Path $SmokeDir "cover_smoke.tex")
-Push-Location $SmokeDir; xelatex -interaction=nonstopmode -halt-on-error cover_smoke.tex; Pop-Location
-```
-
-### Optional: pdftotext (for the ATS check)
-
-`/apply` runs an ATS parseability check on the compiled CV: it extracts the PDF's text layer and verifies contact details, reading order, and keyword coverage the way an applicant-tracking system sees them. This uses `pdftotext` from [poppler](https://poppler.freedesktop.org/), which is not part of TeX distributions:
-
-- **macOS:** `brew install poppler`
-- **Debian/Ubuntu:** `sudo apt install poppler-utils`
-- **Windows:** `choco install poppler`
-
-If `pdftotext` is missing, `/apply` skips the mechanical check with a warning and falls back to a visual keyword review — everything else works normally.
-
-## 2. Fork and clone
-
-```bash
-gh repo fork MadsLorentzen/ai-job-search --clone
-cd ai-job-search
-```
-
-Or manually: fork on GitHub, then clone your fork.
-
-## 3. Install job search CLI dependencies
-Run these from the repository root.
-
-- PowerShell:
-
-```powershell
-$tools = @("jobbank-search", "jobdanmark-search", "jobindex-search", "jobnet-search", "linkedin-search", "freehire-search")
-foreach ($tool in $tools) {
-  Push-Location ".agents/skills/$tool/cli"
-  bun install
-  Pop-Location
-}
-```
-
-- Bash / zsh / Git Bash:
-```bash
-for tool in jobbank-search jobdanmark-search jobindex-search jobnet-search linkedin-search freehire-search; do
-  (cd .agents/skills/$tool/cli && bun install)
-done
-```
-
-For `linkedin-search` and `freehire-search` the install is optional: both have zero runtime dependencies and run with plain `bun`; `bun install` only pulls TypeScript dev types.
-
-If you're outside Denmark, you can generate an equivalent search skill for your local job board with `/add-portal` — it scaffolds the same CLI structure for any public portal and test-runs a live query before registering. See the "Job search tools" section in the README.
-
-## 4. Run the setup interview
-
-Start Claude Code in the repository:
-
-```bash
-claude
-```
-
-Then run the onboarding:
-
-```
-/setup
-```
-
-Claude will offer three paths:
-
-- **Path A (documents folder):** Add your CV, LinkedIn export, diplomas, references, or past applications under `documents/`. Claude reads and cross-references them before proposing profile updates. This is best when you have several source files.
-- **Path B (single CV import):** Share one CV/resume by mentioning the file with `@` or pasting the text. Claude extracts it and asks follow-up questions for anything missing.
-- **Path C (interview mode):** Answer structured interview questions section by section.
-
-All three paths produce the same result: fully populated profile files.
-
-### What gets populated
-
-| File | Content |
-|------|---------|
-| `CLAUDE.md` | Your full candidate profile |
-| `01-candidate-profile.md` | Structured education, experience, skills |
-| `02-behavioral-profile.md` | Behavioral assessment |
-| `04-job-evaluation.md` | Personalized skill match areas and career goals |
-| `05-cv-templates.md` | Profile statement templates for your background |
-| `07-interview-prep.md` | STAR examples from your experience |
-| `cv/main_example.tex` | Your LaTeX CV with actual details |
-| `search-queries.md` | Job search queries for `/scrape` |
-
-### Re-running setup
-
-You can update specific sections later:
-
-```
-/setup --section skills
-/setup --section experience
-/setup --section search
-```
-
-The `--section search` option is especially useful as your priorities evolve. It re-runs the search configuration interview and suggests role types you may not have considered based on your full profile.
-
-## 5. Optional: Set up salary benchmarking
-
-If you have salary data (from a union, salary survey, Glassdoor, or personal research):
-
-1. **Option A:** Create `salary_data.json` manually in the repo root (see `tools/README_SALARY_TOOL.md` for the format)
-2. **Option B:** Convert from Excel:
-   ```bash
-   pip install openpyxl
-   python3 tools/convert_salary_excel.py path/to/salary-data.xlsx --source "My Salary Data 2025"
-   ```
-
-This creates `salary_data.json` which the `/apply` workflow uses for salary benchmarking. If you skip this step, salary lookup is simply omitted.
-
-## 6. Test the workflow
-
-Find a job posting you're interested in, then:
-
-```
-/apply https://jobindex.dk/job/1234567
-```
-
-Or paste the job description directly:
-
-```
-/apply [paste job posting text here]
-```
-
-Claude will:
-1. Evaluate the fit against your profile
-2. Ask if you want to proceed
-3. Draft a tailored CV and cover letter
-4. Have a reviewer agent critique the drafts
-5. Revise and present the final output
-
-## 7. Compile your documents
-
-After `/apply` creates the LaTeX files:
-
-```bash
-# Bash / zsh / Git Bash
-cd cv && lualatex main_<company>_<role>.tex && cd ..
-cd cover_letters && xelatex cover_<company>_<role>.tex && cd ..
-```
-
-```powershell
-# PowerShell
-Set-Location cv; lualatex main_<company>_<role>.tex; Set-Location ..
-Set-Location cover_letters; xelatex cover_<company>_<role>.tex; Set-Location ..
-```
-
-These commands apply to the stock templates (moderncv CV, `cover.cls` cover letter). If you'd rather use your own LaTeX template, run `/add-template` — it captures the template's compile engine, fonts, style rules, and page limit, test-compiles it, and wires it into `/apply`. See the "LaTeX templates" section in the README.
-
-## 8. Pulling upstream updates into your fork
-
-Upstream keeps improving the methodology files your fork has personalized, so plan for updates from day one:
-
-**Prefer releases over raw `master`.** Tagged [releases](../../releases) are vetted checkpoints, each described in [CHANGELOG.md](CHANGELOG.md). Updating to a tag pulls a stable, documented state instead of whatever `master` happens to be mid-review. Fetch tags with `git fetch upstream --tags` and merge a release (for example `git merge v1.0.0`) when you want stability; pull `master` directly only when you specifically want the latest unreleased changes. The steps below apply either way - substitute the release tag for `upstream/master` where you see it.
-
-1. **Commit your personalization to your fork.** `/setup` edits CLAUDE.md and the profile skill files in place — those edits are *yours*, and your fork is private working space, so commit them. The genuinely sensitive files (tracker, salary data, `documents/`, application archives) are gitignored and never enter git either way. An uncommitted working tree is the most common reason `git pull` refuses to merge at all (`Your local changes ... would be overwritten`).
-2. **Preview what changed before pulling:**
-   ```bash
-   git fetch upstream    # or origin, if you cloned the template directly
-   python3 tools/check_upstream_updates.py
-   ```
-   It compares the `framework_version` markers in your framework files against upstream and lists exactly which methodology files changed, with the diff command for each.
-3. **Merge normally.** `git merge upstream/master` (or `git pull`) three-way-merges upstream's edits around your personalization; because methodology edits rarely touch the lines `/setup` filled in, most updates land cleanly. A conflict in a personalized file is a *feature*, not a failure — it means upstream changed methodology in a section you customized, and the version marker plus its changelog commit tell you why. Resolve by keeping your data and adopting the methodology change around it.
-
-## Troubleshooting
-
-### "salary_data.json not found"
-This is expected if you haven't set up salary benchmarking. The `/apply` workflow skips this step automatically.
-
-### Job search CLI tools not working
-Make sure Bun is installed and you ran `bun install` in each CLI directory. The tools require network access to fetch job listings.
-
-### LaTeX compilation errors
-- CV: uses `lualatex` (pdflatex often fails on modern MiKTeX with `fontawesome5` font-expansion errors; lualatex handles the same sources cleanly)
-- Cover letter: uses `xelatex` (for custom fonts in `OpenFonts/fonts/`)
-- Make sure your LaTeX distribution includes the `moderncv` package
-
-### Fonts not found in cover letter
-The cover letter template expects fonts in `cover_letters/OpenFonts/fonts/`. Make sure this directory exists and contains the Lato and Raleway font files.
-
-### Stale `.claude/settings.local.json` from an older clone
-Shared Claude Code permissions now live in `.claude/settings.json` (scoped to `bun run`, `python salary_lookup.py`, and `python3 salary_lookup.py`). Earlier versions of this repo committed a broader `.claude/settings.local.json` that pre-approved `Bash(curl:*)`, `Bash(python:*)` and `Bash(bun:*)`. If you cloned before that change, git leaves the old file behind in your working copy, and its permissions still apply on top of `settings.json`. Delete it (or trim it to your own personal overrides):
-
-```bash
-rm .claude/settings.local.json
-```
+- Full guide: [docs/USER_GUIDE.md](docs/USER_GUIDE.md)
+- Architecture and development: [docs/development.md](docs/development.md)
+- Security boundary: [SECURITY.md](SECURITY.md)
+- Contributions and forks: [CONTRIBUTING.md](CONTRIBUTING.md)
+- Attribution and licenses: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)

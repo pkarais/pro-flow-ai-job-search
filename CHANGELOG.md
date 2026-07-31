@@ -13,6 +13,40 @@ per-file diff commands.
 
 ## [Unreleased]
 
+## [0.2.0-beta.1] - 2026-07-31
+
+### Added
+
+- Local-first Next.js Career OS with reviewed canonical evidence, saved-job
+  operations, evidence-grounded application writing, company insights,
+  interview preparation, and guarded pipeline transitions.
+- Structured résumé schema with five distinct HTML/CSS themes, coordinated
+  cover letters, live preview, ATS and designed PDFs, and editable DOCX export.
+- User-initiated browser capture for six approved U.S. job-board origins.
+- Comprehensive local setup, user, forking, privacy, troubleshooting, and
+  third-party attribution documentation.
+- GitHub Actions coverage for the web application and shared TypeScript
+  contracts.
+
+### Changed
+
+- Pro Flow now owns its private canonical career record and has no runtime
+  dependency on Executive Career OS.
+- Job deletion cascades through related operational records while application
+  archives remain explicitly manageable.
+- Company research uses background Responses API execution and persists cited
+  reports in the dedicated Insights library.
+- Public positioning is explicitly a localhost-only beta, not a hosted or
+  multi-user service.
+
+### Security & privacy
+
+- Private career records, generated applications, environment files, and
+  artifacts remain gitignored.
+- Security reporting now targets the Pro Flow repository.
+- Public-beta documentation explicitly prohibits exposing the unauthenticated
+  local service to the internet.
+
 ## [1.1.0] - 2026-07-30
 
 ### Security & privacy

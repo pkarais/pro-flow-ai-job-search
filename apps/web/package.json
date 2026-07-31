@@ -1,0 +1,44 @@
+{
+  "name": "@pro-flow/web",
+  "version": "0.2.0-beta.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "core:build": "npm --prefix ../../packages/career-core run build",
+    "predev": "npm run core:build",
+    "dev": "next dev",
+    "prebuild": "npm run core:build",
+    "build": "next build",
+    "start": "next start",
+    "prelint": "npm run core:build",
+    "lint": "eslint",
+    "pretest": "npm run core:build",
+    "test": "node --experimental-strip-types --test tests/*.test.mjs",
+    "pretypecheck": "npm run core:build",
+    "typecheck": "tsc --noEmit",
+    "audit:themes": "npm run core:build && node --experimental-strip-types scripts/theme-audit.mjs"
+  },
+  "dependencies": {
+    "@pro-flow/career-core": "file:../../packages/career-core",
+    "docx": "^9.7.1",
+    "next": "16.2.12",
+    "openai": "^7.2.0",
+    "playwright-core": "^1.62.1",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "16.2.12",
+    "typescript": "^5"
+  },
+  "overrides": {
+    "minimatch": "10.2.6",
+    "postcss": "8.5.25",
+    "sharp": "0.35.3"
+  }
+}

@@ -1,22 +1,100 @@
-# Security Policy
+# Security policy
 
-## Reporting a vulnerability
+## Supported versions
 
-Please report security findings privately via **[GitHub private vulnerability reporting](https://github.com/MadsLorentzen/ai-job-search/security/advisories/new)** rather than a public issue. You will get a response within a few days, credit in the fix unless you prefer otherwise, and public disclosure coordinated with the patch.
+| Version | Supported |
+|---|---|
+| `0.2.x` local-first beta | Yes |
+| Earlier Pro Flow checkpoints | No |
+| Publicly hosted deployments | Not supported |
 
-If the private form is unavailable, open a public issue that describes the *class* of problem without a working recipe, and note that you have details to share privately.
+## Report a vulnerability privately
 
-## Threat model, honestly stated
+Use [GitHub private vulnerability reporting](https://github.com/pkarais/pro-flow-ai-job-search/security/advisories/new).
+Do not publish API keys, private career data, exploit steps, or working proofs
+of concept in a public issue.
 
-This is an agentic workflow: an LLM with file access reads untrusted web content (job postings) alongside your personal data (CV, profile, application history). That combination is the main risk surface, and it cannot be fully eliminated - only narrowed. What the framework does about it:
+If private reporting is unavailable, open a public issue that only states the
+general class of problem and asks the maintainer to establish a private contact
+channel.
 
-- **Untrusted-input rules**: `/apply` and `/rank` treat posting text as data, never instructions - agents are told not to follow directions embedded in postings and not to fetch URLs found inside posting text (the user-supplied posting URL is the one exception). Reviewer research starts from the company identity the user confirmed, never from links in the posting body.
-- **Permission allowlist**: `.claude/settings.json` pre-approves only the specific commands the workflow needs; the `security-guards` CI job fails any PR that widens it, adds package-manifest lifecycle scripts, or weakens the personal-data gitignore rules. Note the allowlist governs Bash commands - the model's native WebFetch/WebSearch tools are outside its reach, which is exactly why the instruction-level rules above exist.
-- **Personal data boundaries**: your populated profile, tracker, salary data, and application archive are gitignored; documents never leave the machine by design (`/notion-sync` syncs filenames only; nothing uploads document content anywhere).
+## Local-first beta boundary
 
-Instruction-level defenses raise the bar; they are not a sandbox. If you run this workflow against job boards you do not trust at all, review what the agent fetched and wrote before sending anything out.
+Pro Flow stores sensitive career evidence, applications, generated documents,
+company research, interview preparation, and outcomes on the local filesystem.
+Version 0.2 beta has no authentication, multi-user isolation, encrypted remote
+database, or public-host security layer.
 
-## Scope notes
+Run it only on a trusted computer at `http://localhost:3000`.
 
-- Portal CLI skills make live requests only when you run them; CI never does.
-- Community fork skills listed in the [forks index](https://github.com/MadsLorentzen/ai-job-search/discussions/78) are **not** covered by this policy - review the code you copy, as the index itself says.
+Do not:
+
+- bind it to a public network interface;
+- expose it through a tunnel, reverse proxy, router, or cloud deployment;
+- share the `career-data` directory;
+- commit `.env.local`, provider keys, source documents, or generated artifacts;
+- assume that browser access from another local user is isolated.
+
+Anyone who can reach the running local application can use its APIs and access
+the same private workspace.
+
+## Threat model
+
+The primary risks are:
+
+1. untrusted job-posting text entering an AI-assisted workflow;
+2. private candidate evidence being sent to a configured model provider;
+3. local API access to unencrypted career records and documents;
+4. secrets or generated personal data being committed accidentally;
+5. third-party portal behavior, rate limits, and terms changing;
+6. generated prose containing unsupported or misleading claims.
+
+Current mitigations include:
+
+- posting text is handled as untrusted data rather than agent instructions;
+- only reviewed canonical evidence may support employer-facing claims;
+- rejected claims must be regenerated before document readiness;
+- private data, environment files, and generated documents are gitignored;
+- canonical writes use schema validation, revisions, backups, and atomic
+  replacement;
+- application status cannot bypass document-readiness gates;
+- browser capture is user initiated and limited to the active tab;
+- no automatic submission, messaging, or employer contact exists;
+- CI runs security guards and dependency audits.
+
+These controls reduce risk; they do not turn the beta into a secure hosted
+service.
+
+## Provider privacy
+
+Fresh résumé writing, cover-letter writing, interview preparation, and company
+research can send task-relevant content to OpenAI when an API key is configured.
+Users are responsible for reviewing the provider's policies, managing API
+usage, and deciding which personal information is appropriate to transmit.
+
+Do not put Social Security numbers, banking information, identity documents,
+medical information, account passwords, or security answers into Pro Flow.
+
+## Browser extension
+
+The unpacked extension requests `activeTab` and `scripting`. It reads the
+currently active supported job-posting page only after the user clicks the
+toolbar button and sends the extracted posting to localhost. It is not a
+published Chrome Web Store extension and has not been reviewed by Google or
+Microsoft.
+
+## Before publishing a fork
+
+Run:
+
+```bash
+git status --short
+git check-ignore -v career-data/canonical-career.json
+git check-ignore -v career-data/operations.json
+git check-ignore -v apps/web/.env.local
+python tools/security_guards.py
+```
+
+Also search the complete Git history for any secret or personal value that may
+have been committed earlier. Adding a file to `.gitignore` does not remove it
+from existing history.
