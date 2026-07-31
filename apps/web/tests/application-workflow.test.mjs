@@ -513,7 +513,8 @@ test("document generation fails closed when required local tools are unavailable
       claims: application.draft.claims.map((claim) => ({ ...claim, decision: "verified", reviewedAt: timestamp })),
     },
   };
-  const readiness = await new DocumentService(root).generate(reviewed, {
+  const service = new DocumentService(root, async () => null);
+  const readiness = await service.generate(reviewed, {
     fullName: "Alex Example",
     email: "alex@example.test",
     phone: "+1 555 0100",
@@ -524,7 +525,7 @@ test("document generation fails closed when required local tools are unavailable
   assert.ok(readiness.artifacts.some((artifact) => artifact.kind === "cv_source"));
   assert.ok(readiness.checks.every((item) => item.status !== "passed" || item.id !== "cv_pages"));
   await assert.rejects(
-    () => new DocumentService(root).confirmVisualReview(application.id, application.revision),
+    () => service.confirmVisualReview(application.id, application.revision),
     /All employer-facing PDFs must exist/,
   );
 });

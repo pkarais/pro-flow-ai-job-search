@@ -26,6 +26,7 @@ const execute = promisify(execFile);
 const REQUIRED_TOOLS = ["lualatex", "xelatex", "pdfinfo", "pdftotext"] as const;
 type RequiredTool = (typeof REQUIRED_TOOLS)[number];
 type ResolvedTools = Record<RequiredTool, string | null>;
+type ToolResolver = (command: RequiredTool) => Promise<string | null>;
 const TOOL_ENVIRONMENT: Record<RequiredTool, string> = {
   lualatex: "PRO_FLOW_LUALATEX_PATH",
   xelatex: "PRO_FLOW_XELATEX_PATH",
@@ -331,9 +332,11 @@ async function pdfPages(pdf: string, pdfinfo: string): Promise<number> {
 
 export class DocumentService {
   private readonly dataRoot: string;
+  private readonly toolResolver: ToolResolver;
 
-  constructor(dataRoot: string) {
+  constructor(dataRoot: string, toolResolver: ToolResolver = resolveTool) {
     this.dataRoot = path.resolve(dataRoot);
+    this.toolResolver = toolResolver;
   }
 
   async generate(
@@ -389,7 +392,7 @@ export class DocumentService {
       }
     }
     const tools = Object.fromEntries(
-      await Promise.all(REQUIRED_TOOLS.map(async (tool) => [tool, await resolveTool(tool)])),
+      await Promise.all(REQUIRED_TOOLS.map(async (tool) => [tool, await this.toolResolver(tool)])),
     ) as ResolvedTools;
     const availability = Object.fromEntries(
       REQUIRED_TOOLS.map((tool) => [tool, Boolean(tools[tool])]),
