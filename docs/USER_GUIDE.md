@@ -203,27 +203,39 @@ personal data to a public fork. Keep private source documents under the ignored
 
 Open **Find Jobs**.
 
-1. Choose a role and a U.S. location.
-2. Launch one portal pair or all approved portals.
-3. Open an individual posting.
-4. Capture it with the optional extension or paste its fields into Pro Flow.
-5. Review the match score, gaps, dealbreakers, and risk signals.
+1. Choose a role and one of four U.S. regions.
+2. Optionally hold Ctrl on Windows or Command on macOS to select multiple
+   states from that region. Leave all states unselected for a broad regional
+   search.
+3. Launch one portal pair or all approved portals. Pro Flow creates a separate
+   official search link for every selected portal and state.
+4. Open an individual posting.
+5. Capture it with the optional extension or paste its fields into Pro Flow.
+6. Review the match score, gaps, dealbreakers, and risk signals.
 
 Current guided destinations are LinkedIn, Indeed, USAJOBS, Dice, Built In, and
 Wellfound. Pro Flow does not crawl those sites or automatically apply.
 
-### Install the unpacked browser extension
+### Generate and install your local browser extension
 
-1. Open `chrome://extensions` or `edge://extensions`.
-2. Enable **Developer mode**.
-3. Choose **Load unpacked**.
-4. Select the repository's `browser-extension` directory.
-5. Pin **Pro Flow Job Capture**.
-6. Keep Pro Flow running on `http://localhost:3000`.
-7. Open one individual posting and click the extension once.
+1. Open **Browser Extension** at the bottom of Pro Flow's left toolbar.
+2. Enter a name for your fork's capture extension.
+3. Keep `http://localhost:3000`, or enter the localhost port on which your fork
+   runs.
+4. Download and extract the generated ZIP to a permanent local folder.
+5. Open `chrome://extensions` or `edge://extensions`.
+6. Enable **Developer mode**, choose **Load unpacked**, and select that folder.
+7. Pin the extension, open one individual posting, and click it once.
+
+Chrome does not permit a webpage to silently copy or enable an unpacked
+extension. Pro Flow therefore reports the extension as installed only after
+the extension itself checks in with the local service. After updating Pro Flow,
+use **Reload** on the extension card in `chrome://extensions` to activate the
+latest local extension code.
 
 The extension uses `activeTab` only after the user clicks it. It sends the
-captured posting to the local Pro Flow API and does not crawl result pages.
+captured posting to the selected localhost Pro Flow API and does not crawl
+result pages. The generator rejects public and non-local service URLs.
 
 ## 9. Create an application package
 
@@ -243,9 +255,21 @@ content. The ATS résumé remains a separate single-column artifact.
 
 ## 10. Insights, interviews, and archives
 
-- **Insights** contains saved, cited company-research reports.
+- Every saved-job card shows whether documents, company insights, and direct
+  application research are still needed or already complete.
+- **Insights** separates saved company overviews from direct-application
+  research. Company overviews include a cited market-compensation estimate and
+  title/pay alignment review based on the complete job description, company
+  and site scope, location, responsibilities, capital work, staffing, risk,
+  and genuinely comparable roles—not the title alone.
+- Direct-application research reports only employer-published recruiting or
+  application addresses, official careers pages, and official forms. It never
+  guesses an email address or sends an application.
 - **Interview** contains stage-specific preparation and append-only outcomes.
-- **Application archives** lists past application revisions. Dismissed records
+- **Archive** is a first-class page in the left toolbar. It groups revisions
+  by opportunity, exposes documents plus company insights and interview packs
+  as individual Markdown/JSON downloads, provides complete case-file ZIPs, and
+  shows the state of the embedded local index. Dismissed records
   can be restored. Permanent deletion removes the private record and generated
   artifacts and cannot be undone.
 
@@ -264,6 +288,29 @@ It contains canonical evidence, operations history, applications, generated
 documents, readiness manifests, and backups. Treat the entire directory as
 sensitive personal information.
 
+Pro Flow uses a hybrid local archive:
+
+```text
+career-data/
+|-- canonical-career.json
+|-- operations.json
+|-- pending-company-research.json
+|-- browser-extension.json
+|-- applications/
+|-- vault.sqlite
+`-- vault/companies/<Company>/<Role>/generations/<Application ID>/
+    |-- case-file.zip
+    `-- case-index.json
+```
+
+The JSON records and generated application files remain the authoritative
+private records. `vault.sqlite` is an embedded searchable index rebuilt from
+those records; it requires no account or database service. The company folders
+provide ordinary files that can be browsed, copied, or backed up without a
+database tool. Opening **Archive** creates and refreshes both automatically.
+Repository-root discovery works whether npm is launched from the repository or
+`apps/web`; unusual launchers can set `PRO_FLOW_PROJECT_ROOT` explicitly.
+
 Before making a repository public:
 
 ```bash
@@ -273,7 +320,7 @@ git check-ignore -v career-data/operations.json
 git check-ignore -v apps/web/.env.local
 ```
 
-To remove one application, use **Manage application archives**. To reset all
+To remove one application, use **Archive**. To reset all
 private web data, stop Pro Flow, make a backup if desired, and delete only the
 repository's `career-data` directory. Never delete the repository root.
 

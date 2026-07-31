@@ -29,8 +29,8 @@ test("application artifact bundles contain every manifest-listed file", async ()
 
   const bundle = await buildApplicationArtifactBundle(root, applicationId);
   const files = unzipSync(new Uint8Array(bundle.contents));
-  assert.equal(strFromU8(files["resume.docx"]), "resume fixture");
-  assert.equal(strFromU8(files["cover-letter.pdf"]), "cover fixture");
-  assert.match(strFromU8(files["readiness.json"]), /app_bundle_fixture/);
+  assert.equal(strFromU8(files["documents/resume.docx"]), "resume fixture");
+  assert.equal(strFromU8(files["documents/cover-letter.pdf"]), "cover fixture");
+  assert.match(strFromU8(files["documents/readiness.json"]), /app_bundle_fixture/);
   assert.equal(bundle.artifactCount, 2);
 });

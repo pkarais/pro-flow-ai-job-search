@@ -13,6 +13,7 @@ import {
 } from "@pro-flow/career-core";
 import { SectionHeading, StatusBadge, SurfaceCard } from "./ui";
 import type { AiMarketInsight } from "@/server/operations/market-insights";
+import { locationForScope, US_SEARCH_REGIONS, US_SEARCH_REGION_IDS, type UsSearchRegionId } from "@/lib/us-search-regions";
 
 const statuses: ApplicationStatus[] = [
   "drafting", "factual_review", "document_verification", "ready", "applied",
@@ -37,6 +38,8 @@ export function OperationsWorkspace({
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [roleChoice, setRoleChoice] = useState(searchDefaults.roles[0] ?? "__custom__");
+  const [regionChoice, setRegionChoice] = useState<UsSearchRegionId | "">("");
+  const [stateChoices, setStateChoices] = useState<string[]>([]);
   const [launchMessage, setLaunchMessage] = useState("");
   const [searchLinks, setSearchLinks] = useState<Array<{ label: string; url: string }>>([]);
   const [insightMessage, setInsightMessage] = useState("");
@@ -78,7 +81,7 @@ export function OperationsWorkspace({
     }
   }
 
-  async function generateCompanyInsight(jobId: string) {
+  async function generateCompanyInsight(jobId: string, kind: "company_overview" | "direct_application" = "company_overview") {
     setBusy(true);
     setError("");
     setInsightMessage("");
@@ -86,16 +89,19 @@ export function OperationsWorkspace({
       let response = await fetch("/api/operations/company-insights", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ jobId }),
+        body: JSON.stringify({ jobId, kind }),
       });
       let payload = await response.json();
       if (!response.ok) throw new Error(payload.error ?? "Company research could not be generated.");
+      if (typeof payload.responseId !== "string" || !payload.responseId.startsWith("resp")) {
+        throw new Error("Company research did not start correctly because no valid response ID was returned. Restart the local server and try again.");
+      }
       setInsightMessage(`${payload.message} You can remain on this page while Pro Flow completes it.`);
       let pollAttempts = 0;
       while (response.status === 202 && pollAttempts < 240) {
         await new Promise((resolve) => window.setTimeout(resolve, 2_500));
         pollAttempts += 1;
-        response = await fetch(`/api/operations/company-insights?jobId=${encodeURIComponent(jobId)}&responseId=${encodeURIComponent(payload.responseId)}`, {
+        response = await fetch(`/api/operations/company-insights?jobId=${encodeURIComponent(jobId)}&responseId=${encodeURIComponent(payload.responseId)}&kind=${encodeURIComponent(kind)}`, {
           cache: "no-store",
         });
         payload = await response.json();
@@ -140,31 +146,36 @@ export function OperationsWorkspace({
     const data = new FormData(event.currentTarget);
     const group = String(data.get("group")) as PortalGroupId;
     const query = String(data.get("query") ?? "");
-    const location = String(data.get("location") ?? "United States");
+    if (!regionChoice) {
+      setError("Choose a U.S. region before preparing searches.");
+      setBusy(false);
+      return;
+    }
+    const locations = stateChoices.length
+      ? stateChoices.map((stateName) => locationForScope(regionChoice, stateName))
+      : [locationForScope(regionChoice, "")];
     const labels = new Map(runtimeReport.portals.map((portal) => [portal.portal, portal.label]));
-    const redirects = portalGroupPortals[group].map((portal) => {
+    const redirects = locations.flatMap((location) => portalGroupPortals[group].map((portal) => {
       const params = new URLSearchParams({ portal, query, location });
       return {
-        label: labels.get(portal) ?? portal,
+        label: `${labels.get(portal) ?? portal} — ${location.replace(", United States", "")}`,
         url: `/api/operations/search?${params.toString()}`,
       };
-    });
+    }));
     try {
-      const response = await fetch("/api/operations/search", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          group,
-          query,
-          location,
-        }),
-      });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error ?? "The grouped search could not be created.");
-      const searches = payload.searches as Array<{ label: string; url: string }>;
+      const results = await Promise.all(locations.map(async (location) => {
+        const response = await fetch("/api/operations/search", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ group, query, location }),
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error ?? `The ${location} search could not be created.`);
+        return payload.searches as Array<{ label: string; url: string }>;
+      }));
       setSearchLinks(redirects);
-      setLaunchMessage(`Your ${redirects.length} searches are ready. Open only the portals you want; this role and U.S. location were saved privately.`);
-      if (searches.length !== redirects.length) {
+      setLaunchMessage(`Your ${redirects.length} portal-and-state searches are ready across ${locations.length} location scope${locations.length === 1 ? "" : "s"}. Open only the links you want.`);
+      if (results.flat().length !== redirects.length) {
         setError("The saved search group did not match the requested portal count.");
       }
     } catch (launchError) {
@@ -177,6 +188,11 @@ export function OperationsWorkspace({
   const pipelineFor = (application: ArchivedApplication) => state.pipeline.find((item) => item.applicationId === application.id);
   const statusFor = (application: ArchivedApplication): ApplicationStatus =>
     pipelineFor(application)?.status ?? (application.status === "review_complete" ? "document_verification" : "factual_review");
+  const applicationExistsFor = (job: OperationsState["jobs"][number]) => initialApplications.some((application) =>
+    application.opportunity.url === job.url
+    || (application.opportunity.companyName.trim().toLowerCase() === job.company.trim().toLowerCase()
+      && application.opportunity.positionTitle.trim().toLowerCase() === job.title.trim().toLowerCase()),
+  );
 
   return (
     <div className="operations-page">
@@ -234,13 +250,25 @@ export function OperationsWorkspace({
                 <input name="query" required maxLength={200} autoFocus placeholder="Type a role, skill, or job title" />
               ) : null}
             </label>
-            <label>U.S. location
-              <input name="location" list="career-location-options" required maxLength={200} defaultValue={searchDefaults.locations[0] ?? "United States"} />
-              <datalist id="career-location-options">{searchDefaults.locations.map((location) => <option value={location} key={location} />)}</datalist>
+            <label>U.S. region
+              <select required value={regionChoice} onChange={(event) => {
+                const nextRegion = event.target.value as UsSearchRegionId;
+                setRegionChoice(nextRegion);
+                setStateChoices([]);
+              }}>
+                <option value="" disabled>Select a region…</option>
+                {US_SEARCH_REGION_IDS.map((id) => <option value={id} key={id}>{US_SEARCH_REGIONS[id].label}</option>)}
+              </select>
             </label>
+            {regionChoice ? <label>Specific states
+              <select multiple size={Math.min(8, US_SEARCH_REGIONS[regionChoice].states.length)} value={stateChoices} onChange={(event) => setStateChoices(Array.from(event.target.selectedOptions, (option) => option.value))}>
+                {US_SEARCH_REGIONS[regionChoice].states.map((stateName) => <option value={stateName} key={stateName}>{stateName}</option>)}
+              </select>
+              <small>Hold Ctrl on Windows or Command on macOS to select multiple states. Leave every state unselected to search the whole selected region.</small>
+            </label> : null}
             <button className="button button--primary" type="submit" disabled={busy}>{busy ? "Preparing searches…" : "Prepare recent-job searches"}</button>
           </form>
-          <p className="adapter-note">Role suggestions come from {searchDefaults.source === "reviewed_profile" ? "your reviewed career evidence" : searchDefaults.source === "import_preview" ? "your connected career-source preview" : "manual selection because no career source is connected yet"}. You can always type a different role or U.S. location; successful selections are saved privately and prioritized next time.</p>
+          <p className="adapter-note">Role suggestions come from {searchDefaults.source === "reviewed_profile" ? "your reviewed career evidence" : searchDefaults.source === "import_preview" ? "your connected career-source preview" : "manual selection because no career source is connected yet"}. Choose an entire region to search broadly or one state to narrow every portal query. New Mexico is Western and North Carolina is Southern; neither is included in the East Coast scope.</p>
           {launchMessage ? <p className="search-launch-message" role="status">{launchMessage}</p> : null}
           {searchLinks.length ? (
             <div className="blocked-searches">
@@ -270,7 +298,7 @@ export function OperationsWorkspace({
             <label>Posting URL <input name="url" type="url" required placeholder="https://www.indeed.com/viewjob?jk=…" /></label>
             <label>Job title <input name="title" required maxLength={300} /></label>
             <label>Company <input name="company" required maxLength={300} /></label>
-            <label>Location <input name="location" list="career-location-options" maxLength={500} /></label>
+            <label>Location <input name="location" maxLength={500} placeholder="City, State" /></label>
             <label>Posting date (optional) <input name="postedAt" type="date" /></label>
             <label>Job description (optional) <textarea name="description" rows={6} maxLength={50000} /></label>
             <button className="button button--primary" disabled={busy}>{busy ? "Saving job…" : "Bring job into Pro Flow"}</button>
@@ -279,7 +307,12 @@ export function OperationsWorkspace({
         {state.jobs.length ? <>
           <div className="blocked-searches"><strong>Saved-job tools</strong><div><button className="button button--secondary" type="button" disabled={busy} onClick={() => void post("/api/operations/rescore", {})}>Rescore saved jobs</button><a className="text-link" href="/api/operations/export?format=csv">Download CSV</a><a className="text-link" href="/api/operations/export?format=json">Download JSON</a></div></div>
           <div className="job-results" aria-label="Previously saved jobs">
-          {state.jobs.map((job) => (
+          {state.jobs.map((job) => {
+            const applicationCreated = applicationExistsFor(job);
+            const companyOverviewExists = state.companyInsights.some((report) => report.jobId === job.id && report.kind === "company_overview");
+            const companyInsightCreated = state.companyInsights.some((report) => report.jobId === job.id && report.kind === "company_overview" && /market compensation estimate/i.test(report.report));
+            const directApplicationCreated = state.companyInsights.some((report) => report.jobId === job.id && report.kind === "direct_application");
+            return (
             <SurfaceCard className="job-result-card" key={job.id}>
               <div><StatusBadge tone={job.score >= 60 ? "complete" : "pending"}>{job.score}/100</StatusBadge><small>{job.portal}</small></div>
               <h3>{job.title}</h3>
@@ -292,16 +325,25 @@ export function OperationsWorkspace({
               {job.riskReview ? <details><summary>Posting risk review: {job.riskReview.level} ({job.riskReview.score}/100)</summary>
                 {job.riskReview.signals.length ? <ul>{job.riskReview.signals.map((signal) => <li key={`${signal.category}-${signal.message}`}><strong>{signal.severity}:</strong> {signal.message}</li>)}</ul> : <p>No configured risk signals were found. This is not proof that the posting is legitimate.</p>}
               </details> : null}
-              <a className="button button--primary" href={`/applications/new?jobId=${encodeURIComponent(job.id)}`}>
+              <div className="job-action-status" aria-label="Job preparation progress">
+                <StatusBadge tone={applicationCreated ? "complete" : "pending"}>{applicationCreated ? "Documents created" : "Documents needed"}</StatusBadge>
+                <StatusBadge tone={companyInsightCreated ? "complete" : "pending"}>{companyInsightCreated ? "Company insights + salary complete" : companyOverviewExists ? "Salary update needed" : "Company insights needed"}</StatusBadge>
+                <StatusBadge tone={directApplicationCreated ? "complete" : "pending"}>{directApplicationCreated ? "Direct options complete" : "Direct options needed"}</StatusBadge>
+              </div>
+              {applicationCreated ? <a className="button button--secondary" href="/applications/archive">View created documents</a> : <a className="button button--primary" href={`/applications/new?jobId=${encodeURIComponent(job.id)}`}>
                 Create resume &amp; cover letter
-              </a>
-              <button className="button button--secondary" type="button" disabled={busy} onClick={() => void generateCompanyInsight(job.id)}>
-                Generate AI company insights
+              </a>}
+              <button className="button button--secondary" type="button" disabled={busy || companyInsightCreated} onClick={() => void generateCompanyInsight(job.id)}>
+                {companyInsightCreated ? "AI company insights + salary generated" : companyOverviewExists ? "Update insights with salary analysis" : "Generate AI company insights"}
               </button>
+              <button className="button button--secondary" type="button" disabled={busy || directApplicationCreated} onClick={() => void generateCompanyInsight(job.id, "direct_application")}>
+                {directApplicationCreated ? "Direct application options found" : "Find direct application options"}
+              </button>
+              {(companyOverviewExists || directApplicationCreated) ? <a className="text-link" href="/insights">View saved research</a> : null}
               <a className="text-link" href={job.url} rel="noreferrer" target="_blank">Open posting</a>
               <button className="button button--secondary" type="button" disabled={busy} onClick={() => void removeJob(job.id, `${job.company} — ${job.title}`)}>Delete saved job</button>
             </SurfaceCard>
-          ))}
+          );})}
           </div>
         </> : null}
         {insightMessage ? <p className="search-launch-message" role="status">{insightMessage}</p> : null}

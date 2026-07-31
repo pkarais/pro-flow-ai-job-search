@@ -596,13 +596,7 @@ test("search defaults derive roles from career evidence and keep location in the
   });
   const defaults = deriveSearchDefaults(searchProfile, undefined, ["Operations Director"]);
   assert.deepEqual(defaults.roles, ["Operations Director", "Senior Program Manager"]);
-  assert.deepEqual(defaults.locations, [
-    "New York, NY",
-    "New Jersey",
-    "Pennsylvania",
-    "East Coast, United States",
-    "United States",
-  ]);
+  assert.deepEqual(defaults.locations, ["United States"]);
   assert.equal(defaults.source, "reviewed_profile");
 });
 

@@ -2,6 +2,7 @@ import { jobImportRequestSchema } from "@pro-flow/career-core";
 import { NextResponse } from "next/server";
 import { careerDataRoot, loadCanonicalProfile } from "@/server/canonical/review-service";
 import { deleteJob, importJob } from "@/server/operations/operations-service";
+import { recordExtensionCheckIn } from "@/server/extension/extension-status";
 
 export const runtime = "nodejs";
 
@@ -14,6 +15,10 @@ export async function POST(request: Request) {
     }
     const input = jobImportRequestSchema.parse(await request.json());
     const state = await importJob(careerDataRoot(), input, await loadCanonicalProfile());
+    if ((origin?.startsWith("chrome-extension://") || origin?.startsWith("moz-extension://"))
+      && request.headers.get("x-pro-flow-capture") === "user-initiated-v1") {
+      await recordExtensionCheckIn();
+    }
     const response = NextResponse.json({ state });
     if (origin?.startsWith("chrome-extension://") || origin?.startsWith("moz-extension://")) {
       response.headers.set("Access-Control-Allow-Origin", origin);

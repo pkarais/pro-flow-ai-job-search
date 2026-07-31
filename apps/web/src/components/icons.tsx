@@ -34,6 +34,14 @@ export function FileIcon(props: IconProps) {
   return <svg {...defaults} {...props}><path d="M7 3h7l4 4v14H7z" /><path d="M14 3v5h5M10 13h5M10 17h5" /></svg>;
 }
 
+export function ArchiveIcon(props: IconProps) {
+  return <svg {...defaults} {...props}><path d="M4 7h16v13H4zM3 4h18v3H3z" /><path d="M9 11h6" /></svg>;
+}
+
+export function ExtensionIcon(props: IconProps) {
+  return <svg {...defaults} {...props}><path d="M8 3h4v4h4v4h4v4h-4v5H4V8h4z" /><path d="M8 3v5H4M16 15v5" /></svg>;
+}
+
 export function ShieldIcon(props: IconProps) {
   return <svg {...defaults} {...props}><path d="M12 3 5 6v5c0 4.6 2.9 8.1 7 10 4.1-1.9 7-5.4 7-10V6z" /><path d="m9 12 2 2 4-4" /></svg>;
 }

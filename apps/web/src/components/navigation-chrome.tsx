@@ -1,21 +1,58 @@
 "use client";
 
-import { navigationItems } from "@/lib/navigation";
+import { navigationItems, utilityNavigationItems } from "@/lib/navigation";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CompassIcon, FileIcon, SparkIcon } from "./icons";
+import { useEffect, useState } from "react";
+import { ArchiveIcon, CompassIcon, ExtensionIcon, FileIcon, SparkIcon } from "./icons";
 
-const navIcons = [CompassIcon, FileIcon, SparkIcon, FileIcon, CompassIcon, SparkIcon];
+const navIcons = [CompassIcon, FileIcon, SparkIcon, FileIcon, ArchiveIcon, CompassIcon, SparkIcon];
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
   if (href.startsWith("/career")) return pathname.startsWith("/career");
-  if (href.startsWith("/applications")) return pathname.startsWith("/applications");
+  if (href === "/applications/archive") return pathname === "/applications/archive";
+  if (href === "/applications/new") return pathname === "/applications/new";
   if (href.startsWith("/interview")) return pathname.startsWith("/interview");
   if (href.startsWith("/insights")) return pathname.startsWith("/insights");
+  if (href.startsWith("/extension")) return pathname.startsWith("/extension");
   if (href === "/operations") return pathname.startsWith("/operations");
   if (href.startsWith("/operations#")) return false;
   return false;
+}
+
+export function UtilityNavigation() {
+  const pathname = usePathname();
+  const [extensionCreated, setExtensionCreated] = useState(false);
+  useEffect(() => {
+    let active = true;
+    const update = async () => {
+      try {
+        const response = await fetch("/api/extension/status", { cache: "no-store" });
+        const status = await response.json();
+        if (active) setExtensionCreated(response.ok && status.installed === true);
+      } catch {
+        if (active) setExtensionCreated(false);
+      }
+    };
+    void update();
+    const interval = window.setInterval(() => void update(), 15_000);
+    return () => { active = false; window.clearInterval(interval); };
+  }, []);
+  return <nav className="utility-nav" aria-label="Workspace setup">
+    {utilityNavigationItems.map((item) => {
+      const active = isActive(pathname, item.href);
+      return <Link
+        aria-current={active ? "page" : undefined}
+        className={`${active ? "nav-link nav-link--active" : "nav-link"} ${extensionCreated ? "nav-link--configured" : "nav-link--attention"}`}
+        href={item.href}
+        key={item.href}
+      >
+        <ExtensionIcon />
+        <span>{item.label}</span>
+      </Link>;
+    })}
+  </nav>;
 }
 
 export function PrimaryNavigation() {

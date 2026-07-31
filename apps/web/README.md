@@ -63,7 +63,9 @@ errors.
 
 The current search experience is U.S.-only. `/operations` offers LinkedIn,
 Indeed, USAJOBS, Dice, Built In, and Wellfound, then opens an official recent
-job search with the selected role and U.S. location prefilled. Role choices are
+job search with the selected role and U.S. location prefilled. Four exhaustive
+regions cover all 50 states; a region reveals only its states, and Ctrl/Command
+multi-selection creates a separate portal link for each chosen state. Role choices are
 derived from reviewed canonical career evidence and prior user-selected
 application titles. Users can type an override.
 Legacy Danish and non-U.S. skills are disabled. Operations schema v5 filters
@@ -90,4 +92,15 @@ npm run build
 
 The app consumes shared contracts from `../../packages/career-core`.
 Private application revisions can be reviewed, restored, or permanently removed
-from `/applications/archive`.
+from `/applications/archive`. That route also refreshes the embedded
+`career-data/vault.sqlite` index, writes company/role/generation case folders,
+and exposes company insights and interview packs as individual Markdown/JSON
+downloads and inside the complete ZIP.
+
+Saved-job cards track completion of documents, company research, and direct
+application research. Company overviews include cited salary and role-scope
+analysis based on the complete posting and employer/site research. Direct
+application research is limited to official careers pages, forms, and
+explicitly published recruiting addresses. The `/extension` builder creates a
+localhost-only unpacked extension; the toolbar reports installation only after
+the extension checks in with the local service.

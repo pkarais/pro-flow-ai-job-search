@@ -96,13 +96,23 @@ Open <http://localhost:3000>.
 Private records are written under the gitignored `career-data/` directory.
 Back it up if you want to preserve your history. Never commit it.
 
-## 6. Optional browser capture
+Opening **Archive** initializes the embedded `career-data/vault.sqlite` index
+and company-organized case folders automatically. No separate database server
+or database installation is required.
 
-1. Open `chrome://extensions` or `edge://extensions`.
-2. Enable Developer mode.
-3. Select **Load unpacked**.
-4. Choose this repository's `browser-extension` directory.
-5. Pin the extension and keep Pro Flow running on port 3000.
+## 6. Generate your local browser capture extension
+
+1. Open **Browser Extension** at the bottom of Pro Flow's left toolbar.
+2. Keep the local service URL as `http://localhost:3000`, or enter the
+   localhost port used by your fork.
+3. Give the extension a name and download its ZIP.
+4. Extract the ZIP to a permanent local folder.
+5. Open `chrome://extensions` or `edge://extensions` and enable Developer mode.
+6. Select **Load unpacked** and choose the extracted folder.
+7. Pin the extension and keep Pro Flow running on the configured local port.
+
+The generator accepts localhost addresses only. It does not publish an
+extension or configure a hosted service.
 
 See [browser-extension/README.md](browser-extension/README.md) for its privacy
 and permission model.

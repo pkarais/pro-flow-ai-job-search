@@ -7,7 +7,8 @@ import {
   fixtureReadinessChecks,
   fixtureWorkflow,
 } from "../src/lib/fixtures.ts";
-import { navigationItems } from "../src/lib/navigation.ts";
+import { navigationItems, utilityNavigationItems } from "../src/lib/navigation.ts";
+import { ALL_US_STATES, locationForScope, US_SEARCH_REGIONS } from "../src/lib/us-search-regions.ts";
 
 test("the web shell fixture is validated by career-core", () => {
   assert.equal(fixtureProfile.id, "example_candidate");
@@ -17,13 +18,26 @@ test("the web shell fixture is validated by career-core", () => {
 test("the shell exposes the complete planned primary navigation", () => {
   assert.deepEqual(
     navigationItems.map((item) => item.label),
-    ["Home", "My Career", "Find Jobs", "Applications", "Interview", "Insights"],
+    ["Home", "My Career", "Find Jobs", "Applications", "Archive", "Interview", "Insights"],
   );
+  assert.deepEqual(utilityNavigationItems.map((item) => item.label), ["Browser Extension"]);
 });
 
 test("career navigation opens the evidence review route", () => {
   const career = navigationItems.find((item) => item.label === "My Career");
   assert.equal(career?.href, "/career/import-review");
+});
+
+test("regional search scopes cover every state exactly once", () => {
+  assert.equal(ALL_US_STATES.length, 50);
+  assert.equal(new Set(ALL_US_STATES).size, 50);
+  assert.ok(US_SEARCH_REGIONS.east.states.includes("New York"));
+  assert.ok(US_SEARCH_REGIONS.east.states.includes("New Jersey"));
+  assert.ok(US_SEARCH_REGIONS.east.states.includes("Pennsylvania"));
+  assert.ok(US_SEARCH_REGIONS.south.states.includes("North Carolina"));
+  assert.ok(US_SEARCH_REGIONS.west.states.includes("New Mexico"));
+  assert.equal(locationForScope("east", "New York"), "New York, United States");
+  assert.equal(locationForScope("east", ""), "Northeastern United States");
 });
 
 test("home navigation is a real route rather than a page-local anchor", () => {

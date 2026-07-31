@@ -2,6 +2,7 @@ import { ShieldIcon } from "./icons";
 import {
   MobileNavigation,
   PrimaryNavigation,
+  UtilityNavigation,
   WorkspaceModeBadge,
 } from "./navigation-chrome";
 
@@ -20,6 +21,7 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
 
         <PrimaryNavigation />
 
+        <UtilityNavigation />
         <div className="privacy-note">
           <ShieldIcon />
           <div>
