@@ -44,6 +44,13 @@ interview preparation, and append-only outcomes. The six portal CLIs require
 without corrupting stored operations. The workspace never submits applications
 or contacts employers.
 
+Phase 8 hardens live integration. It installs each Bunli portal's ignored local
+dependencies, maps the correct query flags and response fields per portal, and
+adds a six-adapter runtime readiness panel backed by
+`/api/operations/health`. Local readiness is reported separately from remote
+availability: Cloudflare blocks and portal timeouts remain visible, isolated
+errors.
+
 ## Commands
 
 ```powershell

@@ -436,6 +436,33 @@ Gate:
 - Neutral automated tests, lint, type checking, and production build pass.
 - Live portal acceptance remains pending until Bun is installed on the host.
 
+### Phase 8: Live integration acceptance
+
+1. Verify Bun and fixed CLI paths without running arbitrary commands.
+2. Install ignored CLI-local dependencies for Bunli-based portals.
+3. Use an explicit argument contract and result normalizer for every portal.
+4. Surface local readiness separately from remote portal availability.
+5. Exercise capped live searches without storing acceptance-test results.
+
+Implementation:
+
+- Bun 1.3.14 is installed and inherited by the local preview.
+- All six local adapters report ready through `/api/operations/health`.
+- FreeHire, LinkedIn, Jobdanmark, and Jobnet returned capped live results.
+- Jobbank correctly reported its documented Cloudflare block as isolated.
+- Jobindex reached its adapter but the upstream operation timed out.
+- The guided workspace now displays runtime readiness and supports rechecks.
+- Neutral tests cover portal-specific flags, result shapes, and missing-runtime
+  behavior.
+
+Gate:
+
+- Local failures are actionable and do not write partial search state.
+- Portal-specific fields normalize without fabricated company information.
+- Remote blocks and timeouts are reported honestly rather than labeled as
+  local setup failures.
+- Web tests, lint, type checking, and production compilation pass.
+
 ## Immediate conflicts to resolve
 
 | Topic | Executive behavior | Pro-Flow behavior | Resolution |
@@ -491,7 +518,7 @@ The integration is considered seamless when:
 
 ## Next action
 
-Install Bun and run one live search per configured portal, then complete the
-Phase 5/6 document acceptance gate with a user-selected posting. Use the
-resulting application to verify the full Phase 7 pipeline, interview, and
-outcome journey in `/operations`.
+Use a user-selected live result to complete the Phase 5/6 document acceptance
+gate, then verify the full pipeline, interview, and outcome journey in
+`/operations`. Retest Jobbank and Jobindex later without treating their current
+upstream failures as local integration defects.

@@ -784,6 +784,49 @@ h3 {
   padding: clamp(var(--space-5), 3vw, var(--space-8));
 }
 
+.portal-readiness-card {
+  margin-top: var(--space-8);
+  padding: clamp(var(--space-5), 3vw, var(--space-8));
+}
+
+.portal-readiness-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-5);
+}
+
+.portal-readiness-heading h3 {
+  margin-top: var(--space-2);
+}
+
+.portal-readiness-heading p:last-child {
+  margin-bottom: 0;
+  color: var(--color-ink-muted);
+}
+
+.portal-readiness-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.portal-readiness-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+}
+
+.portal-readiness-item small {
+  grid-column: 1 / -1;
+  color: var(--color-ink-muted);
+}
+
 .operations-search {
   display: grid;
   grid-template-columns: minmax(10rem, 0.7fr) minmax(14rem, 1.3fr) minmax(12rem, 1fr) auto;
@@ -1674,8 +1717,14 @@ h3 {
   .operations-search,
   .pipeline-card,
   .pipeline-card form,
-  .operations-two-column {
+  .operations-two-column,
+  .portal-readiness-grid {
     grid-template-columns: 1fr;
+  }
+
+  .portal-readiness-heading {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .job-results {

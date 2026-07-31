@@ -6,6 +6,7 @@ import {
   type ApplicationStatus,
   type ArchivedApplication,
   type OperationsState,
+  type PortalRuntimeReport,
 } from "@pro-flow/career-core";
 import { SectionHeading, StatusBadge, SurfaceCard } from "./ui";
 
@@ -17,29 +18,52 @@ const statuses: ApplicationStatus[] = [
 export function OperationsWorkspace({
   initialApplications,
   initialState,
+  initialRuntimeReport,
 }: {
   initialApplications: ArchivedApplication[];
   initialState: OperationsState;
+  initialRuntimeReport: PortalRuntimeReport;
 }) {
   const [state, setState] = useState(initialState);
+  const [runtimeReport, setRuntimeReport] = useState(initialRuntimeReport);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
   async function post(endpoint: string, body: unknown) {
     setBusy(true);
     setError("");
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const payload = await response.json();
-    setBusy(false);
-    if (!response.ok) {
-      setError(payload.error ?? "The operation failed.");
-      return;
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setError(payload.error ?? "The operation failed.");
+        return;
+      }
+      setState(payload.state);
+    } catch {
+      setError("The local service could not be reached. Confirm the preview is running and try again.");
+    } finally {
+      setBusy(false);
     }
-    setState(payload.state);
+  }
+
+  async function refreshRuntime() {
+    setBusy(true);
+    setError("");
+    try {
+      const response = await fetch("/api/operations/health");
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error ?? "Runtime check failed.");
+      setRuntimeReport(payload);
+    } catch (runtimeError) {
+      setError(runtimeError instanceof Error ? runtimeError.message : "Runtime check failed.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   function search(event: FormEvent<HTMLFormElement>) {
@@ -60,7 +84,7 @@ export function OperationsWorkspace({
   return (
     <div className="operations-page">
       <header className="operations-hero">
-        <StatusBadge tone="current">Phase 7 · Career operations</StatusBadge>
+        <StatusBadge tone="current">Phase 8 · Integration acceptance</StatusBadge>
         <p className="eyebrow">One connected operating loop</p>
         <h1>Discover, progress, prepare, and learn.</h1>
         <p>Portal failures stay isolated. Pipeline changes are validated. Interview guidance stays consistent with verified application claims, and outcomes append history rather than rewrite it.</p>
@@ -68,6 +92,28 @@ export function OperationsWorkspace({
 
       <section className="operations-section" id="jobs">
         <SectionHeading eyebrow="Job discovery" title="Search through normalized portal adapters" description="Live portal CLIs return one shared job shape. Results are deduplicated and ranked against reviewed evidence." />
+        <SurfaceCard className="portal-readiness-card">
+          <div className="portal-readiness-heading">
+            <div>
+              <p className="eyebrow">Local runtime readiness</p>
+              <h3>{runtimeReport.portals.filter((portal) => portal.status === "ready").length} of {runtimeReport.portals.length} adapters ready</h3>
+              <p>Bun {runtimeReport.bunVersion ?? "not detected"} · Checked {new Date(runtimeReport.checkedAt).toLocaleTimeString()}</p>
+            </div>
+            <button className="button button--secondary" type="button" disabled={busy} onClick={() => void refreshRuntime()}>Recheck adapters</button>
+          </div>
+          <div className="portal-readiness-grid">
+            {runtimeReport.portals.map((portal) => (
+              <div className="portal-readiness-item" key={portal.portal}>
+                <StatusBadge tone={portal.status === "ready" ? "complete" : portal.status === "needs_setup" ? "pending" : "danger"}>
+                  {portal.status.replaceAll("_", " ")}
+                </StatusBadge>
+                <strong>{portal.label}</strong>
+                <small>{portal.message}</small>
+              </div>
+            ))}
+          </div>
+          <p className="adapter-note">A ready adapter can still report a temporary portal-side block or timeout. Those failures remain isolated and never store partial results.</p>
+        </SurfaceCard>
         <SurfaceCard className="operations-card">
           <form className="operations-search" onSubmit={search}>
             <label>Portal
@@ -84,7 +130,7 @@ export function OperationsWorkspace({
             <label>Location <input name="location" maxLength={200} placeholder="Required for LinkedIn" /></label>
             <button className="button button--primary" disabled={busy}>Search recent jobs</button>
           </form>
-          <p className="adapter-note">Adapter runtime: Bun is currently required. If unavailable, the selected portal reports an isolated failure and no state is changed.</p>
+          <p className="adapter-note">Each portal receives its own supported query flags. Location is passed directly where supported and safely included in the keyword query elsewhere.</p>
         </SurfaceCard>
         <div className="job-results">
           {state.jobs.map((job) => (

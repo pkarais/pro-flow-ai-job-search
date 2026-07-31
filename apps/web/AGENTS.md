@@ -35,3 +35,10 @@ Pipeline transitions must use `career-core`; readiness-dependent transitions
 must verify the matching Phase 6 manifest. Interview packs use verified claims
 only, outcomes append history, and no route may submit an application or
 contact an employer.
+
+Phase 8 exposes read-only adapter diagnostics through
+`/api/operations/health`. Keep portal argument builders explicit and
+allowlisted, normalize portal-specific response fields without inventing
+missing employer data, and distinguish local runtime readiness from remote
+portal availability. Dependency folders and generated Bun lockfiles stay
+ignored.

@@ -7,6 +7,19 @@ export const portalIdSchema = z.enum([
   "jobdanmark-search", "jobindex-search", "jobnet-search",
 ]);
 
+export const portalRuntimeStatusSchema = z.enum(["ready", "needs_setup", "unavailable"]);
+
+export const portalRuntimeReportSchema = z.object({
+  bunVersion: nonEmptyTextSchema.max(100).optional(),
+  checkedAt: isoDateTimeSchema,
+  portals: z.array(z.object({
+    portal: portalIdSchema,
+    label: nonEmptyTextSchema.max(100),
+    status: portalRuntimeStatusSchema,
+    message: nonEmptyTextSchema.max(500),
+  }).strict()),
+}).strict();
+
 export const jobSearchRequestSchema = z.object({
   portal: portalIdSchema,
   query: nonEmptyTextSchema.max(200),
@@ -95,6 +108,7 @@ export const operationsStateSchema = z.object({
 }).strict();
 
 export type PortalId = z.infer<typeof portalIdSchema>;
+export type PortalRuntimeReport = z.infer<typeof portalRuntimeReportSchema>;
 export type JobSearchRequest = z.infer<typeof jobSearchRequestSchema>;
 export type NormalizedJob = z.infer<typeof normalizedJobSchema>;
 export type PipelineRecord = z.infer<typeof pipelineRecordSchema>;

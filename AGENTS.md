@@ -52,3 +52,9 @@ must follow the shared transition contract; readiness-dependent states cannot
 bypass the Phase 6 gate. Interview answers may use only verified claims, and
 outcomes are append-only historical records. The web application never submits
 applications or contacts employers automatically.
+
+Phase 8 keeps each portal's command-line contract explicit; never collapse
+different portal flags into a generic invocation. Runtime diagnostics may
+verify Bun, fixed CLI paths, and ignored local dependencies, but a locally
+ready adapter is not a promise that the remote portal is available. Remote
+blocks and timeouts must remain isolated and must not persist partial results.

@@ -11,7 +11,13 @@ import { buildApplication } from "../src/server/applications/application-service
 import { ApplicationStore } from "../src/server/applications/application-store.ts";
 import { DocumentService, renderDocumentSources } from "../src/server/documents/document-service.ts";
 import { OperationsStore } from "../src/server/operations/operations-store.ts";
-import { PortalUnavailableError, searchPortal } from "../src/server/operations/portal-adapter.ts";
+import {
+  buildPortalSearchArguments,
+  inspectPortalRuntime,
+  normalizePortalResult,
+  PortalUnavailableError,
+  searchPortal,
+} from "../src/server/operations/portal-adapter.ts";
 import {
   createInterviewPack,
   recordOutcome,
@@ -164,6 +170,67 @@ test("portal runtime failure is isolated and does not create operations state", 
       () => searchPortal({ portal: "freehire-search", query: "product strategy", limit: 5 }, profile),
       (error) => error instanceof PortalUnavailableError && /no search was attempted/i.test(error.message),
     );
+  } finally {
+    process.env.PATH = previousPath;
+  }
+});
+
+test("each portal adapter uses its own supported query contract", () => {
+  const base = { query: "project manager", location: "Aarhus", limit: 5 };
+  assert.deepEqual(
+    buildPortalSearchArguments({ ...base, portal: "jobbank-search" }).slice(3, 5),
+    ["--key", "project manager Aarhus"],
+  );
+  assert.deepEqual(
+    buildPortalSearchArguments({ ...base, portal: "jobdanmark-search" }).slice(3, 7),
+    ["--text", "project manager", "--municipality", "Aarhus"],
+  );
+  assert.deepEqual(
+    buildPortalSearchArguments({ ...base, portal: "jobnet-search" }).slice(3, 5),
+    ["--search-string", "project manager Aarhus"],
+  );
+  assert.deepEqual(
+    buildPortalSearchArguments({ ...base, portal: "linkedin-search" }).slice(3, 7),
+    ["--query", "project manager", "--location", "Aarhus"],
+  );
+});
+
+test("portal-specific result shapes normalize without inventing employer data", () => {
+  assert.deepEqual(normalizePortalResult("jobdanmark-search", {
+    slug: "fixture-role",
+    title: "Program Lead",
+    companyName: "Fixture Company",
+    companyAddress: "Aarhus",
+    publishedDate: "2026-07-30",
+    url: "https://example.test/job/fixture-role",
+  }), {
+    externalId: "fixture-role",
+    title: "Program Lead",
+    company: "Fixture Company",
+    location: "Aarhus",
+    url: "https://example.test/job/fixture-role",
+    description: undefined,
+    postedAt: "2026-07-30",
+  });
+  assert.equal(
+    normalizePortalResult("jobnet-search", {
+      jobAdId: "fixture-job",
+      title: "Project Lead",
+      hiringOrgName: "Public Employer",
+      postalDistrictName: "Copenhagen",
+    }).url,
+    "https://jobnet.dk/job/fixture-job",
+  );
+});
+
+test("runtime diagnostics report every portal unavailable when Bun is absent", async () => {
+  const previousPath = process.env.PATH;
+  process.env.PATH = "";
+  try {
+    const report = await inspectPortalRuntime();
+    assert.equal(report.portals.length, 6);
+    assert.ok(report.portals.every((portal) => portal.status === "unavailable"));
+    assert.equal(report.bunVersion, undefined);
   } finally {
     process.env.PATH = previousPath;
   }
