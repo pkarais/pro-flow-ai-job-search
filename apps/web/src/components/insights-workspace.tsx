@@ -1,15 +1,28 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState, type ReactNode } from "react";
 import type { CompanyInsightRecord } from "@pro-flow/career-core";
 import { SectionHeading, StatusBadge, SurfaceCard } from "./ui";
 
 export function InsightsWorkspace({ reports }: { reports: CompanyInsightRecord[] }) {
+  const router = useRouter();
   const ordered = [...reports].sort((left, right) => right.generatedAt.localeCompare(left.generatedAt));
   const companyReports = ordered.filter((report) => report.kind === "company_overview");
   const directReports = ordered.filter((report) => report.kind === "direct_application");
   const [selectedId, setSelectedId] = useState(companyReports[0]?.id ?? ordered[0]?.id ?? "");
   const selected = ordered.find((report) => report.id === selectedId);
+  useEffect(() => {
+    const refreshInsights = () => {
+      if (document.visibilityState === "visible") router.refresh();
+    };
+    window.addEventListener("focus", refreshInsights);
+    document.addEventListener("visibilitychange", refreshInsights);
+    return () => {
+      window.removeEventListener("focus", refreshInsights);
+      document.removeEventListener("visibilitychange", refreshInsights);
+    };
+  }, [router]);
   return <div className="operations-page">
     <header className="operations-hero">
       <StatusBadge tone="current">AI insights · Company research</StatusBadge>
