@@ -9,6 +9,12 @@ const artifacts = {
   cv_pdf: ["cv.pdf", "application/pdf"],
   cover_letter_pdf: ["cover-letter.pdf", "application/pdf"],
   ats_text: ["cv-ats.txt", "text/plain; charset=utf-8"],
+  designed_resume_html: ["designed-resume.html", "text/html; charset=utf-8"],
+  designed_resume_pdf: ["designed-resume.pdf", "application/pdf"],
+  resume_docx: ["resume.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
+  designed_cover_letter_html: ["designed-cover-letter.html", "text/html; charset=utf-8"],
+  designed_cover_letter_pdf: ["designed-cover-letter.pdf", "application/pdf"],
+  cover_letter_docx: ["cover-letter.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
 } as const;
 
 export async function GET(
@@ -25,7 +31,7 @@ export async function GET(
     return new Response(contents, {
       headers: {
         "content-type": artifact[1],
-        "content-disposition": `inline; filename="${artifact[0]}"`,
+        "content-disposition": `${kind.endsWith("_docx") ? "attachment" : "inline"}; filename="${artifact[0]}"`,
         "cache-control": "private, no-store",
       },
     });

@@ -7,6 +7,7 @@ import {
   type CanonicalCareerProfile,
   type OpportunityIntake,
 } from "@pro-flow/career-core";
+import type { AiGeneration, ApplicationWriting } from "../ai/grounded-writing-service";
 
 const STOP_WORDS = new Set([
   "and", "the", "with", "for", "that", "this", "from", "your", "you", "our",
@@ -23,6 +24,32 @@ function terms(value: string): string[] {
 
 function stableId(prefix: string, value: string): string {
   return `${prefix}_${createHash("sha256").update(value).digest("hex").slice(0, 16)}`;
+}
+
+function readableList(values: string[]): string {
+  const cleaned = values.map((value) => value.replaceAll("-", " "));
+  if (cleaned.length <= 1) return cleaned[0] ?? "";
+  if (cleaned.length === 2) return `${cleaned[0]} and ${cleaned[1]}`;
+  return `${cleaned.slice(0, -1).join(", ")}, and ${cleaned.at(-1)}`;
+}
+
+function buildCoverLetter(
+  intake: OpportunityIntake,
+  matchedKeywords: string[],
+): string {
+  const alignment = readableList(matchedKeywords.slice(0, 8));
+  const alignmentParagraph = alignment
+    ? `My confirmed experience aligns with several priorities in the posting, including ${alignment}. I would bring a practical, systems-oriented approach to coordinating work, improving operational clarity, and supporting accountable execution.`
+    : "I would bring a practical, systems-oriented approach to coordinating work, improving operational clarity, and supporting accountable execution.";
+
+  return [
+    "Dear Hiring Manager,",
+    `I am writing to express my interest in the ${intake.positionTitle} position at ${intake.companyName}. The opportunity to contribute to this work is a strong match for the direction of my career and the operational challenges I am prepared to take on.`,
+    alignmentParagraph,
+    `I would welcome the opportunity to discuss how my background could support ${intake.companyName}'s goals. Thank you for your time and consideration.`,
+    "Sincerely,",
+    "[Your name]",
+  ].join("\n\n");
 }
 
 export function buildApplication(
@@ -65,10 +92,10 @@ export function buildApplication(
     evidenceIds: [item.id],
     decision: "pending" as const,
   }));
-  const evidenceNarrative = strongest.map((item) => item.value).join(" ");
-  const gapCopy = gaps.length
-    ? `The posting also emphasizes ${gaps.slice(0, 5).join(", ")}; these remain explicit gaps until supported.`
-    : "No material keyword gaps were detected by the local comparison.";
+  const alignment = readableList(matchedKeywords.slice(0, 8));
+  const positioningSummary = alignment
+    ? `Candidate evidence supports relevant experience in ${alignment} for the ${intake.positionTitle} opportunity.`
+    : `Confirmed career evidence is available for review against the ${intake.positionTitle} opportunity.`;
 
   return archivedApplicationSchema.parse({
     schemaVersion: 1,
@@ -106,13 +133,74 @@ export function buildApplication(
       assessedAt: timestamp,
     },
     draft: {
-      summary: `Draft positioning for ${intake.positionTitle} at ${intake.companyName}: ${evidenceNarrative}`,
-      coverLetter: `Dear Hiring Manager,\n\nI am interested in the ${intake.positionTitle} role at ${intake.companyName}. My relevant, confirmed background includes: ${evidenceNarrative}\n\n${gapCopy}\n\nSincerely`,
+      summary: positioningSummary,
+      coverLetter: buildCoverLetter(intake, matchedKeywords),
       matchedKeywords,
       gaps,
-      claims,
+      claims: claims.map((claim) => ({ ...claim, kind: "resume_bullet" as const })),
+      generation: {
+        method: "template",
+        note: "Deterministic local fallback draft.",
+      },
     },
     createdAt: timestamp,
     updatedAt: timestamp,
+  });
+}
+
+export function applyAiWriting(
+  application: ArchivedApplication,
+  generation: AiGeneration<ApplicationWriting>,
+): ArchivedApplication {
+  if (generation.method !== "ai") {
+    return archivedApplicationSchema.parse({
+      ...application,
+      draft: {
+        ...application.draft,
+        generation: {
+          method: "template",
+          note: generation.note,
+        },
+      },
+    });
+  }
+
+  const writing = generation.value;
+  const claimInputs = [
+    {
+      text: writing.positioningSummary.text,
+      evidenceIds: writing.positioningSummary.evidenceIds,
+      kind: "summary" as const,
+    },
+    ...writing.resumeBullets.map((item) => ({ ...item, kind: "resume_bullet" as const })),
+    ...writing.coverLetter.bodyParagraphs.map((item) => ({ ...item, kind: "cover_letter" as const })),
+  ];
+  const claims = claimInputs.map((claim, index) => ({
+    id: stableId("claim", `${application.id}:ai:${index}:${claim.text}`),
+    ...claim,
+    decision: "pending" as const,
+  }));
+  const coverLetter = [
+    "Dear Hiring Manager,",
+    writing.coverLetter.opening,
+    ...writing.coverLetter.bodyParagraphs.map((item) => item.text),
+    writing.coverLetter.closing,
+    "Sincerely,",
+    "[Your name]",
+  ].join("\n\n");
+
+  return archivedApplicationSchema.parse({
+    ...application,
+    draft: {
+      ...application.draft,
+      summary: writing.positioningSummary.text,
+      coverLetter,
+      claims,
+      generation: {
+        method: "ai",
+        model: generation.model,
+        visualDirection: writing.visualDirection,
+      },
+    },
   });
 }

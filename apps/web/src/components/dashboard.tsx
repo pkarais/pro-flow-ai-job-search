@@ -12,7 +12,7 @@ export function Dashboard({ dashboard }: { dashboard: AcceptanceDashboard }) {
       <section className="welcome-grid">
         <div className="welcome-copy">
           <StatusBadge tone={plan.percent === 100 ? "complete" : "current"}>
-            Phase 10 guided acceptance
+            Guided career workspace
           </StatusBadge>
           <p className="eyebrow">Your private career workspace</p>
           <h1>Move forward with one clear next step.</h1>
@@ -133,7 +133,7 @@ export function Dashboard({ dashboard }: { dashboard: AcceptanceDashboard }) {
         </SurfaceCard>
       </section>
 
-      <section className="boundary-card" aria-label="Phase 10 privacy boundary">
+      <section className="boundary-card" aria-label="Privacy boundary">
         <div><FileIcon /></div>
         <div>
           <strong>Read-only orchestration boundary</strong>

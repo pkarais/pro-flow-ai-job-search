@@ -2,7 +2,7 @@
   <img src="assets/mascot/pip_flight_loop.gif" alt="Pip, the courier bird from the original AI Job Search project" width="200">
 </p>
 
-# Pro-Flow AI Job Search + Executive Career OS
+# Pro Flow Career OS
 
 **A private, local-first career operating system for U.S. job discovery,
 evidence review, application development, document verification, pipeline
@@ -10,17 +10,14 @@ tracking, interview preparation, and outcome learning.**
 
 [![CI](https://github.com/pkarais/pro-flow-ai-job-search/actions/workflows/ci.yml/badge.svg)](https://github.com/pkarais/pro-flow-ai-job-search/actions/workflows/ci.yml)
 
-This repository is an attributed fork and substantial extension of
+This autonomous repository originated as an attributed fork and substantial extension of
 [Mads Lorentzen's AI Job Search](https://github.com/MadsLorentzen/ai-job-search).
-It combines Mads's original agent-driven job-search framework with the
-career-knowledge model and application-generation ideas developed in
-**Executive Career OS**, then adds a persistent, guided Next.js interface and a
-shared, safety-focused domain layer.
+It now owns its career evidence, workflow state, application archives, and
+document pipeline locally. No predecessor repository is a runtime dependency
+or source of truth.
 
-The result is not a replacement attribution for the original project. Mads's
-work remains the foundation. The hybrid work adds a new application surface,
-new data contracts, new persistence and verification services, a U.S.-focused
-search experience, and an integration path for Executive Career OS evidence.
+Historical attribution is preserved below, but current behavior and data are
+defined entirely within this project.
 
 > This is an independent open-source project. It is not affiliated with,
 > endorsed by, sponsored by, or maintained by Anthropic, OpenAI, LinkedIn,
@@ -82,9 +79,8 @@ concept:
 - factual audit;
 - missing-information review.
 
-The protected Executive Career OS source project remains independent. This
-hybrid reads only an explicit allowlist of its career knowledge and project
-files. It does not modify that repository.
+Those ideas have been incorporated into Pro Flow's own canonical data and
+workflow. The former project is no longer read or required at runtime.
 
 ### Hybrid integration and refinements
 
@@ -93,7 +89,7 @@ The integration work in this fork was developed by
 
 - a guided, responsive Next.js web application;
 - a shared TypeScript contract package;
-- read-only Executive Career OS evidence import;
+- project-owned canonical career evidence;
 - canonical fact review with provenance and corrections;
 - private atomic storage, revisions, backups, and integrity hashes;
 - a grounded application studio;
@@ -116,20 +112,21 @@ upstream  https://github.com/MadsLorentzen/ai-job-search.git
 
 | Capability | Current behavior |
 |---|---|
-| Career-source connection | Reads 12 explicitly allowlisted Executive Career OS knowledge/project files |
+| Career evidence | Reads and updates Pro Flow's private canonical career record |
 | Evidence review | Confirms, corrects, or rejects one fact at a time while preserving provenance |
 | Canonical profile | Stores reviewed evidence privately with atomic writes, backups, revisions, and SHA-256 integrity checks |
 | U.S. job search | Opens official searches on LinkedIn, Indeed, USAJOBS, Dice, Built In, and Wellfound |
+| One-click job capture | Captures one actively viewed posting through the optional local browser extension |
 | Concurrent portal search | Runs LinkedIn + Indeed, USAJOBS + Built In, Wellfound + Dice, or all six |
 | Guided search inputs | Builds up to 40 role/title/skill suggestions from career evidence and user history |
 | Search memory | Privately remembers the most recent 50 role and U.S. location selections |
 | Opportunity intake | Accepts a company, position, location, and pasted job description |
 | Fit assessment | Shows evidence-supported matches, gaps, terms, and eligibility questions |
-| Application drafting | Produces conservative, deterministic positioning and cover-letter content |
+| Application drafting | Produces persuasive AI-written résumé and cover-letter content with canonical evidence IDs and a deterministic fallback |
 | Factual review | Requires an explicit decision for every material drafted claim |
 | Private archives | Stores reviewed application packages under stable application IDs |
-| Document generation | Produces escaped LaTeX CV and cover-letter sources from verified claims |
-| PDF verification | Compiles PDFs and checks page count, ATS text, contact text, keywords, and visual review |
+| Document generation | Builds one structured resume from verified claims, then produces ATS LaTeX, modern HTML/CSS, designed PDF, editable DOCX, and a cover letter |
+| PDF verification | Checks ATS and designed PDFs for page count, extractable text, contact text, keywords, and visual review |
 | Pipeline | Enforces safe drafting, review, readiness, applied, interview, offer, rejection, and withdrawal transitions |
 | Interview preparation | Builds stage-specific questions and honest gap bridges from verified claims |
 | Outcomes | Appends outcome history without rewriting prior evidence |
@@ -187,7 +184,10 @@ Track application -> prepare interview -> record outcome
 | `/` | Guided dashboard and workflow orientation |
 | `/career/import-review` | Executive evidence connection and canonical fact review |
 | `/applications/new` | Opportunity intake, fit assessment, drafting, factual review, and documents |
-| `/operations` | U.S. portal search, pipeline, interview preparation, and outcomes |
+| `/applications/archive` | View, restore, or permanently delete private application archives |
+| `/operations` | U.S. portal search, saved jobs, risk review, company-research launch, and guarded pipeline |
+| `/insights` | Saved, cited AI company-research reports |
+| `/interview` | Interview preparation and append-only outcome feedback |
 | `/api/operations/health` | Read-only six-portal readiness report |
 
 Local preview:
@@ -219,8 +219,19 @@ origin. If the browser blocks multiple tabs, the interface reports the blocked
 searches and provides direct fallback links.
 
 Indeed's documented APIs are oriented toward approved partners, employers, and
-job-posting integrations, so this project does not claim a public Indeed
-candidate-search API or scrape Indeed results.
+job-posting integrations. Indeed also documents a beta MCP connector with Job
+Search and Job Detail tools, but currently describes it as available only
+through Claude Connector. This project does not scrape Indeed results or claim
+that the connector is available to the Pro Flow runtime. The activation-gated
+adaptation is documented in
+[`docs/integration/indeed-mcp-adaptation.md`](docs/integration/indeed-mcp-adaptation.md).
+
+The optional [`browser-extension`](browser-extension/README.md) reads one job
+posting already open in the active tab after an explicit toolbar click. It
+prefers Schema.org `JobPosting` data, falls back to visible fields, and sends
+one normalized record directly to the local Pro Flow service. The server never
+retrieves the portal page. Search-result crawling, scheduled capture,
+authentication bypass, and automatic submission remain prohibited.
 
 USAJOBS has an official Search API, but it requires approved credentials. The
 current implementation uses the official public USAJOBS search page until
@@ -232,31 +243,11 @@ the active U.S.-only workflow does not expose them.
 
 ## Career evidence and source of truth
 
-The integration follows a thin-pointer, single-source-of-truth model.
+Pro Flow is its own source of truth. The application reads candidate evidence
+only from its private canonical record. Historical files and predecessor
+repositories do not supplement or override it.
 
-### Original Pro-Flow inputs
-
-The original workflow specifications remain under:
-
-```text
-CLAUDE.md
-.claude/commands/
-.claude/skills/job-application-assistant/
-.claude/skills/job-scraper/
-```
-
-These files remain the behavioral reference for the legacy agent commands.
-
-### Executive Career OS inputs
-
-The web importer reads an explicit manifest of 12 files from:
-
-```text
-career_os/knowledge/
-career_os/projects/
-```
-
-Imported facts retain:
+Canonical facts retain:
 
 - source file;
 - source section;
@@ -265,13 +256,7 @@ Imported facts retain:
 - conflict information;
 - usage restrictions.
 
-Executive Career OS is an optional evidence adapter, not a requirement for the
-long-term product. Future public onboarding paths—including resume/CV upload,
-guided manual entry, and existing-profile import—must converge on the same
-staged-evidence and explicit-review boundary before any fact becomes verified
-or employer-facing.
-
-### Reviewed canonical record
+### Canonical record
 
 Explicit web-review decisions are stored in:
 
@@ -293,7 +278,7 @@ career-data/
 ├── backups/                       # Prior canonical revisions
 ├── compatibility/                 # Deterministic generated views + manifest
 ├── applications/                  # Private application archives and documents
-└── operations.json                # Search history, pipeline, interviews, outcomes
+└── operations.json                # Search, jobs, pipeline, insights, interviews, outcomes, and dismissed archives
 ```
 
 Other original private locations remain protected by `.gitignore`, including:
@@ -363,7 +348,7 @@ not accepted.
 
 Only verified application claims can render into document sources.
 
-The document workflow uses fixed commands:
+The ATS and cover-letter workflow uses fixed commands:
 
 ```text
 lualatex
@@ -371,6 +356,13 @@ xelatex
 pdfinfo
 pdftotext
 ```
+
+The application studio also renders a sandboxed live HTML/CSS preview from the
+same structured resume used for export. A fixed local Chrome executable,
+configured with `PRO_FLOW_CHROME_PATH`, converts that document to a designed
+PDF through `playwright-core`; the `docx` library creates an editable Word
+version in-process. Rendering uses no remote fonts, images, scripts, or assets.
+The ATS PDF remains a separate conservative export path.
 
 The gate checks:
 
@@ -437,7 +429,7 @@ Set-Location apps/web
 npm install
 ```
 
-### Connect Executive Career OS
+### Configure local AI writing
 
 Copy the web environment template:
 
@@ -445,10 +437,11 @@ Copy the web environment template:
 Copy-Item .env.example .env.local
 ```
 
-Set the absolute source path in `apps/web/.env.local`:
+Set local AI credentials in `apps/web/.env.local`:
 
 ```text
-EXECUTIVE_CAREER_OS_PATH=C:\absolute\path\to\executive-career-os
+OPENAI_API_KEY=...
+OPENAI_MODEL=...
 ```
 
 Do not place provider keys or personal information in `.env.example`.
@@ -540,7 +533,7 @@ The hybrid was developed in reversible, test-gated phases:
 | 0 | Protected both original project baselines |
 | 1 | Added migration documentation and shared contracts |
 | 2 | Added the isolated guided Next.js shell |
-| 3 | Added read-only Executive Career OS evidence import |
+| 3 | Imported the initial evidence set that became Pro Flow's canonical record |
 | 4 | Added canonical profile persistence and guided fact review |
 | 5 | Added the grounded application workflow |
 | 6 | Added document generation and readiness verification |

@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Pro Flow Job Capture",
+  "version": "0.1.2",
+  "description": "Capture one actively viewed job posting into your local Pro Flow workspace.",
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": ["http://localhost:3000/*", "http://127.0.0.1:3000/*"],
+  "action": {
+    "default_title": "Capture this job in Pro Flow"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}

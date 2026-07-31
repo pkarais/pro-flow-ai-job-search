@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
   operationsStateSchema,
@@ -10,7 +10,21 @@ import {
 async function atomicWrite(target: string, contents: string): Promise<void> {
   const temporary = `${target}.${randomUUID()}.tmp`;
   await writeFile(temporary, contents, { encoding: "utf8", flag: "wx" });
-  await rename(temporary, target);
+  try {
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      try {
+        await rename(temporary, target);
+        return;
+      } catch (error) {
+        if (!["EPERM", "EACCES"].includes((error as NodeJS.ErrnoException).code ?? "") || attempt === 3) throw error;
+        await new Promise((resolve) => setTimeout(resolve, 100 * (attempt + 1)));
+      }
+    }
+  } catch (error) {
+    if (!["EPERM", "EACCES"].includes((error as NodeJS.ErrnoException).code ?? "")) throw error;
+    await copyFile(temporary, target);
+    await unlink(temporary);
+  }
 }
 
 export class OperationsStore {
@@ -32,22 +46,30 @@ export class OperationsStore {
               && job !== null
               && portalIdSchema.safeParse((job as Record<string, unknown>).portal).success)
           : [];
-        return operationsStateSchema.parse({ ...raw, schemaVersion: 3, jobs, searches: [] });
+        return operationsStateSchema.parse({ ...raw, schemaVersion: 5, jobs, searches: [], companyInsights: [], dismissedApplicationIds: [] });
       }
       if (raw.schemaVersion === 2) {
-        return operationsStateSchema.parse({ ...raw, schemaVersion: 3, searches: [] });
+        return operationsStateSchema.parse({ ...raw, schemaVersion: 5, searches: [], companyInsights: [], dismissedApplicationIds: [] });
+      }
+      if (raw.schemaVersion === 3) {
+        return operationsStateSchema.parse({ ...raw, schemaVersion: 5, companyInsights: [], dismissedApplicationIds: [] });
+      }
+      if (raw.schemaVersion === 4) {
+        return operationsStateSchema.parse({ ...raw, schemaVersion: 5, dismissedApplicationIds: [] });
       }
       return operationsStateSchema.parse(raw);
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
       return operationsStateSchema.parse({
-        schemaVersion: 3,
+        schemaVersion: 5,
         revision: 0,
         jobs: [],
         searches: [],
         pipeline: [],
         interviews: [],
         outcomes: [],
+        companyInsights: [],
+        dismissedApplicationIds: [],
         updatedAt: new Date(0).toISOString(),
       });
     }

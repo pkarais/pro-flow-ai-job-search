@@ -1,4 +1,9 @@
-# Executive Career OS Integration Manifest
+# Archived Executive Career OS Integration Manifest
+
+> Historical record only. Pro Flow is autonomous and does not read, require,
+> synchronize with, or preserve runtime compatibility with Executive Career
+> OS. The private `career-data/canonical-career.json` record is Pro Flow's sole
+> career-evidence source of truth.
 
 ## Purpose
 

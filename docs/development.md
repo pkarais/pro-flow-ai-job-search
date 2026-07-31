@@ -45,21 +45,16 @@ npm run typecheck
 npm run build
 ```
 
-During Phase 2 the web shell uses validated neutral fixtures only. It does not
-read or write personal career data, call an AI provider, or execute job-search
-tools.
+Tests use validated neutral fixtures and do not call the live AI provider.
+The running application uses the server-only AI writer only when
+`OPENAI_API_KEY` is configured; otherwise it uses deterministic fallbacks.
 
-### Read-only Executive Career OS preview
+### Canonical career evidence
 
-Copy `apps/web/.env.example` to `apps/web/.env.local` and set:
-
-```text
-EXECUTIVE_CAREER_OS_PATH=C:\absolute\path\to\executive-career-os
-```
-
-Then open `/career/import-review`. The server reads only the 12 relative paths
-in `src/server/evidence/source-manifest.ts`. Phase 3 exposes no save operation,
-mutation endpoint, arbitrary-path input, AI call, or job-tool execution.
+Pro Flow owns its private career record at
+`career-data/canonical-career.json`. Open `/career/import-review` to review or
+correct that record directly. No external repository path is required or
+consulted at runtime.
 
 In Phase 4, explicit review decisions are written under the gitignored
 `career-data/` directory. Tests use temporary directories and never touch the
@@ -68,7 +63,8 @@ hash/revision verification whenever the review page loads.
 
 Phase 5 application workflow tests also use temporary archives. To exercise the
 live workflow, confirm at least one employer-facing evidence item at
-`/career/import-review`, then open `/applications/new`. Live application
+`/career/import-review`, then open `/applications/new`. Manage private application
+revisions at `/applications/archive`. Live application
 archives remain ignored under `career-data/applications/`.
 
 Phase 6 document verification requires these commands on `PATH`:
@@ -85,9 +81,13 @@ Generated sources and readiness manifests still remain private under the
 application archive; no readiness status can become `ready` until compilation,
 page-count, ATS/contact/keyword, and human visual checks all pass.
 
-### Phase 7 operations workspace
+### Operations, insights, and interview workspaces
 
-Open `/operations` for search, pipeline, interview, and outcome workflows.
+Open `/operations` for search, saved jobs, risk review, company-research
+generation, and pipeline workflows. Successful company research is persisted
+and viewed at `/insights`; the Find Jobs page shows only a completion message.
+Open `/interview` for grounded interview preparation and append-only outcome
+feedback.
 Portal search uses only the installed CLIs under `.agents/skills` and requires:
 
 ```powershell
@@ -95,9 +95,9 @@ bun --version
 ```
 
 When Bun is unavailable, search reports a scoped runtime error and does not
-write partial results. Pipeline, interview, and outcome features remain
-available for existing application archives. All operational state is private
-and gitignored at `career-data/operations.json`.
+write partial results. Pipeline, insight, interview, and outcome features
+remain available for existing application archives. All operational state is
+private and gitignored at `career-data/operations.json`.
 
 The current U.S.-only web search does not require Bun or portal-local
 dependencies. Open `/api/operations/health` or use **Recheck adapters** in

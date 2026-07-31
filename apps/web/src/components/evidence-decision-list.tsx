@@ -5,7 +5,7 @@ import {
   type CanonicalReviewSummary,
   type ImportedFact,
 } from "@pro-flow/career-core";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { AlertIcon, CheckIcon } from "./icons";
 import { StatusBadge } from "./ui";
 
@@ -49,6 +49,33 @@ export function EvidenceDecisionList({
   const [savingId, setSavingId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+
+  async function addEvidence(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    setSavingId("new-evidence");
+    setError("");
+    setMessage("");
+    try {
+      const response = await fetch("/api/career/evidence", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          expectedRevision: revision,
+          category: data.get("category"),
+          value: data.get("value"),
+          note: data.get("note") || undefined,
+        }),
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.message ?? "The evidence could not be added.");
+      window.location.reload();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "The evidence could not be added.");
+      setSavingId(null);
+    }
+  }
 
   const visibleFacts = useMemo(
     () =>
@@ -161,6 +188,31 @@ export function EvidenceDecisionList({
           </p>
         ) : null}
       </div>
+
+      <details className="evidence-add-panel">
+        <summary>Add new career evidence</summary>
+        <form className="operations-stack-form" onSubmit={(event) => void addEvidence(event)}>
+          <label>Evidence category
+            <select name="category" defaultValue="experience">
+              <option value="experience">Professional experience</option>
+              <option value="skills">Skills and capabilities</option>
+              <option value="projects">Projects and systems</option>
+              <option value="education">Education</option>
+              <option value="credentials">Credentials</option>
+              <option value="other">Additional evidence</option>
+            </select>
+          </label>
+          <label>Evidence to add
+            <textarea name="value" required rows={6} maxLength={10000} placeholder="Enter a specific factual statement that Pro Flow may use in future applications." />
+          </label>
+          <label>Private context or source note (optional)
+            <textarea name="note" rows={3} maxLength={2000} placeholder="For example: confirmed from employment records or personal recollection." />
+          </label>
+          <button className="button button--primary" disabled={savingId === "new-evidence"}>
+            {savingId === "new-evidence" ? "Adding evidence…" : "Add confirmed evidence"}
+          </button>
+        </form>
+      </details>
 
       <div className="fact-list">
         {visibleFacts.map((fact) => {

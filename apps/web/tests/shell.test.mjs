@@ -52,12 +52,46 @@ test("fixture source paths cannot point at personal-data directories", () => {
   assert.ok(evidence.every((item) => !item.sourcePath.includes("documents/")));
 });
 
-test("grouped searches open validated redirect routes without blank placeholder tabs", async () => {
+test("grouped searches expose user-initiated redirect links without opening tabs", async () => {
   const workspace = await readFile(
     new URL("../src/components/operations-workspace.tsx", import.meta.url),
     "utf8",
   );
   assert.equal(workspace.includes('window.open("about:blank"'), false);
+  assert.equal(workspace.includes("window.open(search.url"), false);
   assert.ok(workspace.includes("/api/operations/search?"));
-  assert.ok(workspace.includes("window.open(search.url"));
+  assert.ok(workspace.includes("Open {search.label}"));
+  assert.ok(workspace.includes("Bring job into Pro Flow"));
+  assert.ok(workspace.includes("Create resume &amp; cover letter"));
+  assert.ok(workspace.includes("/applications/new?jobId="));
+});
+
+test("the application studio can prefill a selected saved job", async () => {
+  const page = await readFile(
+    new URL("../src/app/applications/new/page.tsx", import.meta.url),
+    "utf8",
+  );
+  const workspace = await readFile(
+    new URL("../src/components/application-workspace.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.ok(page.includes("OperationsStore"));
+  assert.ok(page.includes("initialOpportunity"));
+  assert.ok(workspace.includes("Review the selected posting"));
+  assert.ok(workspace.includes("defaultValue={initialOpportunity?.description}"));
+});
+
+test("career review is standalone and reads Pro Flow canonical evidence", async () => {
+  const page = await readFile(
+    new URL("../src/app/career/import-review/page.tsx", import.meta.url),
+    "utf8",
+  );
+  const route = await readFile(
+    new URL("../src/app/api/career/evidence-decision/route.ts", import.meta.url),
+    "utf8",
+  );
+  assert.equal(page.includes("EXECUTIVE_CAREER_OS_PATH"), false);
+  assert.equal(page.includes("loadExecutiveEvidencePreview"), false);
+  assert.ok(page.includes("loadCanonicalReview"));
+  assert.ok(route.includes("decideCanonicalFact"));
 });

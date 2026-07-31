@@ -15,16 +15,27 @@ Phase 4 permits canonical evidence decisions only through the strict
 `/api/career/evidence-decision` route. Writes must remain under the fixed,
 gitignored `career-data` root, use schema validation, expected revisions,
 atomic replacement, backups, and deterministic compatibility hashes. Do not
-add arbitrary file paths, bulk acceptance, job-search execution, or AI
-providers. Phase 5 application archives must remain under the fixed
+add arbitrary file paths, bulk acceptance, or job-search execution to the
+evidence-decision route. Phase 5 application archives must remain under the fixed
 `career-data/applications` root, use validated server-generated IDs and
 optimistic revisions, and derive claims only from reviewed employer-facing
 evidence. Policy records must never be drafted as claims.
 
-Phase 6 may execute only the fixed document tools `lualatex`, `xelatex`,
-`pdfinfo`, and `pdftotext` with server-generated filenames inside the fixed
-application archive. Artifact reads are restricted to validated application
-IDs and an explicit kind-to-filename map. Failed, pending, or stale checks must
+AI writing is server-only and may receive only the current opportunity,
+confirmed/corrected employer-facing evidence, voice rules, and prohibited-claim
+constraints. Use structured output with evidence IDs, validate every citation,
+set `store: false`, expose AI versus fallback status, and preserve deterministic
+fallbacks. Never send contact fields, pending/rejected evidence, operations
+history, or application outcomes to the writing provider.
+
+Phase 6 may execute the fixed document tools `lualatex`, `xelatex`, `pdfinfo`,
+and `pdftotext`, plus a configured local Chrome executable through
+`playwright-core` for server-rendered HTML-to-PDF conversion. Editable DOCX
+files must be created in-process with the fixed `docx` library. Do not load
+remote assets or execute arbitrary browser scripts during rendering. All tools
+use server-generated filenames inside the fixed application archive. Artifact
+reads are restricted to validated application IDs and an explicit
+kind-to-filename map. Failed, pending, or stale checks must
 keep readiness blocked.
 
 Phase 7 may execute only the six fixed portal adapters under `.agents/skills`
@@ -51,11 +62,15 @@ pages, never scraping. Operations schema v3 removes legacy non-U.S. jobs while
 preserving workflow history and retains at most 50 private search selections.
 Never promote those selections to verified career evidence.
 
-Future onboarding work must remain source-neutral. Executive Career OS is one
-read-only evidence adapter, not a required user data model. Resume/CV upload,
-guided manual entry, existing Pro-Flow import, and future approved sources must
-all produce staged evidence with provenance and pass through explicit user
-review before entering the canonical profile. Never promote extracted,
+The root policy's user-initiated browser-capture exception permits a browser
+extension to extract exactly one actively viewed posting after an explicit
+user click. The server must never fetch the portal page. Capture requests must
+come from browser-extension origins, remain single-shot, and store imported
+content as untrusted opportunity data.
+
+Future onboarding must write staged evidence inside this project and pass
+through explicit user review before entering the canonical profile. Never
+read live career evidence from another repository or promote extracted,
 inferred, uploaded, or search-preference data directly to verified evidence.
 Keep source documents and onboarding progress under the fixed, gitignored
 `career-data` root; do not place personal information in tracked fixtures,

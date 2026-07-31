@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { applicationStatusSchema } from "./application.js";
+import { generationMetadataSchema } from "./application-workflow.js";
 import { isoDateTimeSchema, nonEmptyTextSchema, recordIdSchema } from "./common.js";
 
 export const portalIdSchema = z.enum([
@@ -75,7 +76,29 @@ export const normalizedJobSchema = z.object({
   score: z.number().int().min(0).max(100),
   matchedTerms: z.array(nonEmptyTextSchema.max(100)),
   gaps: z.array(nonEmptyTextSchema.max(100)),
+  dealBreakers: z.array(nonEmptyTextSchema.max(500)).default([]),
+  duplicateOf: recordIdSchema.optional(),
+  riskReview: z.object({
+    score: z.number().int().min(0).max(100),
+    level: z.enum(["low", "medium", "high"]),
+    signals: z.array(z.object({
+      severity: z.enum(["low", "medium", "high", "critical"]),
+      category: z.enum(["fraud", "privacy", "content", "communication", "staleness"]),
+      message: nonEmptyTextSchema.max(500),
+    }).strict()),
+  }).strict().optional(),
+  scoringExplanation: z.array(nonEmptyTextSchema.max(500)).default([]),
   firstSeenAt: isoDateTimeSchema,
+}).strict();
+
+export const jobImportRequestSchema = z.object({
+  portal: portalIdSchema,
+  title: nonEmptyTextSchema.max(300),
+  company: nonEmptyTextSchema.max(300),
+  location: z.string().trim().max(500).optional(),
+  url: z.url().max(2_000),
+  description: z.string().trim().max(50_000).optional(),
+  postedAt: z.string().trim().max(100).optional(),
 }).strict();
 
 export const pipelineEventSchema = z.object({
@@ -109,6 +132,7 @@ export const interviewPackSchema = z.object({
   consistencyClaims: z.array(nonEmptyTextSchema.max(4_000)),
   bridgeAnswers: z.array(nonEmptyTextSchema.max(2_000)),
   questionsToAsk: z.array(nonEmptyTextSchema.max(1_000)),
+  generation: generationMetadataSchema.optional(),
   generatedAt: isoDateTimeSchema,
 }).strict();
 
@@ -132,14 +156,34 @@ export const outcomeRequestSchema = z.object({
   note: nonEmptyTextSchema.max(4_000),
 }).strict();
 
+export const companyInsightCitationSchema = z.object({
+  startIndex: z.number().int().nonnegative(),
+  endIndex: z.number().int().nonnegative(),
+  title: nonEmptyTextSchema.max(500),
+  url: z.url().max(2_000),
+}).strict();
+
+export const companyInsightRecordSchema = z.object({
+  id: recordIdSchema,
+  jobId: recordIdSchema,
+  company: nonEmptyTextSchema.max(300),
+  role: nonEmptyTextSchema.max(300),
+  report: nonEmptyTextSchema.max(30_000),
+  citations: z.array(companyInsightCitationSchema).min(1).max(100),
+  generatedAt: isoDateTimeSchema,
+  model: nonEmptyTextSchema.max(200),
+}).strict();
+
 export const operationsStateSchema = z.object({
-  schemaVersion: z.literal(3),
+  schemaVersion: z.literal(5),
   revision: z.number().int().nonnegative(),
   jobs: z.array(normalizedJobSchema),
   searches: z.array(searchRunSchema).max(50),
   pipeline: z.array(pipelineRecordSchema),
   interviews: z.array(interviewPackSchema),
   outcomes: z.array(outcomeSchema),
+  companyInsights: z.array(companyInsightRecordSchema),
+  dismissedApplicationIds: z.array(recordIdSchema),
   updatedAt: isoDateTimeSchema,
 }).strict();
 
@@ -151,10 +195,12 @@ export type JobSearchRequest = z.infer<typeof jobSearchRequestSchema>;
 export type SearchDefaults = z.infer<typeof searchDefaultsSchema>;
 export type SearchRun = z.infer<typeof searchRunSchema>;
 export type NormalizedJob = z.infer<typeof normalizedJobSchema>;
+export type JobImportRequest = z.infer<typeof jobImportRequestSchema>;
 export type PipelineRecord = z.infer<typeof pipelineRecordSchema>;
 export type PipelineTransitionRequest = z.infer<typeof pipelineTransitionRequestSchema>;
 export type InterviewPack = z.infer<typeof interviewPackSchema>;
 export type InterviewPackRequest = z.infer<typeof interviewPackRequestSchema>;
 export type Outcome = z.infer<typeof outcomeSchema>;
 export type OutcomeRequest = z.infer<typeof outcomeRequestSchema>;
+export type CompanyInsightRecord = z.infer<typeof companyInsightRecordSchema>;
 export type OperationsState = z.infer<typeof operationsStateSchema>;

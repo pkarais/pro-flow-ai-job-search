@@ -29,20 +29,21 @@ export async function loadAcceptanceDashboard(): Promise<AcceptanceDashboard> {
       new OperationsStore(root).load(),
     ]);
     const review = summarizeCanonicalReview(profile);
+    const visibleApplications = applications.filter((application) => !operations.dismissedApplicationIds.includes(application.id));
     const readiness = await Promise.all(
-      applications.map((application) => new DocumentService(root).load(application.id)),
+      visibleApplications.map((application) => new DocumentService(root).load(application.id)),
     );
     const snapshot: AcceptanceSnapshot = {
       evidenceTotal: review.total,
       evidenceReviewed: review.total - review.pending,
       searches: operations.searches.length,
-      applications: applications.length,
-      reviewedApplications: applications.filter(
+      applications: visibleApplications.length,
+      reviewedApplications: visibleApplications.filter(
         (application) => application.status === "review_complete",
       ).length,
       readyDocuments: readiness.filter((manifest, index) =>
         manifest?.status === "ready"
-        && manifest.applicationRevision === applications[index]?.revision
+        && manifest.applicationRevision === visibleApplications[index]?.revision
       ).length,
       pipelineRecords: operations.pipeline.length,
       interviews: operations.interviews.length,

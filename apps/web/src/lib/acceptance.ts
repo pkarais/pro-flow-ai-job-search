@@ -87,7 +87,7 @@ const definitions = [
     id: "interview",
     label: "Prepare an interview pack",
     action: "Prepare for an interview",
-    href: "/operations#interview",
+    href: "/interview",
     detail: (snapshot: AcceptanceSnapshot) =>
       `${snapshot.interviews} grounded interview ${snapshot.interviews === 1 ? "pack" : "packs"} generated`,
     complete: (snapshot: AcceptanceSnapshot) => snapshot.interviews > 0,
@@ -96,7 +96,7 @@ const definitions = [
     id: "outcome",
     label: "Record an outcome",
     action: "Record outcome",
-    href: "/operations#outcomes",
+    href: "/interview",
     detail: (snapshot: AcceptanceSnapshot) =>
       `${snapshot.outcomes} career ${snapshot.outcomes === 1 ? "outcome" : "outcomes"} recorded`,
     complete: (snapshot: AcceptanceSnapshot) => snapshot.outcomes > 0,

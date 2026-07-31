@@ -79,7 +79,15 @@ export function deriveSearchDefaults(
 
   return searchDefaultsSchema.parse({
     roles: unique([...userSelectedRoles, ...roles], 40),
-    locations: unique([...userSelectedLocations, ...locations, "United States"], 20),
+    locations: unique([
+      ...userSelectedLocations,
+      ...locations,
+      "New York, NY",
+      "New Jersey",
+      "Pennsylvania",
+      "East Coast, United States",
+      "United States",
+    ], 20),
     source: profile ? "reviewed_profile" : preview ? "import_preview" : "fallback",
   });
 }

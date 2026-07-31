@@ -8,4 +8,5 @@ export * from "./opportunity.js";
 export * from "./operations.js";
 export * from "./profile.js";
 export * from "./services.js";
+export * from "./structured-resume.js";
 export * from "./workflow.js";

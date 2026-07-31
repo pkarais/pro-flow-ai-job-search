@@ -112,6 +112,13 @@ export const evidenceDecisionRequestSchema = z
     }
   });
 
+export const evidenceAdditionRequestSchema = z.object({
+  expectedRevision: z.number().int().nonnegative(),
+  category: z.enum(["experience", "skills", "projects", "education", "credentials", "other"]),
+  value: nonEmptyTextSchema.max(10_000),
+  note: z.string().trim().max(2_000).optional(),
+}).strict();
+
 export const canonicalReviewSummarySchema = z
   .object({
     revision: z.number().int().nonnegative(),
@@ -134,4 +141,5 @@ export type EvidenceDecision = z.infer<typeof evidenceDecisionSchema>;
 export type CanonicalEvidenceRecord = z.infer<typeof canonicalEvidenceRecordSchema>;
 export type CanonicalCareerProfile = z.infer<typeof canonicalCareerProfileSchema>;
 export type EvidenceDecisionRequest = z.infer<typeof evidenceDecisionRequestSchema>;
+export type EvidenceAdditionRequest = z.infer<typeof evidenceAdditionRequestSchema>;
 export type CanonicalReviewSummary = z.infer<typeof canonicalReviewSummarySchema>;

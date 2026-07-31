@@ -3,9 +3,8 @@ import { evidenceDecisionRequestSchema } from "@pro-flow/career-core";
 import {
   RevisionConflictError,
   SourceEvidenceChangedError,
-  decideImportedFact,
+  decideCanonicalFact,
 } from "@/server/canonical/review-service";
-import { loadExecutiveEvidencePreview } from "@/server/evidence/preview-service";
 
 export const runtime = "nodejs";
 
@@ -26,15 +25,7 @@ export async function POST(request: Request) {
 
   try {
     const decision = evidenceDecisionRequestSchema.parse(body);
-    const preview = await loadExecutiveEvidencePreview();
-    if (preview.status === "not_configured") {
-      return fail("configuration_error", "Executive Career OS is not configured.", 503);
-    }
-    if (preview.status === "error") {
-      return fail("source_error", preview.message, 502);
-    }
-
-    const result = await decideImportedFact(preview.result, decision);
+    const result = await decideCanonicalFact(decision);
     const record = result.profile.records.find((item) => item.id === decision.factId);
     return Response.json({
       data: {

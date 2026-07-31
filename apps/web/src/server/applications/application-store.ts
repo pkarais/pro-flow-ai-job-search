@@ -1,11 +1,14 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
   archivedApplicationSchema,
   claimDecisionRequestSchema,
+  regenerateDraftRequestSchema,
   type ArchivedApplication,
+  type ApplicationDraft,
   type ClaimDecisionRequest,
+  type RegenerateDraftRequest,
 } from "@pro-flow/career-core";
 import { RevisionConflictError } from "../canonical/canonical-store.ts";
 
@@ -38,6 +41,15 @@ export class ApplicationStore {
     }
   }
 
+  async delete(id: string): Promise<void> {
+    const archiveFile = this.file(id);
+    const artifactDirectory = this.directory(id);
+    await Promise.all([
+      rm(archiveFile, { force: true }),
+      rm(artifactDirectory, { recursive: true, force: true }),
+    ]);
+  }
+
   async decide(input: ClaimDecisionRequest, now = new Date()): Promise<ArchivedApplication> {
     const request = claimDecisionRequestSchema.parse(input);
     const current = await this.load(request.applicationId);
@@ -59,8 +71,40 @@ export class ApplicationStore {
     return next;
   }
 
+  async replaceDraft(
+    input: RegenerateDraftRequest,
+    draft: ApplicationDraft,
+    now = new Date(),
+  ): Promise<ArchivedApplication> {
+    const request = regenerateDraftRequestSchema.parse(input);
+    const current = await this.load(request.applicationId);
+    if (!current) throw new Error("Application archive not found.");
+    if (current.revision !== request.expectedRevision) throw new RevisionConflictError(current.revision);
+    if (draft.claims.some((claim) => claim.decision !== "pending")) {
+      throw new Error("A regenerated draft must return every new claim to factual review.");
+    }
+    const next = archivedApplicationSchema.parse({
+      ...current,
+      revision: current.revision + 1,
+      status: "factual_review",
+      draft,
+      draftHistory: [
+        ...(current.draftHistory ?? []),
+        { revision: current.revision, archivedAt: now.toISOString(), draft: current.draft },
+      ].slice(-20),
+      updatedAt: now.toISOString(),
+    });
+    await atomicWrite(this.file(next.id), `${JSON.stringify(next, null, 2)}\n`);
+    return next;
+  }
+
   private file(id: string): string {
     if (!/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/.test(id)) throw new Error("Invalid application ID.");
     return path.join(this.root, `${id}.json`);
+  }
+
+  private directory(id: string): string {
+    if (!/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/.test(id)) throw new Error("Invalid application ID.");
+    return path.join(this.root, id);
   }
 }

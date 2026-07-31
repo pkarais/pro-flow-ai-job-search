@@ -3,6 +3,7 @@ import { mkdtemp, readFile, readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { evidenceAdditionRequestSchema } from "../../../packages/career-core/dist/index.js";
 
 import {
   CanonicalProfileStore,
@@ -37,6 +38,21 @@ const imported = {
   issues: [],
   readOnly: true,
 };
+
+test("candidate-added evidence requires a controlled category and revision", () => {
+  const input = evidenceAdditionRequestSchema.parse({
+    expectedRevision: 4,
+    category: "credentials",
+    value: "Confirmed credential held by the candidate.",
+    note: "Added directly during canonical review.",
+  });
+  assert.equal(input.category, "credentials");
+  assert.throws(() => evidenceAdditionRequestSchema.parse({
+    expectedRevision: 4,
+    category: "uncontrolled",
+    value: "Unsupported category.",
+  }));
+});
 
 test("canonical storage round-trips without data loss and backs up revisions", async () => {
   const root = await mkdtemp(path.join(tmpdir(), "pro-flow-canonical-"));
