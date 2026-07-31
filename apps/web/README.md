@@ -56,8 +56,9 @@ Indeed, USAJOBS, Dice, Built In, and Wellfound, then opens an official recent
 job search with the selected role and U.S. location prefilled. Role choices are
 derived from reviewed career evidence, the connected read-only import preview,
 and prior user-selected application titles. Users can type an override.
-Legacy Danish and non-U.S. skills are disabled, and operations schema v2
-filters their old results without altering application history.
+Legacy Danish and non-U.S. skills are disabled. Operations schema v3 filters
+their old results without altering application history and privately retains
+the latest 50 successful role/location selections for future defaults.
 
 Portal searches run as four groups: LinkedIn + Indeed, USAJOBS + Built In,
 Wellfound + Dice, or all six. A single submit launches the selected searches

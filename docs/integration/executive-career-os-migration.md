@@ -482,8 +482,9 @@ Implementation:
 - USAJOBS uses its official public search page until approved API credentials
   are configured.
 - FreeHire and the four Danish skills are disabled so `/scrape` skips them.
-- Operations schema v2 filters legacy non-U.S. jobs while preserving pipeline,
-  interview, and outcome records.
+- Operations schema v3 filters legacy non-U.S. jobs while preserving pipeline,
+  interview, and outcome records, and retains the latest 50 private search
+  selections.
 - Role uses a complete dropdown plus custom entry; location uses an editable
   suggestion list, retaining manual choice.
 - Portal selection is grouped into three pairs plus an all-six option, with
@@ -497,6 +498,8 @@ Gate:
 - Search defaults contain only reviewed/imported/user-selected role inputs and
   U.S. locations.
 - Migration tests prove application workflow history is preserved.
+- Successful user-selected roles and normalized U.S. locations are prioritized
+  on the next visit without becoming verified career facts.
 
 ## Immediate conflicts to resolve
 

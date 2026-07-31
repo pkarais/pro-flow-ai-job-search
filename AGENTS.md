@@ -68,4 +68,7 @@ U.S. location arguments. FreeHire and every Danish portal skill remain
 disabled for rollback only and must be skipped by `/scrape`. Do not scrape a
 portal that lacks a public candidate-search API. Role suggestions may come
 from reviewed evidence, connected read-only evidence, and archived
-user-selected application titles; they are search input, not new career facts.
+user-selected application titles. Operations schema v3 may retain the latest
+50 successful search selections under the private `career-data` root so recent
+roles and U.S. locations can be prioritized. They are search inputs, not new
+career facts.

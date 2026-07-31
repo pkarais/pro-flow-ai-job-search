@@ -15,11 +15,13 @@ import {
   buildOfficialSearchUrl,
   buildOfficialSearchUrls,
   inspectPortalRuntime,
+  normalizeUsLocation,
 } from "../src/server/operations/portal-adapter.ts";
 import { deriveSearchDefaults } from "../src/server/operations/search-defaults.ts";
 import {
   createInterviewPack,
   recordOutcome,
+  recordSearchRun,
   transitionPipeline,
 } from "../src/server/operations/operations-service.ts";
 
@@ -206,6 +208,8 @@ test("portal groups launch the requested pair or all six without duplicates", ()
   const all = buildOfficialSearchUrls({ ...request, group: "all" });
   assert.equal(all.length, 6);
   assert.equal(new Set(all.map((item) => item.portal)).size, 6);
+  assert.equal(normalizeUsLocation("Austin, TX"), "Austin, TX, United States");
+  assert.equal(normalizeUsLocation("United States"), "United States");
 });
 
 test("search defaults derive roles from career evidence and keep location in the U.S.", () => {
@@ -227,6 +231,20 @@ test("search defaults derive roles from career evidence and keep location in the
   assert.deepEqual(defaults.roles, ["Operations Director", "Senior Program Manager"]);
   assert.deepEqual(defaults.locations, ["United States"]);
   assert.equal(defaults.source, "reviewed_profile");
+});
+
+test("successful grouped searches persist private reusable role and location choices", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "pro-flow-search-history-"));
+  const state = await recordSearchRun(root, {
+    group: "linkedin_indeed",
+    query: "Operations Director",
+    location: "Austin, TX, United States",
+  }, new Date(timestamp));
+  assert.equal(state.searches.length, 1);
+  assert.deepEqual(state.searches[0].portals, ["linkedin-search", "indeed-search"]);
+  const defaults = deriveSearchDefaults(null, undefined, [state.searches[0].query], [state.searches[0].location]);
+  assert.equal(defaults.roles[0], "Operations Director");
+  assert.equal(defaults.locations[0], "Austin, TX, United States");
 });
 
 test("legacy operations migration removes non-U.S. portal jobs but keeps LinkedIn history", async () => {
@@ -256,8 +274,9 @@ test("legacy operations migration removes non-U.S. portal jobs but keeps LinkedI
     updatedAt: timestamp,
   }));
   const migrated = await new OperationsStore(root).load();
-  assert.equal(migrated.schemaVersion, 2);
+  assert.equal(migrated.schemaVersion, 3);
   assert.deepEqual(migrated.jobs.map((item) => item.portal), ["linkedin-search"]);
+  assert.deepEqual(migrated.searches, []);
 });
 
 test("pipeline rejects unsafe skips and readiness bypasses", async () => {

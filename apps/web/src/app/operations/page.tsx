@@ -19,7 +19,11 @@ export default async function OperationsPage() {
   const searchDefaults = deriveSearchDefaults(
     profile,
     previewState?.status === "ready" ? previewState.result : undefined,
-    applications.map((application) => application.opportunity.positionTitle),
+    [
+      ...state.searches.map((search) => search.query).reverse(),
+      ...applications.map((application) => application.opportunity.positionTitle),
+    ],
+    state.searches.map((search) => search.location).reverse(),
   );
   return (
     <OperationsWorkspace

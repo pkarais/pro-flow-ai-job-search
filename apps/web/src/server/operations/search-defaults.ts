@@ -60,6 +60,7 @@ export function deriveSearchDefaults(
   profile: CanonicalCareerProfile | null,
   preview?: EvidenceImportResult,
   userSelectedRoles: string[] = [],
+  userSelectedLocations: string[] = [],
 ): SearchDefaults {
   const facts = profile ? factsFromCanonical(profile) : preview ? factsFromPreview(preview) : [];
   const roles: string[] = [];
@@ -78,7 +79,7 @@ export function deriveSearchDefaults(
 
   return searchDefaultsSchema.parse({
     roles: unique([...userSelectedRoles, ...roles], 40),
-    locations: unique([...locations, "United States"], 20),
+    locations: unique([...userSelectedLocations, ...locations, "United States"], 20),
     source: profile ? "reviewed_profile" : preview ? "import_preview" : "fallback",
   });
 }

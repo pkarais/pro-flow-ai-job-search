@@ -33,9 +33,16 @@ function searchUrl(base: string, parameters: Record<string, string>): string {
   return url.toString();
 }
 
+export function normalizeUsLocation(value?: string): string {
+  const location = value?.trim() || "United States";
+  return /\b(united states|u\.?s\.?a?\.?)\b/i.test(location)
+    ? location
+    : `${location}, United States`;
+}
+
 export function buildOfficialSearchUrl(requestInput: JobSearchRequest): string {
   const request = jobSearchRequestSchema.parse(requestInput);
-  const location = request.location?.trim() || "United States";
+  const location = normalizeUsLocation(request.location);
   switch (request.portal) {
     case "linkedin-search":
       return searchUrl("https://www.linkedin.com/jobs/search/", {

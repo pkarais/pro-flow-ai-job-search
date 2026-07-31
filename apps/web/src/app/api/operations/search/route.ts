@@ -1,6 +1,8 @@
 import { jobSearchRequestSchema, portalGroupSearchRequestSchema } from "@pro-flow/career-core";
 import { NextResponse } from "next/server";
-import { buildOfficialSearchUrl, buildOfficialSearchUrls } from "@/server/operations/portal-adapter";
+import { careerDataRoot } from "@/server/canonical/review-service";
+import { recordSearchRun } from "@/server/operations/operations-service";
+import { buildOfficialSearchUrl, buildOfficialSearchUrls, normalizeUsLocation } from "@/server/operations/portal-adapter";
 
 export const runtime = "nodejs";
 
@@ -24,8 +26,11 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const input = portalGroupSearchRequestSchema.parse(await request.json());
-    return NextResponse.json({ searches: buildOfficialSearchUrls(input) });
+    const parsed = portalGroupSearchRequestSchema.parse(await request.json());
+    const input = { ...parsed, location: normalizeUsLocation(parsed.location) };
+    const searches = buildOfficialSearchUrls(input);
+    const next = await recordSearchRun(careerDataRoot(), input);
+    return NextResponse.json({ searches, stateRevision: next.revision });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Search request is invalid." },

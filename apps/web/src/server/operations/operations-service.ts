@@ -5,10 +5,13 @@ import {
   canTransition,
   interviewPackRequestSchema,
   outcomeRequestSchema,
+  portalGroupPortals,
+  portalGroupSearchRequestSchema,
   pipelineTransitionRequestSchema,
   type ArchivedApplication,
   type InterviewPackRequest,
   type OutcomeRequest,
+  type PortalGroupSearchRequest,
   type PipelineRecord,
   type PipelineTransitionRequest,
 } from "@pro-flow/career-core";
@@ -28,6 +31,27 @@ export async function listApplications(dataRoot: string): Promise<ArchivedApplic
     if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
     throw error;
   }
+}
+
+export async function recordSearchRun(
+  dataRoot: string,
+  input: PortalGroupSearchRequest,
+  now = new Date(),
+) {
+  const request = portalGroupSearchRequestSchema.parse(input);
+  const store = new OperationsStore(dataRoot);
+  const state = await store.load();
+  return store.save({
+    ...state,
+    searches: [...state.searches, {
+      id: `search_${randomUUID().replaceAll("-", "")}`,
+      group: request.group,
+      query: request.query,
+      location: request.location,
+      portals: [...portalGroupPortals[request.group]],
+      launchedAt: now.toISOString(),
+    }].slice(-50),
+  }, state.revision);
 }
 
 export async function transitionPipeline(dataRoot: string, input: PipelineTransitionRequest) {

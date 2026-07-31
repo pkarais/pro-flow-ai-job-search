@@ -47,5 +47,6 @@ The current U.S.-only search policy supersedes the Phase 7/8 adapter list.
 `portalIdSchema` permits only LinkedIn, Indeed, USAJOBS, Dice, Built In, and
 Wellfound. `/api/operations/search` may redirect only to those official HTTPS
 origins. Searches without public candidate APIs use official prefilled search
-pages, never scraping. Operations schema v2 removes legacy non-U.S. jobs while
-preserving pipeline, interview, and outcome history.
+pages, never scraping. Operations schema v3 removes legacy non-U.S. jobs while
+preserving workflow history and retains at most 50 private search selections.
+Never promote those selections to verified career evidence.

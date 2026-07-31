@@ -32,15 +32,19 @@ export class OperationsStore {
               && job !== null
               && portalIdSchema.safeParse((job as Record<string, unknown>).portal).success)
           : [];
-        return operationsStateSchema.parse({ ...raw, schemaVersion: 2, jobs });
+        return operationsStateSchema.parse({ ...raw, schemaVersion: 3, jobs, searches: [] });
+      }
+      if (raw.schemaVersion === 2) {
+        return operationsStateSchema.parse({ ...raw, schemaVersion: 3, searches: [] });
       }
       return operationsStateSchema.parse(raw);
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
       return operationsStateSchema.parse({
-        schemaVersion: 2,
+        schemaVersion: 3,
         revision: 0,
         jobs: [],
+        searches: [],
         pipeline: [],
         interviews: [],
         outcomes: [],

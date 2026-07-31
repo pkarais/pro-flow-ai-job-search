@@ -44,7 +44,16 @@ export const jobSearchRequestSchema = z.object({
 export const portalGroupSearchRequestSchema = z.object({
   group: portalGroupIdSchema,
   query: nonEmptyTextSchema.max(200),
-  location: z.string().trim().max(200).default("United States"),
+  location: nonEmptyTextSchema.max(200).default("United States"),
+}).strict();
+
+export const searchRunSchema = z.object({
+  id: recordIdSchema,
+  group: portalGroupIdSchema,
+  query: nonEmptyTextSchema.max(200),
+  location: nonEmptyTextSchema.max(200),
+  portals: z.array(portalIdSchema).min(2).max(6),
+  launchedAt: isoDateTimeSchema,
 }).strict();
 
 export const searchDefaultsSchema = z.object({
@@ -124,9 +133,10 @@ export const outcomeRequestSchema = z.object({
 }).strict();
 
 export const operationsStateSchema = z.object({
-  schemaVersion: z.literal(2),
+  schemaVersion: z.literal(3),
   revision: z.number().int().nonnegative(),
   jobs: z.array(normalizedJobSchema),
+  searches: z.array(searchRunSchema).max(50),
   pipeline: z.array(pipelineRecordSchema),
   interviews: z.array(interviewPackSchema),
   outcomes: z.array(outcomeSchema),
@@ -139,6 +149,7 @@ export type PortalGroupSearchRequest = z.infer<typeof portalGroupSearchRequestSc
 export type PortalRuntimeReport = z.infer<typeof portalRuntimeReportSchema>;
 export type JobSearchRequest = z.infer<typeof jobSearchRequestSchema>;
 export type SearchDefaults = z.infer<typeof searchDefaultsSchema>;
+export type SearchRun = z.infer<typeof searchRunSchema>;
 export type NormalizedJob = z.infer<typeof normalizedJobSchema>;
 export type PipelineRecord = z.infer<typeof pipelineRecordSchema>;
 export type PipelineTransitionRequest = z.infer<typeof pipelineTransitionRequestSchema>;

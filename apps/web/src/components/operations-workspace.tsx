@@ -107,7 +107,7 @@ export function OperationsWorkspace({
         if (tab) tab.location.href = search.url;
         else blocked.push(search);
       });
-      setLaunchMessage(`${searches.length - blocked.length} of ${searches.length} portal searches opened.`);
+      setLaunchMessage(`${searches.length - blocked.length} of ${searches.length} portal searches opened. This role and U.S. location were saved privately for your next search.`);
       setBlockedSearches(blocked);
     } catch (launchError) {
       tabs.forEach((tab) => tab?.close());
@@ -183,7 +183,7 @@ export function OperationsWorkspace({
             </label>
             <button className="button button--primary" type="submit" disabled={busy}>{busy ? "Launching searches…" : "Search recent jobs"}</button>
           </form>
-          <p className="adapter-note">Role suggestions come from {searchDefaults.source === "reviewed_profile" ? "your reviewed career evidence" : searchDefaults.source === "import_preview" ? "your connected career-source preview" : "manual selection because no career source is connected yet"}. You can always type a different role or U.S. location.</p>
+          <p className="adapter-note">Role suggestions come from {searchDefaults.source === "reviewed_profile" ? "your reviewed career evidence" : searchDefaults.source === "import_preview" ? "your connected career-source preview" : "manual selection because no career source is connected yet"}. You can always type a different role or U.S. location; successful selections are saved privately and prioritized next time.</p>
           {launchMessage ? <p className="search-launch-message" role="status">{launchMessage}</p> : null}
           {blockedSearches.length ? (
             <div className="blocked-searches" role="alert">
