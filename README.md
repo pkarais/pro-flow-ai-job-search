@@ -10,6 +10,15 @@ tracking, interview preparation, and outcome learning.**
 
 [![CI](https://github.com/pkarais/pro-flow-ai-job-search/actions/workflows/ci.yml/badge.svg)](https://github.com/pkarais/pro-flow-ai-job-search/actions/workflows/ci.yml)
 
+> **Release status: 0.2.0-beta.1 — local-first public beta.** Pro Flow is
+> designed to run on one trusted computer. It has no authentication or
+> multi-user isolation. Do not expose port 3000, deploy it to a public URL, or
+> publish the private `career-data` directory.
+
+[Quick setup](SETUP.md) · [Complete user and fork guide](docs/USER_GUIDE.md) ·
+[Security](SECURITY.md) · [Privacy](PRIVACY.md) · [Third-party notices](THIRD_PARTY_NOTICES.md) ·
+[Contributing](CONTRIBUTING.md) · [Release checklist](docs/RELEASE_CHECKLIST.md)
+
 This autonomous repository originated as an attributed fork and substantial extension of
 [Mads Lorentzen's AI Job Search](https://github.com/MadsLorentzen/ai-job-search).
 It now owns its career evidence, workflow state, application archives, and
@@ -100,6 +109,25 @@ The integration work in this fork was developed by
 - a U.S.-only six-portal search experience;
 - grouped concurrent searches and remembered search preferences;
 - expanded automated tests and integration documentation.
+
+### Open-source projects reviewed during the redesign
+
+Pro Flow's current product direction was also informed by a comparative review
+of job-tracking, job-risk, market-data, and résumé-rendering projects:
+
+- [Donzhu2020/job-tracker](https://github.com/Donzhu2020/job-tracker);
+- [GhostJobDetector/Ghost-Job-Detector](https://github.com/GhostJobDetector/Ghost-Job-Detector);
+- [ebltzr/capstone](https://github.com/ebltzr/capstone);
+- [tarunsinghal92/indeedscrapperlatest](https://github.com/tarunsinghal92/indeedscrapperlatest);
+- [Indeed Hiring Lab AI Tracker](https://github.com/hiring-lab/ai-tracker);
+- [weberwcwei/job-scout](https://github.com/weberwcwei/job-scout);
+- [phoinixi/resuml](https://github.com/phoinixi/resuml).
+
+These projects helped frame questions about saved-job workflows, explainable
+scoring, risk signals, market context, structured résumé data, theme systems,
+and rendering. Except for the cited Indeed Hiring Lab dataset, their source
+code was not incorporated. Exact relationships and detected licenses are
+documented in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 Git remotes preserve the relationship:
 
@@ -397,66 +425,10 @@ records.
 
 ## Installation
 
-### Prerequisites
-
-- Node.js 20 or newer
-- npm
-- Python 3.10 or newer
-- Git
-- MiKTeX, TeX Live, MacTeX, or another distribution providing `lualatex` and
-  `xelatex`
-- Poppler tools providing `pdfinfo` and `pdftotext`
-- Bun is optional for retained legacy CLI skills; the current U.S. web search
-  uses official search destinations and does not require Bun
-
-### Clone
-
-```powershell
-git clone https://github.com/pkarais/pro-flow-ai-job-search.git
-Set-Location pro-flow-ai-job-search
-```
-
-To retain the original project relationship:
-
-```powershell
-git remote add upstream https://github.com/MadsLorentzen/ai-job-search.git
-```
-
-### Install the web application
-
-```powershell
-Set-Location apps/web
-npm install
-```
-
-### Configure local AI writing
-
-Copy the web environment template:
-
-```powershell
-Copy-Item .env.example .env.local
-```
-
-Set local AI credentials in `apps/web/.env.local`:
-
-```text
-OPENAI_API_KEY=...
-OPENAI_MODEL=...
-```
-
-Do not place provider keys or personal information in `.env.example`.
-
-### Start the guided interface
-
-```powershell
-npm run dev
-```
-
-Open:
-
-```text
-http://localhost:3000
-```
+Use [SETUP.md](SETUP.md) for the tested quick start. The comprehensive
+[user and fork guide](docs/USER_GUIDE.md) covers Windows, macOS, Linux,
+document tools, OpenAI configuration, browser capture, private-data backup,
+customization, validation, updates, and troubleshooting.
 
 ## Development and validation
 
@@ -485,17 +457,17 @@ python -m pip install -r requirements-dev.txt
 python -m unittest discover -s tests -v
 ```
 
-At the completion of the documented Phase 10 work, the validated baseline is:
+The local-first beta baseline is:
 
 - **132** original Pro-Flow Python tests;
 - **12** shared career-core tests;
-- **35** web workflow tests;
+- **59** web workflow tests;
 - passing ESLint;
 - passing TypeScript checks;
 - passing Next.js production build.
 
-The protected Executive Career OS baseline separately passed its original
-12-test suite and TypeScript typecheck.
+GitHub Actions repeats these web, shared-core, security, Python, LaTeX, and
+portable-skill checks on public-beta changes.
 
 ## Legacy agent workflow
 
@@ -607,6 +579,10 @@ third-party portal skills, provider integrations, or external connectors.
 
 Important boundaries:
 
+- this beta is localhost-only and must not be exposed to the public internet;
+- it has no authentication, tenant isolation, or encrypted remote storage;
+- all users with access to the local service can access the same career data;
+
 - postings are untrusted content;
 - secrets stay in environment variables or approved secret stores;
 - provider calls may transmit the supplied prompt context;
@@ -614,6 +590,10 @@ Important boundaries:
 - employer-facing output must not contain internal paths or review metadata;
 - no automated outreach occurs;
 - inspect any borrowed portal skill before enabling it.
+
+See [docs/USER_GUIDE.md](docs/USER_GUIDE.md) for backup and deletion procedures
+and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for incorporated and
+inspiration-only sources.
 
 ## Contributing and upstream updates
 

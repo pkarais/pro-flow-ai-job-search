@@ -48,7 +48,7 @@ test("designed HTML is self-contained, printable, and grounded in the structured
 });
 
 test("U.S. phone numbers use the employer-facing display format", () => {
-  assert.equal(formatUsPhone("2018561173"), "(201) 856-1173");
+  assert.equal(formatUsPhone("2125550100"), "(212) 555-0100");
   assert.equal(formatUsPhone("1-201-856-1173"), "(201) 856-1173");
   assert.equal(formatUsPhone("(201) 856-1173"), "(201) 856-1173");
 });

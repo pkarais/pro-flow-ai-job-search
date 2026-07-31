@@ -7,8 +7,8 @@
 
 ## Purpose
 
-This manifest controls the migration of reusable parts of
-`C:\Users\pjkar\executive-career-os` into Pro-Flow AI Job Search.
+This manifest controlled the migration of reusable parts of the former local
+`executive-career-os` checkout into Pro-Flow AI Job Search.
 
 The integration must produce one guided product without breaking either source
 project, duplicating authoritative career facts, exposing private data, or

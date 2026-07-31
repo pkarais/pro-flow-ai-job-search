@@ -7,10 +7,14 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   try {
+    const origin = request.headers.get("origin");
+    if ((origin?.startsWith("chrome-extension://") || origin?.startsWith("moz-extension://"))
+      && request.headers.get("x-pro-flow-capture") !== "user-initiated-v1") {
+      return NextResponse.json({ error: "The browser capture request is invalid." }, { status: 403 });
+    }
     const input = jobImportRequestSchema.parse(await request.json());
     const state = await importJob(careerDataRoot(), input, await loadCanonicalProfile());
     const response = NextResponse.json({ state });
-    const origin = request.headers.get("origin");
     if (origin?.startsWith("chrome-extension://") || origin?.startsWith("moz-extension://")) {
       response.headers.set("Access-Control-Allow-Origin", origin);
     }

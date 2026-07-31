@@ -71,6 +71,52 @@ jobs:
           python-version: "3.12"
       - run: python -m unittest discover -s tests -t . -v
 
+  career-core:
+    name: Shared career contracts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: packages/career-core/package-lock.json
+      - run: npm ci
+        working-directory: packages/career-core
+      - run: npm run typecheck
+        working-directory: packages/career-core
+      - run: npm test
+        working-directory: packages/career-core
+      - run: npm audit --audit-level=moderate
+        working-directory: packages/career-core
+
+  web-application:
+    name: Local-first web application
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: |
+            packages/career-core/package-lock.json
+            apps/web/package-lock.json
+      - run: npm ci
+        working-directory: packages/career-core
+      - run: npm ci
+        working-directory: apps/web
+      - run: npm run typecheck
+        working-directory: apps/web
+      - run: npm run lint
+        working-directory: apps/web
+      - run: npm test
+        working-directory: apps/web
+      - run: npm run build
+        working-directory: apps/web
+      - run: npm audit --audit-level=moderate
+        working-directory: apps/web
+
   dependency-review:
     name: Dependency review
     # Requires the repo's Dependency graph, which not every repo (upstream or

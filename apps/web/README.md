@@ -1,5 +1,12 @@
 # Pro-Flow Career OS Web
 
+Release: `0.2.0-beta.1` local-first public beta.
+
+This application is localhost-only. It has no authentication or tenant
+isolation and must not be deployed to a public URL. Start with the repository
+[setup guide](../../SETUP.md) and complete
+[user guide](../../docs/USER_GUIDE.md).
+
 The isolated Next.js shell for the guided Pro-Flow Career OS experience.
 
 The dashboard and application workflows use the private canonical record at
