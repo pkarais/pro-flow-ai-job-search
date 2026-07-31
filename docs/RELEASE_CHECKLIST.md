@@ -50,10 +50,16 @@ career data.
 - [ ] Import and review neutral evidence.
 - [ ] Save one real or neutral test posting.
 - [ ] Generate and factual-review an application.
+- [ ] Blend multiple AI emphasis suggestions, regenerate after the initial
+      review, and confirm the completed approval is not requested again.
 - [ ] Inspect all résumé themes and the coordinated cover letter.
+- [ ] Change the accent palette, regenerate files, and confirm Archive serves
+      the new palette rather than a cached earlier PDF.
 - [ ] Verify ATS PDF, designed PDFs, DOCX files, and phone formatting.
 - [ ] Generate, persist, and reopen a cited company report.
 - [ ] Create an interview pack and record a neutral outcome.
+- [ ] Download an `.eml` application package; if Gmail OAuth is configured,
+      create and inspect a Gmail draft without sending it.
 - [ ] Delete a job and confirm operational cascades.
 - [ ] Restore and permanently delete a test application archive.
 - [ ] Inspect desktop and mobile navigation, focus states, loading states,

@@ -102,10 +102,13 @@ The integration work in this fork was developed by
 - canonical fact review with provenance and corrections;
 - private atomic storage, revisions, backups, and integrity hashes;
 - a grounded application studio;
+- AI-generated, selectable emphasis strategies that can be blended into one
+  coordinated final-polish instruction;
 - deterministic fit, claim, and gap analysis;
 - document generation and a fail-closed readiness gate;
 - guarded application-pipeline transitions;
 - grounded interview packs and append-only outcomes;
+- local `.eml` application packages and optional Gmail OAuth draft creation;
 - a U.S.-only six-portal search experience;
 - grouped concurrent searches and remembered search preferences;
 - expanded automated tests and integration documentation.
@@ -151,8 +154,9 @@ upstream  https://github.com/MadsLorentzen/ai-job-search.git
 | Search memory | Privately remembers the most recent 50 role and U.S. location selections |
 | Opportunity intake | Accepts a company, position, location, and pasted job description |
 | Fit assessment | Shows evidence-supported matches, gaps, terms, and eligibility questions |
-| Application drafting | Produces persuasive AI-written résumé and cover-letter content with canonical evidence IDs and a deterministic fallback |
-| Factual review | Requires an explicit decision for every material drafted claim |
+| Application drafting | Produces persuasive AI-written résumé and cover-letter content with canonical evidence IDs and fails closed when AI writing is unavailable |
+| AI final polish | Reanalyzes the current summary, bullets, and cover letter against the complete posting, confirmed career evidence, and only the newest matching company-insights report; users can blend selected emphasis strategies |
+| Factual review | Requires an explicit initial decision for every material claim, then carries that completed approval into later editorial regenerations |
 | Private archives | Stores reviewed application packages under stable application IDs |
 | Hybrid local vault | Builds an embedded SQLite index plus company/role/generation folders containing portable case-file ZIPs |
 | Fork extension builder | Generates a named, localhost-only Chrome/Edge capture extension from the left toolbar |
@@ -164,12 +168,14 @@ upstream  https://github.com/MadsLorentzen/ai-job-search.git
 | Employer research | Separately saves cited company overviews and verified direct-application routes without guessing contact details |
 | Compensation analysis | Tests title/pay alignment against the complete posting, company/site scope, responsibilities, geography, and comparable market roles |
 | Portable case files | Downloads documents, research, interview preparation, pipeline, outcomes, and manifests together or as individual Markdown/JSON assets |
+| Email preparation | Downloads reviewable `.eml` packages or creates Gmail drafts through optional local OAuth; Pro Flow never presses Send |
 | Outcomes | Appends outcome history without rewriting prior evidence |
 
 ## What it deliberately does not do
 
 - It does not automatically apply for jobs.
-- It does not send email, LinkedIn messages, or employer outreach.
+- It does not send email, LinkedIn messages, or employer outreach. Optional
+  Gmail integration creates drafts for the user to review and send.
 - It does not scrape portals that lack an approved public candidate-search
   interface.
 - It does not turn search preferences into verified career facts.
@@ -224,6 +230,7 @@ Track application -> prepare interview -> record outcome
 | `/operations` | U.S. portal search, saved jobs, risk review, company-research launch, and guarded pipeline |
 | `/insights` | Saved, cited company overviews, compensation analysis, and direct-application research |
 | `/interview` | Interview preparation and append-only outcome feedback |
+| `/gmail` | Optional local Gmail OAuth setup for creating reviewable drafts without sending them |
 | `/api/operations/health` | Read-only six-portal readiness report |
 
 Local preview:
@@ -436,7 +443,8 @@ The application workflow:
 2. identifies supported terms and visible gaps;
 3. links every drafted material claim to evidence IDs;
 4. excludes policy records from employer-facing claims;
-5. requires verify/do-not-use decisions;
+5. requires verify/do-not-use decisions for the initial factual review and
+   preserves that completed approval through later editorial regeneration;
 6. archives revisions privately;
 7. prevents readiness or application status from bypassing document checks.
 
@@ -482,7 +490,7 @@ The local-first beta baseline is:
 
 - **132** original Pro-Flow Python tests;
 - **12** shared career-core tests;
-- **59** web workflow tests;
+- **65** web workflow tests;
 - passing ESLint;
 - passing TypeScript checks;
 - passing Next.js production build.

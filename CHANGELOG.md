@@ -27,6 +27,11 @@ per-file diff commands.
   posting, company/site scope, responsibilities, location, and comparable roles.
 - Individual Archive downloads for company research and interview preparation
   in Markdown and JSON, alongside complete ZIP case files.
+- Selectable AI emphasis suggestions, multi-suggestion blending, and a
+  coordinated final-polish pass across the existing summary, résumé bullets,
+  and cover letter using only the newest matching company-insights report.
+- Optional Gmail OAuth setup for creating reviewable drafts with document
+  attachments, plus downloadable `.eml` application packages.
 
 ### Changed
 
@@ -36,6 +41,12 @@ per-file diff commands.
   older reports remain available and clearly identify missing salary analysis.
 - Repository-root discovery no longer depends on the directory from which the
   local Node process was launched.
+- Completed initial factual approval now carries into later editorial
+  regenerations, approved claim cascades collapse out of the active workflow,
+  and internal save revisions are no longer presented as draft versions.
+- Archive views refresh when refocused, display the latest generated palette
+  and timestamp, and use generation-specific artifact links to prevent stale
+  browser PDF reuse.
 
 ## [0.2.0-beta.1] - 2026-07-31
 

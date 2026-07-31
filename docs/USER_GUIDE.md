@@ -19,7 +19,8 @@ Pro Flow combines seven connected areas:
 1. career evidence import and factual review;
 2. user-initiated U.S. job-board searches;
 3. one-posting browser capture or manual job import;
-4. evidence-grounded AI résumé and cover-letter writing;
+4. evidence-grounded AI résumé and cover-letter writing with selectable
+   final-polish directions;
 5. ATS-safe and designed document generation;
 6. company insights, application tracking, and interview preparation;
 7. private outcome history for improving later applications.
@@ -242,13 +243,27 @@ result pages. The generator rejects public and non-local service URLs.
 From a saved job, choose **Create résumé & cover letter**.
 
 1. Generate fresh AI writing.
-2. Inspect every claim and its evidence IDs.
-3. Verify or reject each material claim.
-4. Regenerate after any rejection so excluded language cannot remain.
-5. Choose a document theme and optional accent color.
-6. Generate ATS and designed documents.
-7. Open both PDFs and complete visual inspection.
-8. Move the pipeline to Ready only after the readiness gate passes.
+2. Inspect every claim and its evidence IDs, then complete the initial factual
+   review once by verifying or rejecting each material claim.
+3. Generate job-specific emphasis suggestions. Select one, several, or all;
+   use **Use selected blend** to combine them into one editable instruction.
+4. The final-polish pass reanalyzes the existing positioning summary, tailored
+   bullets, and cover letter together against the complete posting, confirmed
+   career evidence, and only the newest matching company-insights report.
+5. Regenerate the coordinated draft. After the initial review is complete,
+   editorial regeneration retains that approval instead of reopening the full
+   claim cascade. Rejected language remains prohibited.
+6. Choose a document theme and optional accent color. The color choice changes
+   the coordinated designed résumé and cover letter without changing content.
+7. Select **Regenerate all files for this version**. The live preview is not a
+   saved artifact until this file-generation action completes.
+8. Open the generated PDFs and complete visual inspection.
+9. Move the pipeline to Ready only after the readiness gate passes.
+
+Previous draft content is available under the collapsed optional history
+control. It is not another required workflow decision. The current physical
+PDF, DOCX, HTML, source, and ZIP set is the latest generated set for that
+application; generating again replaces those current artifact filenames.
 
 The designed résumé and cover letter share the same structured, verified
 content. The ATS résumé remains a separate single-column artifact.
@@ -273,6 +288,22 @@ content. The ATS résumé remains a separate single-column artifact.
   can be restored. Permanent deletion removes the private record and generated
   artifacts and cannot be undone.
 
+Archive refreshes when it regains browser focus and identifies the palette and
+generation time of the latest saved document set. Artifact links include the
+current revision and generation timestamp so a browser PDF viewer does not
+reuse an older document under the same filename.
+
+### Optional email drafts
+
+- Without connecting an account, Pro Flow can download a reviewable `.eml`
+  message with the selected résumé and cover letter attached.
+- The optional **Gmail** page guides each local user through creating their
+  own Google OAuth web client and authorizing only `gmail.compose`.
+- Gmail integration creates a draft in the connected account. It never sends
+  the message automatically.
+- OAuth configuration and the encrypted refresh token are stored under the
+  ignored `career-data/` directory. Disconnect Gmail to remove authorization.
+
 Deleting a saved job also removes its active pipeline, interview, outcome, and
 company-insight records while dismissing related application archives.
 
@@ -296,6 +327,8 @@ career-data/
 |-- operations.json
 |-- pending-company-research.json
 |-- browser-extension.json
+|-- gmail-oauth-config.json
+|-- gmail-oauth-token.json
 |-- applications/
 |-- vault.sqlite
 `-- vault/companies/<Company>/<Role>/generations/<Application ID>/
@@ -432,6 +465,20 @@ folder may provide more reliable tool access.
 
 Reload the extension from the browser's Extensions page, refresh the posting,
 and ensure the selected posting's URL changes before capturing again.
+
+### Archive still shows an older palette or document
+
+Return to the Archive tab or refresh it so the current server record is
+loaded. Confirm the card shows the intended palette and recent generation
+time. A live preview color is not saved until **Regenerate all files for this
+version** completes.
+
+### Gmail OAuth does not connect
+
+Confirm the Gmail API is enabled, the OAuth client type is **Web application**,
+the exact localhost callback from the Gmail setup page is authorized, and the
+connected account is listed as a test user while the consent screen remains in
+testing.
 
 ### Port 3000 is already in use
 

@@ -88,10 +88,14 @@ Open <http://localhost:3000>.
 2. Open **Find Jobs** and launch a user-initiated portal search.
 3. Save or capture one posting.
 4. Create fresh AI résumé and cover-letter writing.
-5. Review every material claim.
-6. Generate ATS and designed documents.
-7. Complete mechanical and human visual review.
-8. Continue through pipeline, Insights, and Interview.
+5. Complete the initial factual review once. Later editorial regenerations
+   retain that approval.
+6. Optionally generate AI emphasis suggestions, select a blend, and run the
+   coordinated final-polish pass using the newest matching company insights.
+7. Choose a theme and accent color, then select **Regenerate all files for this
+   version** to save ATS and designed documents.
+8. Complete mechanical and human visual review.
+9. Continue through pipeline, Insights, Interview, and Archive.
 
 Private records are written under the gitignored `career-data/` directory.
 Back it up if you want to preserve your history. Never commit it.
