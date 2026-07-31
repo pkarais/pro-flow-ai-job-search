@@ -83,13 +83,25 @@ export function OperationsWorkspace({
     setError("");
     setInsightMessage("");
     try {
-      const response = await fetch("/api/operations/company-insights", {
+      let response = await fetch("/api/operations/company-insights", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ jobId }),
       });
-      const payload = await response.json();
+      let payload = await response.json();
       if (!response.ok) throw new Error(payload.error ?? "Company research could not be generated.");
+      setInsightMessage(`${payload.message} You can remain on this page while Pro Flow completes it.`);
+      let pollAttempts = 0;
+      while (response.status === 202 && pollAttempts < 240) {
+        await new Promise((resolve) => window.setTimeout(resolve, 2_500));
+        pollAttempts += 1;
+        response = await fetch(`/api/operations/company-insights?jobId=${encodeURIComponent(jobId)}&responseId=${encodeURIComponent(payload.responseId)}`, {
+          cache: "no-store",
+        });
+        payload = await response.json();
+        if (!response.ok && response.status !== 202) throw new Error(payload.error ?? "Company research could not be generated.");
+      }
+      if (response.status === 202) throw new Error("Company research is still running after ten minutes. Try again shortly.");
       setState(payload.state);
       setInsightMessage(`${payload.message} Open Insights from the left toolbar to view it.`);
     } catch (insightError) {

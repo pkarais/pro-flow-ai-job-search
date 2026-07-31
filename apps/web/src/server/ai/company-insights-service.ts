@@ -1,21 +1,18 @@
 import OpenAI from "openai";
 import type { CompanyInsightRecord, NormalizedJob } from "@pro-flow/career-core";
 
-export async function researchCompany(job: NormalizedJob): Promise<Omit<CompanyInsightRecord, "id" | "jobId">> {
+function client() {
   const apiKey = process.env.OPENAI_API_KEY?.trim();
   if (!apiKey) throw new Error("OPENAI_API_KEY is not configured.");
-  const model = process.env.OPENAI_INSIGHTS_MODEL?.trim() || process.env.OPENAI_MODEL?.trim() || "gpt-5.6-sol";
-  const timeout = Number.parseInt(process.env.OPENAI_REQUEST_TIMEOUT_MS?.trim() || "120000", 10);
-  const client = new OpenAI({ apiKey, maxRetries: 1, timeout: Number.isFinite(timeout) ? timeout : 120_000 });
-  const response = await client.responses.create({
-    model,
-    tools: [{
-      type: "web_search",
-      search_context_size: "medium",
-      user_location: { type: "approximate", country: "US", region: "New York", timezone: "America/New_York" },
-    }],
-    tool_choice: "auto",
-    input: `Research the employer below for a job candidate preparing an application.
+  return new OpenAI({ apiKey, maxRetries: 1, timeout: 30_000 });
+}
+
+function configuredModel() {
+  return process.env.OPENAI_INSIGHTS_MODEL?.trim() || process.env.OPENAI_MODEL?.trim() || "gpt-5.6-sol";
+}
+
+function prompt(job: NormalizedJob) {
+  return `Research the employer below for a job candidate preparing an application.
 
 Company: ${job.company}
 Role: ${job.title}
@@ -31,8 +28,37 @@ Recent developments
 What matters for this role
 Questions to investigate
 
-Use current web research. Prefer the employer's official website, reputable business publications, and authoritative public records. Cite factual claims inline. Clearly label uncertain, conflicting, or inferred information. Do not invent facts, do not provide personal contact information, and do not repeat the job description as company research.`,
+Use current web research. Prefer the employer's official website, reputable business publications, and authoritative public records. Cite factual claims inline. Clearly label uncertain, conflicting, or inferred information. Do not invent facts, do not provide personal contact information, and do not repeat the job description as company research.`;
+}
+
+export async function startCompanyResearch(job: NormalizedJob) {
+  const response = await client().responses.create({
+    model: configuredModel(),
+    background: true,
+    tools: [{
+      type: "web_search",
+      search_context_size: "medium",
+      user_location: { type: "approximate", country: "US", region: "New York", timezone: "America/New_York" },
+    }],
+    tool_choice: "auto",
+    input: prompt(job),
   });
+  return { responseId: response.id, status: response.status };
+}
+
+export async function pollCompanyResearch(
+  responseId: string,
+  job: NormalizedJob,
+): Promise<
+  | { status: "queued" | "in_progress" }
+  | { status: "failed"; error: string }
+  | { status: "completed"; insight: Omit<CompanyInsightRecord, "id" | "jobId"> }
+> {
+  const response = await client().responses.retrieve(responseId);
+  if (response.status === "queued" || response.status === "in_progress") return { status: response.status };
+  if (response.status !== "completed") {
+    return { status: "failed", error: response.error?.message || `Company research ended with status ${response.status}.` };
+  }
   const textParts = response.output
     .filter((item) => item.type === "message")
     .flatMap((item) => item.content.filter((content) => content.type === "output_text"));
@@ -50,13 +76,16 @@ Use current web research. Prefer the employer's official website, reputable busi
       })));
     textOffset += item.text.length + 2;
   }
-  if (!report || !citations.length) throw new Error("Company research returned no cited report.");
+  if (!report || !citations.length) return { status: "failed", error: "Company research returned no cited report." };
   return {
-    company: job.company,
-    role: job.title,
-    report,
-    citations,
-    generatedAt: new Date().toISOString(),
-    model,
+    status: "completed",
+    insight: {
+      company: job.company,
+      role: job.title,
+      report,
+      citations,
+      generatedAt: new Date().toISOString(),
+      model: response.model || configuredModel(),
+    },
   };
 }
