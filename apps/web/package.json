@@ -2,6 +2,9 @@
   "name": "@pro-flow/web",
   "version": "0.2.0-beta.1",
   "private": true,
+  "engines": {
+    "node": ">=22"
+  },
   "type": "module",
   "scripts": {
     "core:build": "npm --prefix ../../packages/career-core run build",

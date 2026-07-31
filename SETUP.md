@@ -11,7 +11,7 @@ in [docs/USER_GUIDE.md](docs/USER_GUIDE.md).
 ## Requirements
 
 - Git
-- Node.js 20+
+- Node.js 22+
 - npm 10+
 - Chrome or Edge
 - OpenAI API key
