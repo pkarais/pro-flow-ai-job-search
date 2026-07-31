@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { recordIdSchema } from "@pro-flow/career-core";
 import { careerDataRoot } from "@/server/canonical/review-service";
+import { buildApplicationArtifactBundle } from "@/server/documents/artifact-bundle";
 
 const artifacts = {
   cv_source: ["cv.tex", "application/x-tex"],
@@ -24,6 +25,16 @@ export async function GET(
   try {
     const { applicationId: rawId, kind } = await context.params;
     const applicationId = recordIdSchema.parse(rawId);
+    if (kind === "bundle") {
+      const bundle = await buildApplicationArtifactBundle(careerDataRoot(), applicationId);
+      return new Response(bundle.contents, {
+        headers: {
+          "content-type": "application/zip",
+          "content-disposition": `attachment; filename="${bundle.filename}"`,
+          "cache-control": "private, no-store",
+        },
+      });
+    }
     const artifact = artifacts[kind as keyof typeof artifacts];
     if (!artifact) return new Response("Artifact not found.", { status: 404 });
     const target = path.resolve(careerDataRoot(), "applications", applicationId, artifact[0]);

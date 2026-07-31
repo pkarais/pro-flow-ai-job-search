@@ -1,6 +1,6 @@
 "use client";
 
-import type { ArchivedApplication } from "@pro-flow/career-core";
+import type { ArchivedApplication, DocumentReadiness } from "@pro-flow/career-core";
 import Link from "next/link";
 import { useState } from "react";
 import { StatusBadge, SurfaceCard } from "./ui";
@@ -8,9 +8,11 @@ import { StatusBadge, SurfaceCard } from "./ui";
 export function ApplicationArchiveWorkspace({
   initialApplications,
   dismissedApplicationIds,
+  initialReadiness,
 }: {
   initialApplications: ArchivedApplication[];
   dismissedApplicationIds: string[];
+  initialReadiness: Array<DocumentReadiness | null>;
 }) {
   const [applications, setApplications] = useState(initialApplications);
   const [dismissed, setDismissed] = useState(new Set(dismissedApplicationIds));
@@ -73,6 +75,7 @@ export function ApplicationArchiveWorkspace({
       <div className="archive-management-list">
         {applications.map((application) => {
           const isDismissed = dismissed.has(application.id);
+          const readiness = initialReadiness.find((item) => item?.applicationId === application.id);
           return <SurfaceCard className="archive-management-card" key={application.id}>
             <div>
               <StatusBadge tone={isDismissed ? "pending" : "complete"}>{isDismissed ? "Archived" : "Active"}</StatusBadge>
@@ -82,6 +85,22 @@ export function ApplicationArchiveWorkspace({
             </div>
             <div className="archive-management-actions">
               {application.opportunity.url ? <a className="button button--secondary" href={application.opportunity.url} target="_blank" rel="noreferrer">View posting</a> : null}
+              {readiness?.artifacts.length ? <>
+                <a className="button button--primary" href={`/api/applications/artifacts/${application.id}/bundle`} download>
+                  Download all files (.zip)
+                </a>
+                <details>
+                  <summary>Download individual files ({readiness.artifacts.length})</summary>
+                  <div className="artifact-actions" aria-label={`Generated files for ${application.opportunity.positionTitle}`}>
+                    {readiness.artifacts.map((artifact) => <a
+                      className="button button--secondary"
+                      href={`/api/applications/artifacts/${application.id}/${artifact.kind}`}
+                      key={artifact.kind}
+                      download
+                    >{archiveArtifactLabel(artifact.kind)}</a>)}
+                  </div>
+                </details>
+              </> : <small>No generated document files are retained for this application.</small>}
               {isDismissed ? <button className="button button--primary" disabled={busyId === application.id} onClick={() => restore(application.id)}>Restore</button> : null}
               <button className="button button--danger" disabled={busyId === application.id} onClick={() => permanentlyDelete(application)}>Permanently delete</button>
             </div>
@@ -91,4 +110,21 @@ export function ApplicationArchiveWorkspace({
       </div>
     </section>
   </main>;
+}
+
+function archiveArtifactLabel(kind: string) {
+  const labels: Record<string, string> = {
+    cv_pdf: "ATS resume PDF",
+    cv_source: "ATS resume source",
+    cover_letter_pdf: "ATS cover letter PDF",
+    cover_letter_source: "Cover letter source",
+    ats_text: "ATS plain text",
+    designed_resume_html: "Designed resume HTML",
+    designed_resume_pdf: "Designed resume PDF",
+    resume_docx: "Editable resume DOCX",
+    designed_cover_letter_html: "Designed cover letter HTML",
+    designed_cover_letter_pdf: "Designed cover letter PDF",
+    cover_letter_docx: "Editable cover letter DOCX",
+  };
+  return labels[kind] ?? kind.replaceAll("_", " ");
 }
