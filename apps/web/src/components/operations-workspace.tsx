@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import {
   canTransition,
   type ApplicationStatus,
   type ArchivedApplication,
   type OperationsState,
   type PortalRuntimeReport,
+  type SearchDefaults,
 } from "@pro-flow/career-core";
 import { SectionHeading, StatusBadge, SurfaceCard } from "./ui";
 
@@ -19,10 +20,12 @@ export function OperationsWorkspace({
   initialApplications,
   initialState,
   initialRuntimeReport,
+  searchDefaults,
 }: {
   initialApplications: ArchivedApplication[];
   initialState: OperationsState;
   initialRuntimeReport: PortalRuntimeReport;
+  searchDefaults: SearchDefaults;
 }) {
   const [state, setState] = useState(initialState);
   const [runtimeReport, setRuntimeReport] = useState(initialRuntimeReport);
@@ -66,17 +69,6 @@ export function OperationsWorkspace({
     }
   }
 
-  function search(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    void post("/api/operations/search", {
-      portal: data.get("portal"),
-      query: data.get("query"),
-      location: data.get("location"),
-      limit: 10,
-    });
-  }
-
   const pipelineFor = (application: ArchivedApplication) => state.pipeline.find((item) => item.applicationId === application.id);
   const statusFor = (application: ArchivedApplication): ApplicationStatus =>
     pipelineFor(application)?.status ?? (application.status === "review_complete" ? "document_verification" : "factual_review");
@@ -84,20 +76,20 @@ export function OperationsWorkspace({
   return (
     <div className="operations-page">
       <header className="operations-hero">
-        <StatusBadge tone="current">Phase 8 · Integration acceptance</StatusBadge>
+        <StatusBadge tone="current">U.S. career search · Guided workflow</StatusBadge>
         <p className="eyebrow">One connected operating loop</p>
-        <h1>Discover, progress, prepare, and learn.</h1>
-        <p>Portal failures stay isolated. Pipeline changes are validated. Interview guidance stays consistent with verified application claims, and outcomes append history rather than rewrite it.</p>
+        <h1>Search the right U.S. market with less setup.</h1>
+        <p>Choose a U.S. hiring portal, confirm a role drawn from your career evidence, and use the prefilled U.S. location. One click opens the portal’s official recent-job search.</p>
       </header>
 
       <section className="operations-section" id="jobs">
-        <SectionHeading eyebrow="Job discovery" title="Search through normalized portal adapters" description="Live portal CLIs return one shared job shape. Results are deduplicated and ranked against reviewed evidence." />
+        <SectionHeading eyebrow="Job discovery" title="Search trusted U.S. hiring portals" description="Every choice is a U.S.-origin hiring destination. Searches open the portal’s official results page; no unsupported scraping or Danish job boards are used." />
         <SurfaceCard className="portal-readiness-card">
           <div className="portal-readiness-heading">
             <div>
               <p className="eyebrow">Local runtime readiness</p>
               <h3>{runtimeReport.portals.filter((portal) => portal.status === "ready").length} of {runtimeReport.portals.length} adapters ready</h3>
-              <p>Bun {runtimeReport.bunVersion ?? "not detected"} · Checked {new Date(runtimeReport.checkedAt).toLocaleTimeString()}</p>
+              <p>Official search destinations · Checked {new Date(runtimeReport.checkedAt).toLocaleTimeString()}</p>
             </div>
             <button className="button button--secondary" type="button" disabled={busy} onClick={() => void refreshRuntime()}>Recheck adapters</button>
           </div>
@@ -112,27 +104,33 @@ export function OperationsWorkspace({
               </div>
             ))}
           </div>
-          <p className="adapter-note">A ready adapter can still report a temporary portal-side block or timeout. Those failures remain isolated and never store partial results.</p>
+          <p className="adapter-note">USAJOBS also provides an official API, but it requires approved credentials. The current adapter uses its public official search until those credentials are configured.</p>
         </SurfaceCard>
         <SurfaceCard className="operations-card">
-          <form className="operations-search" onSubmit={search}>
+          <form className="operations-search" action="/api/operations/search" method="get" target="_blank">
             <label>Portal
-              <select name="portal" defaultValue="freehire-search">
-                <option value="freehire-search">FreeHire</option>
+              <select name="portal" defaultValue="linkedin-search">
                 <option value="linkedin-search">LinkedIn</option>
-                <option value="jobindex-search">Jobindex</option>
-                <option value="jobbank-search">Jobbank</option>
-                <option value="jobdanmark-search">Jobdanmark</option>
-                <option value="jobnet-search">Jobnet</option>
+                <option value="indeed-search">Indeed</option>
+                <option value="usajobs-search">USAJOBS</option>
+                <option value="dice-search">Dice</option>
+                <option value="builtin-search">Built In</option>
+                <option value="wellfound-search">Wellfound</option>
               </select>
             </label>
-            <label>Role or skill <input name="query" required maxLength={200} /></label>
-            <label>Location <input name="location" maxLength={200} placeholder="Required for LinkedIn" /></label>
-            <button className="button button--primary" disabled={busy}>Search recent jobs</button>
+            <label>Role, skill, or job title
+              <input name="query" list="career-role-options" required maxLength={200} defaultValue={searchDefaults.roles[0] ?? ""} placeholder="Select or type a role" />
+              <datalist id="career-role-options">{searchDefaults.roles.map((role) => <option value={role} key={role} />)}</datalist>
+            </label>
+            <label>U.S. location
+              <input name="location" list="career-location-options" required maxLength={200} defaultValue={searchDefaults.locations[0] ?? "United States"} />
+              <datalist id="career-location-options">{searchDefaults.locations.map((location) => <option value={location} key={location} />)}</datalist>
+            </label>
+            <button className="button button--primary" type="submit">Search recent jobs</button>
           </form>
-          <p className="adapter-note">Each portal receives its own supported query flags. Location is passed directly where supported and safely included in the keyword query elsewhere.</p>
+          <p className="adapter-note">Role suggestions come from {searchDefaults.source === "reviewed_profile" ? "your reviewed career evidence" : searchDefaults.source === "import_preview" ? "your connected career-source preview" : "manual selection because no career source is connected yet"}. You can always type a different role or U.S. location.</p>
         </SurfaceCard>
-        <div className="job-results">
+        {state.jobs.length ? <div className="job-results" aria-label="Previously saved jobs">
           {state.jobs.map((job) => (
             <SurfaceCard className="job-result-card" key={job.id}>
               <div><StatusBadge tone={job.score >= 60 ? "complete" : "pending"}>{job.score}/100</StatusBadge><small>{job.portal}</small></div>
@@ -143,7 +141,7 @@ export function OperationsWorkspace({
               <a className="text-link" href={job.url} rel="noreferrer" target="_blank">Open posting</a>
             </SurfaceCard>
           ))}
-        </div>
+        </div> : null}
       </section>
 
       <section className="operations-section" id="pipeline">

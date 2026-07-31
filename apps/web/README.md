@@ -51,6 +51,14 @@ adds a six-adapter runtime readiness panel backed by
 availability: Cloudflare blocks and portal timeouts remain visible, isolated
 errors.
 
+The current search experience is U.S.-only. `/operations` offers LinkedIn,
+Indeed, USAJOBS, Dice, Built In, and Wellfound, then opens an official recent
+job search with the selected role and U.S. location prefilled. Role choices are
+derived from reviewed career evidence, the connected read-only import preview,
+and prior user-selected application titles. Users can type an override.
+Legacy Danish and non-U.S. skills are disabled, and operations schema v2
+filters their old results without altering application history.
+
 ## Commands
 
 ```powershell

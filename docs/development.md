@@ -99,15 +99,8 @@ write partial results. Pipeline, interview, and outcome features remain
 available for existing application archives. All operational state is private
 and gitignored at `career-data/operations.json`.
 
-For the Bunli-based Danish portals, install the CLI-local dependencies once:
-
-```powershell
-Set-Location .agents/skills/jobbank-search/cli
-bun install
-```
-
-Repeat for `jobdanmark-search`, `jobindex-search`, and `jobnet-search`. These
-dependency folders and Bun lockfiles are ignored. Open
-`/api/operations/health` or use **Recheck adapters** in `/operations` to verify
-local readiness. A ready local adapter can still receive a temporary upstream
-block or timeout.
+The current U.S.-only web search does not require Bun or portal-local
+dependencies. Open `/api/operations/health` or use **Recheck adapters** in
+`/operations` to verify the fixed official destinations. The allowlist is
+LinkedIn, Indeed, USAJOBS, Dice, Built In, and Wellfound. Legacy FreeHire and
+Danish skills have `enabled: false` so `/scrape` skips them.

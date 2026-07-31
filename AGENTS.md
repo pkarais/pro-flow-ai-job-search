@@ -58,3 +58,14 @@ different portal flags into a generic invocation. Runtime diagnostics may
 verify Bun, fixed CLI paths, and ignored local dependencies, but a locally
 ready adapter is not a promise that the remote portal is available. Remote
 blocks and timeouts must remain isolated and must not persist partial results.
+
+## U.S.-Only Search Policy
+
+The current portal allowlist supersedes the Phase 7/8 portal configuration:
+LinkedIn, Indeed, USAJOBS, Dice, Built In, and Wellfound only. Web searches
+must redirect to these fixed official HTTPS origins with validated role and
+U.S. location arguments. FreeHire and every Danish portal skill remain
+disabled for rollback only and must be skipped by `/scrape`. Do not scrape a
+portal that lacks a public candidate-search API. Role suggestions may come
+from reviewed evidence, connected read-only evidence, and archived
+user-selected application titles; they are search input, not new career facts.

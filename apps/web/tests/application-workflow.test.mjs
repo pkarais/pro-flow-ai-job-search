@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile } from "node:fs/promises";
+import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -12,12 +12,10 @@ import { ApplicationStore } from "../src/server/applications/application-store.t
 import { DocumentService, renderDocumentSources } from "../src/server/documents/document-service.ts";
 import { OperationsStore } from "../src/server/operations/operations-store.ts";
 import {
-  buildPortalSearchArguments,
+  buildOfficialSearchUrl,
   inspectPortalRuntime,
-  normalizePortalResult,
-  PortalUnavailableError,
-  searchPortal,
 } from "../src/server/operations/portal-adapter.ts";
+import { deriveSearchDefaults } from "../src/server/operations/search-defaults.ts";
 import {
   createInterviewPack,
   recordOutcome,
@@ -162,78 +160,84 @@ test("document generation fails closed when required local tools are unavailable
   );
 });
 
-test("portal runtime failure is isolated and does not create operations state", async () => {
-  const previousPath = process.env.PATH;
-  process.env.PATH = "";
-  try {
-    await assert.rejects(
-      () => searchPortal({ portal: "freehire-search", query: "product strategy", limit: 5 }, profile),
-      (error) => error instanceof PortalUnavailableError && /no search was attempted/i.test(error.message),
-    );
-  } finally {
-    process.env.PATH = previousPath;
+test("every search adapter targets an allowlisted U.S. hiring portal", () => {
+  const portals = {
+    "linkedin-search": "www.linkedin.com",
+    "indeed-search": "www.indeed.com",
+    "usajobs-search": "www.usajobs.gov",
+    "dice-search": "www.dice.com",
+    "builtin-search": "builtin.com",
+    "wellfound-search": "wellfound.com",
+  };
+  for (const [portal, hostname] of Object.entries(portals)) {
+    const url = new URL(buildOfficialSearchUrl({
+      portal,
+      query: "program manager",
+      location: "United States",
+      limit: 10,
+    }));
+    assert.equal(url.hostname, hostname);
+    assert.doesNotMatch(url.href, /jobbank|jobnet|jobindex|jobdanmark|freehire/i);
   }
 });
 
-test("each portal adapter uses its own supported query contract", () => {
-  const base = { query: "project manager", location: "Aarhus", limit: 5 };
-  assert.deepEqual(
-    buildPortalSearchArguments({ ...base, portal: "jobbank-search" }).slice(3, 5),
-    ["--key", "project manager Aarhus"],
-  );
-  assert.deepEqual(
-    buildPortalSearchArguments({ ...base, portal: "jobdanmark-search" }).slice(3, 7),
-    ["--text", "project manager", "--municipality", "Aarhus"],
-  );
-  assert.deepEqual(
-    buildPortalSearchArguments({ ...base, portal: "jobnet-search" }).slice(3, 5),
-    ["--search-string", "project manager Aarhus"],
-  );
-  assert.deepEqual(
-    buildPortalSearchArguments({ ...base, portal: "linkedin-search" }).slice(3, 7),
-    ["--query", "project manager", "--location", "Aarhus"],
-  );
+test("runtime diagnostics expose only the six U.S. official searches", () => {
+  const report = inspectPortalRuntime(new Date(timestamp));
+  assert.equal(report.portals.length, 6);
+  assert.ok(report.portals.every((portal) => portal.status === "ready"));
+  assert.ok(report.portals.every((portal) => portal.searchMode === "official_search"));
 });
 
-test("portal-specific result shapes normalize without inventing employer data", () => {
-  assert.deepEqual(normalizePortalResult("jobdanmark-search", {
-    slug: "fixture-role",
-    title: "Program Lead",
-    companyName: "Fixture Company",
-    companyAddress: "Aarhus",
-    publishedDate: "2026-07-30",
-    url: "https://example.test/job/fixture-role",
-  }), {
-    externalId: "fixture-role",
-    title: "Program Lead",
-    company: "Fixture Company",
-    location: "Aarhus",
-    url: "https://example.test/job/fixture-role",
-    description: undefined,
-    postedAt: "2026-07-30",
+test("search defaults derive roles from career evidence and keep location in the U.S.", () => {
+  const searchProfile = canonicalCareerProfileSchema.parse({
+    ...profile,
+    records: [...profile.records, {
+      id: "target_role",
+      sourceId: "professional_genome",
+      sourcePath: "fixtures/profile.md",
+      sourceSection: "Target roles",
+      path: "searchPreferences.coreRoles.0",
+      value: "Senior Program Manager",
+      status: "needs_review",
+      decision: "confirmed",
+      decidedAt: timestamp,
+    }],
   });
-  assert.equal(
-    normalizePortalResult("jobnet-search", {
-      jobAdId: "fixture-job",
-      title: "Project Lead",
-      hiringOrgName: "Public Employer",
-      postalDistrictName: "Copenhagen",
-    }).url,
-    "https://jobnet.dk/job/fixture-job",
-  );
+  const defaults = deriveSearchDefaults(searchProfile, undefined, ["Operations Director"]);
+  assert.deepEqual(defaults.roles, ["Operations Director", "Senior Program Manager"]);
+  assert.deepEqual(defaults.locations, ["United States"]);
+  assert.equal(defaults.source, "reviewed_profile");
 });
 
-test("runtime diagnostics report every portal unavailable when Bun is absent", async () => {
-  const previousPath = process.env.PATH;
-  process.env.PATH = "";
-  try {
-    const report = await inspectPortalRuntime();
-    assert.equal(report.portals.length, 6);
-    assert.ok(report.portals.every((portal) => portal.status === "unavailable"));
-    assert.equal(report.bunVersion, undefined);
-  } finally {
-    process.env.PATH = previousPath;
-  }
+test("legacy operations migration removes non-U.S. portal jobs but keeps LinkedIn history", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "pro-flow-us-migration-"));
+  const job = {
+    id: "job_fixture",
+    externalId: "fixture",
+    title: "Program Manager",
+    company: "Fixture Company",
+    location: "Remote",
+    url: "https://example.test/job",
+    score: 50,
+    matchedTerms: [],
+    gaps: [],
+    firstSeenAt: timestamp,
+  };
+  await writeFile(path.join(root, "operations.json"), JSON.stringify({
+    schemaVersion: 1,
+    revision: 2,
+    jobs: [
+      { ...job, portal: "linkedin-search" },
+      { ...job, id: "job_legacy", portal: "jobnet-search" },
+    ],
+    pipeline: [],
+    interviews: [],
+    outcomes: [],
+    updatedAt: timestamp,
+  }));
+  const migrated = await new OperationsStore(root).load();
+  assert.equal(migrated.schemaVersion, 2);
+  assert.deepEqual(migrated.jobs.map((item) => item.portal), ["linkedin-search"]);
 });
 
 test("pipeline rejects unsafe skips and readiness bypasses", async () => {

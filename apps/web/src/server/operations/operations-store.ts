@@ -3,6 +3,7 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
   operationsStateSchema,
+  portalIdSchema,
   type OperationsState,
 } from "@pro-flow/career-core";
 
@@ -23,11 +24,21 @@ export class OperationsStore {
 
   async load(): Promise<OperationsState> {
     try {
-      return operationsStateSchema.parse(JSON.parse(await readFile(this.file, "utf8")));
+      const raw = JSON.parse(await readFile(this.file, "utf8")) as Record<string, unknown>;
+      if (raw.schemaVersion === 1) {
+        const jobs = Array.isArray(raw.jobs)
+          ? raw.jobs.filter((job) =>
+              typeof job === "object"
+              && job !== null
+              && portalIdSchema.safeParse((job as Record<string, unknown>).portal).success)
+          : [];
+        return operationsStateSchema.parse({ ...raw, schemaVersion: 2, jobs });
+      }
+      return operationsStateSchema.parse(raw);
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
       return operationsStateSchema.parse({
-        schemaVersion: 1,
+        schemaVersion: 2,
         revision: 0,
         jobs: [],
         pipeline: [],

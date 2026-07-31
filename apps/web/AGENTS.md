@@ -42,3 +42,10 @@ allowlisted, normalize portal-specific response fields without inventing
 missing employer data, and distinguish local runtime readiness from remote
 portal availability. Dependency folders and generated Bun lockfiles stay
 ignored.
+
+The current U.S.-only search policy supersedes the Phase 7/8 adapter list.
+`portalIdSchema` permits only LinkedIn, Indeed, USAJOBS, Dice, Built In, and
+Wellfound. `/api/operations/search` may redirect only to those official HTTPS
+origins. Searches without public candidate APIs use official prefilled search
+pages, never scraping. Operations schema v2 removes legacy non-U.S. jobs while
+preserving pipeline, interview, and outcome history.

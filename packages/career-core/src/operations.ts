@@ -3,19 +3,19 @@ import { applicationStatusSchema } from "./application.js";
 import { isoDateTimeSchema, nonEmptyTextSchema, recordIdSchema } from "./common.js";
 
 export const portalIdSchema = z.enum([
-  "freehire-search", "linkedin-search", "jobbank-search",
-  "jobdanmark-search", "jobindex-search", "jobnet-search",
+  "linkedin-search", "indeed-search", "usajobs-search",
+  "dice-search", "builtin-search", "wellfound-search",
 ]);
 
 export const portalRuntimeStatusSchema = z.enum(["ready", "needs_setup", "unavailable"]);
 
 export const portalRuntimeReportSchema = z.object({
-  bunVersion: nonEmptyTextSchema.max(100).optional(),
   checkedAt: isoDateTimeSchema,
   portals: z.array(z.object({
     portal: portalIdSchema,
     label: nonEmptyTextSchema.max(100),
     status: portalRuntimeStatusSchema,
+    searchMode: z.enum(["official_search", "official_api"]),
     message: nonEmptyTextSchema.max(500),
   }).strict()),
 }).strict();
@@ -25,6 +25,12 @@ export const jobSearchRequestSchema = z.object({
   query: nonEmptyTextSchema.max(200),
   location: z.string().trim().max(200).optional(),
   limit: z.number().int().min(1).max(20).default(10),
+}).strict();
+
+export const searchDefaultsSchema = z.object({
+  roles: z.array(nonEmptyTextSchema.max(200)).max(40),
+  locations: z.array(nonEmptyTextSchema.max(200)).max(20),
+  source: z.enum(["reviewed_profile", "import_preview", "fallback"]),
 }).strict();
 
 export const normalizedJobSchema = z.object({
@@ -98,7 +104,7 @@ export const outcomeRequestSchema = z.object({
 }).strict();
 
 export const operationsStateSchema = z.object({
-  schemaVersion: z.literal(1),
+  schemaVersion: z.literal(2),
   revision: z.number().int().nonnegative(),
   jobs: z.array(normalizedJobSchema),
   pipeline: z.array(pipelineRecordSchema),
@@ -110,6 +116,7 @@ export const operationsStateSchema = z.object({
 export type PortalId = z.infer<typeof portalIdSchema>;
 export type PortalRuntimeReport = z.infer<typeof portalRuntimeReportSchema>;
 export type JobSearchRequest = z.infer<typeof jobSearchRequestSchema>;
+export type SearchDefaults = z.infer<typeof searchDefaultsSchema>;
 export type NormalizedJob = z.infer<typeof normalizedJobSchema>;
 export type PipelineRecord = z.infer<typeof pipelineRecordSchema>;
 export type PipelineTransitionRequest = z.infer<typeof pipelineTransitionRequestSchema>;

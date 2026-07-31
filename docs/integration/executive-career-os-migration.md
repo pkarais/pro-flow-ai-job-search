@@ -463,6 +463,37 @@ Gate:
   local setup failures.
 - Web tests, lint, type checking, and production compilation pass.
 
+### Phase 9: U.S.-only guided search
+
+1. Replace the mixed-market portal enum with a U.S.-origin allowlist.
+2. Use official search destinations where no public candidate-search API
+   exists.
+3. Populate role/title suggestions from reviewed career evidence, connected
+   import evidence, and archived user selections.
+4. Prefill a reviewed U.S. location or fall back to `United States`.
+5. Remove legacy non-U.S. results without changing application history.
+
+Implementation:
+
+- The only active choices are LinkedIn, Indeed, USAJOBS, Dice, Built In, and
+  Wellfound.
+- The guided form opens a validated, prefilled official search in a new tab.
+- Indeed is not scraped; its documented APIs are partner/employer oriented.
+- USAJOBS uses its official public search page until approved API credentials
+  are configured.
+- FreeHire and the four Danish skills are disabled so `/scrape` skips them.
+- Operations schema v2 filters legacy non-U.S. jobs while preserving pipeline,
+  interview, and outcome records.
+- Role and location fields use editable datalists, retaining manual choice.
+
+Gate:
+
+- Every generated redirect resolves to one of six fixed official HTTPS hosts.
+- No Danish or non-U.S. portal ID passes the shared contract.
+- Search defaults contain only reviewed/imported/user-selected role inputs and
+  U.S. locations.
+- Migration tests prove application workflow history is preserved.
+
 ## Immediate conflicts to resolve
 
 | Topic | Executive behavior | Pro-Flow behavior | Resolution |
@@ -518,7 +549,7 @@ The integration is considered seamless when:
 
 ## Next action
 
-Use a user-selected live result to complete the Phase 5/6 document acceptance
-gate, then verify the full pipeline, interview, and outcome journey in
-`/operations`. Retest Jobbank and Jobindex later without treating their current
-upstream failures as local integration defects.
+Choose a role and U.S. location in `/operations`, run each desired official
+search, and paste a selected posting into the Application Studio. Then complete
+the Phase 5/6 document acceptance gate and verify the pipeline, interview, and
+outcome journey.
