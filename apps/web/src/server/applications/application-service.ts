@@ -166,6 +166,11 @@ export function applyAiWriting(
   }
 
   const writing = generation.value;
+  const priorPackageWasApproved = application.status === "review_complete";
+  const previouslyVerifiedEvidence = new Set<string>();
+  for (const claim of application.draft.claims.filter((item) => item.decision === "verified")) {
+    claim.evidenceIds.forEach((id) => previouslyVerifiedEvidence.add(id));
+  }
   const claimInputs = [
     {
       text: writing.positioningSummary.text,
@@ -175,11 +180,15 @@ export function applyAiWriting(
     ...writing.resumeBullets.map((item) => ({ ...item, kind: "resume_bullet" as const })),
     ...writing.coverLetter.bodyParagraphs.map((item) => ({ ...item, kind: "cover_letter" as const })),
   ];
-  const claims = claimInputs.map((claim, index) => ({
-    id: stableId("claim", `${application.id}:ai:${index}:${claim.text}`),
-    ...claim,
-    decision: "pending" as const,
-  }));
+  const claims = claimInputs.map((claim, index) => {
+    const retainsApproval = priorPackageWasApproved || claim.evidenceIds.every((id) => previouslyVerifiedEvidence.has(id));
+    return {
+      id: stableId("claim", `${application.id}:ai:${index}:${claim.text}`),
+      ...claim,
+      decision: retainsApproval ? "verified" as const : "pending" as const,
+      ...(retainsApproval ? { reviewedAt: new Date().toISOString() } : {}),
+    };
+  });
   const coverLetter = [
     "Dear Hiring Manager,",
     writing.coverLetter.opening,

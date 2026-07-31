@@ -42,6 +42,7 @@ export default async function ApplicationArchivePage() {
     }];
   }));
   return <ApplicationArchiveWorkspace
+    key={applications.map((application) => `${application.id}:${application.revision}`).join("|")}
     initialApplications={applications}
     dismissedApplicationIds={operations.dismissedApplicationIds}
     initialReadiness={readiness}

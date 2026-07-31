@@ -20,7 +20,7 @@ test("the shell exposes the complete planned primary navigation", () => {
     navigationItems.map((item) => item.label),
     ["Home", "My Career", "Find Jobs", "Applications", "Archive", "Interview", "Insights"],
   );
-  assert.deepEqual(utilityNavigationItems.map((item) => item.label), ["Browser Extension"]);
+  assert.deepEqual(utilityNavigationItems.map((item) => item.label), ["Browser Extension", "Gmail"]);
 });
 
 test("career navigation opens the evidence review route", () => {

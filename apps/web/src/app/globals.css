@@ -850,7 +850,8 @@ h3 {
 
 .regenerate-draft-card {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   justify-content: space-between;
   gap: var(--space-5);
   margin-top: var(--space-5);
@@ -864,6 +865,121 @@ h3 {
 
 .regenerate-draft-card .button {
   flex: 0 0 auto;
+}
+
+.refinement-suggestion-tools {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.refinement-suggestion-list {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+}
+
+.refinement-selection-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.refinement-suggestion {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.refinement-suggestion--selected {
+  border-color: var(--color-brand);
+  background: var(--color-brand-soft);
+}
+
+.refinement-suggestion-heading {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  cursor: pointer;
+}
+
+.refinement-suggestion-heading input {
+  flex: 0 0 auto;
+  margin-top: 0.2rem;
+}
+
+.refinement-suggestion h4,
+.refinement-suggestion p,
+.refinement-suggestion blockquote { margin: 0; }
+
+.refinement-suggestion blockquote {
+  padding-left: var(--space-3);
+  border-left: 3px solid var(--color-accent);
+  color: var(--color-ink-muted);
+  white-space: pre-wrap;
+}
+
+.insight-selection {
+  display: grid;
+  gap: var(--space-2);
+  padding-block: var(--space-2);
+}
+
+.insight-selection details p {
+  max-height: 14rem;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+
+.draft-version-current {
+  border-color: var(--color-brand);
+  background: var(--color-brand-soft);
+}
+
+.draft-version-history {
+  margin-top: var(--space-5);
+  padding: var(--space-4);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+}
+
+.draft-version-history > summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.draft-version-history > summary span {
+  margin-left: var(--space-2);
+  color: var(--color-ink-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.archive-package-meta {
+  display: block;
+  margin-top: var(--space-2);
+  color: var(--color-brand-strong);
+  font-weight: 700;
+}
+
+.review-complete-summary {
+  display: grid;
+  gap: var(--space-3);
+  border-color: var(--color-brand);
+  background: var(--color-brand-soft);
+}
+
+.review-complete-summary p,
+.reviewed-claim p { margin: 0; }
+
+.reviewed-claim {
+  padding-block: var(--space-3);
+  border-bottom: 1px solid var(--color-line);
 }
 
 .archive-card {
@@ -1147,6 +1263,22 @@ h3 {
   padding: var(--space-5);
 }
 
+.job-result-card--expanded {
+  grid-column: 1 / -1;
+}
+
+.application-card-expanded {
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-line);
+}
+
+.application-card-expanded .application-page {
+  width: 100%;
+  padding-inline: 0;
+  padding-bottom: var(--space-4);
+}
+
 .job-action-status {
   display: flex;
   flex-wrap: wrap;
@@ -1214,6 +1346,24 @@ h3 {
   margin-top: var(--space-8);
   border-top: 1px solid var(--color-line);
   padding-top: var(--space-5);
+}
+
+.interview-share-panel {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+  border-top: 1px solid var(--color-line);
+  padding-top: var(--space-5);
+}
+
+.interview-share-panel p {
+  margin: 0;
+}
+
+.interview-share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }
 
 .interview-summary ul {

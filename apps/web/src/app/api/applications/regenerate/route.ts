@@ -4,6 +4,7 @@ import { applyAiWriting } from "@/server/applications/application-service";
 import { ApplicationStore } from "@/server/applications/application-store";
 import { generateApplicationWriting } from "@/server/ai/grounded-writing-service";
 import { careerDataRoot, loadCanonicalProfile } from "@/server/canonical/review-service";
+import { OperationsStore } from "@/server/operations/operations-store";
 
 export const runtime = "nodejs";
 
@@ -26,10 +27,29 @@ export async function POST(request: Request) {
       description: current.opportunity.description,
       url: current.opportunity.url,
     };
+    const operations = await new OperationsStore(careerDataRoot()).load();
+    const matchingJobIds = new Set(operations.jobs.filter((job) => job.url === current.opportunity.url
+      || (job.company.trim().toLowerCase() === current.opportunity.companyName.trim().toLowerCase()
+        && job.title.trim().toLowerCase() === current.opportunity.positionTitle.trim().toLowerCase())).map((job) => job.id));
+    const selectedInsights = operations.companyInsights
+      .filter((insight) => insight.kind === "company_overview")
+      .filter((insight) => matchingJobIds.has(insight.jobId)
+        || (insight.company.trim().toLowerCase() === current.opportunity.companyName.trim().toLowerCase()
+          && insight.role.trim().toLowerCase() === current.opportunity.positionTitle.trim().toLowerCase()))
+      .sort((left, right) => Date.parse(right.generatedAt) - Date.parse(left.generatedAt))
+      .slice(0, 1)
+      .map((insight) => ({ kind: insight.kind, report: insight.report }));
     const generation = await generateApplicationWriting(
       intake,
       profile,
       rejected.map((claim) => claim.text),
+      input.refinementInstructions ?? "",
+      selectedInsights,
+      {
+        positioningSummary: current.draft.summary,
+        claims: current.draft.claims.map(({ text, kind, decision }) => ({ text, kind, decision })),
+        coverLetter: current.draft.coverLetter,
+      },
     );
     if (generation.method !== "ai") {
       return NextResponse.json({ error: generation.note }, { status: 503 });

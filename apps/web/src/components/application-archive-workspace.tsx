@@ -2,7 +2,8 @@
 
 import type { ArchivedApplication, DocumentReadiness } from "@pro-flow/career-core";
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { StatusBadge, SurfaceCard } from "./ui";
 import type { HybridVaultSummary } from "@/server/vault/hybrid-vault";
 
@@ -23,7 +24,20 @@ export function ApplicationArchiveWorkspace({
   const [dismissed, setDismissed] = useState(new Set(dismissedApplicationIds));
   const [message, setMessage] = useState("");
   const [busyId, setBusyId] = useState("");
+  const router = useRouter();
   const groups = groupApplications(applications);
+
+  useEffect(() => {
+    const refreshArchive = () => {
+      if (document.visibilityState === "visible") router.refresh();
+    };
+    window.addEventListener("focus", refreshArchive);
+    document.addEventListener("visibilitychange", refreshArchive);
+    return () => {
+      window.removeEventListener("focus", refreshArchive);
+      document.removeEventListener("visibilitychange", refreshArchive);
+    };
+  }, [router]);
 
   async function restore(id: string) {
     setBusyId(id);
@@ -79,7 +93,7 @@ export function ApplicationArchiveWorkspace({
     const documentCount = readiness?.artifacts.length ?? 0;
     if (!documentCount && !supplementalCount) return <small>No generated files or saved research retained.</small>;
     return <>
-      {documentCount ? <a className={`button ${compact ? "button--secondary" : "button--primary"}`} href={`/api/applications/artifacts/${application.id}/bundle`} download>
+      {documentCount ? <a className={`button ${compact ? "button--secondary" : "button--primary"}`} href={`/api/applications/artifacts/${application.id}/bundle?revision=${readiness?.applicationRevision}&generated=${encodeURIComponent(readiness?.generatedAt ?? "")}`} download>
         {compact ? `Download ZIP (${documentCount} files)` : "Download latest files (.zip)"}
       </a> : null}
       <details>
@@ -87,7 +101,7 @@ export function ApplicationArchiveWorkspace({
         <div className="artifact-actions" aria-label={`Generated files for ${application.opportunity.positionTitle}`}>
           {(readiness?.artifacts ?? []).map((artifact) => <a
             className="button button--secondary"
-            href={`/api/applications/artifacts/${application.id}/${artifact.kind}`}
+            href={`/api/applications/artifacts/${application.id}/${artifact.kind}?revision=${readiness?.applicationRevision}&generated=${encodeURIComponent(readiness?.generatedAt ?? "")}`}
             key={artifact.kind}
             download
           >{archiveArtifactLabel(artifact.kind)}</a>)}
@@ -124,9 +138,11 @@ export function ApplicationArchiveWorkspace({
               <StatusBadge tone={isDismissed ? "pending" : "complete"}>{isDismissed ? "Archived" : "Active"}</StatusBadge>
               <h2>{application.opportunity.positionTitle}</h2>
               <p>{application.opportunity.companyName}{application.opportunity.location ? ` · ${application.opportunity.location}` : ""}</p>
-              <small>Latest version · Updated {new Date(application.updatedAt).toLocaleString()} · Revision {application.revision} · {application.status.replaceAll("_", " ")}</small>
+              <small>Current draft version {(application.draftHistory?.length ?? 0) + 1} · Updated {new Date(application.updatedAt).toLocaleString()} · {application.status.replaceAll("_", " ")}</small>
+              {readinessFor(application.id) ? <small className="archive-package-meta">Latest generated files · {readinessFor(application.id)?.paletteId ?? "AI-selected"} palette · {new Date(readinessFor(application.id)!.generatedAt).toLocaleString()}</small> : null}
             </div>
             <div className="archive-management-actions">
+              {!isDismissed ? <Link className="button button--primary" href={`/applications/new?applicationId=${encodeURIComponent(application.id)}#application-focus`}>Open studio &amp; refine</Link> : null}
               {application.opportunity.url ? <a className="button button--secondary" href={application.opportunity.url} target="_blank" rel="noreferrer">View posting</a> : null}
               {downloadActions(application)}
               {isDismissed ? <button className="button button--primary" disabled={busyId === application.id} onClick={() => restore(application.id)}>Restore</button> : null}

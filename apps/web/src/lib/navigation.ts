@@ -10,6 +10,7 @@ export const navigationItems = [
 
 export const utilityNavigationItems = [
   { label: "Browser Extension", href: "/extension", shortLabel: "Extension" },
+  { label: "Gmail", href: "/gmail", shortLabel: "Gmail" },
 ] as const;
 
 export type NavigationItem = (typeof navigationItems)[number];

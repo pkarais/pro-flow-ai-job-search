@@ -309,6 +309,43 @@ test("draft regeneration archives rejected decisions and resets replacement clai
   );
 });
 
+test("draft regeneration preserves approval for the same section and evidence basis", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "pro-flow-regenerate-approved-"));
+  const store = new ApplicationStore(root);
+  const application = buildApplication(intake, profile, new Date(timestamp));
+  await store.saveNew(application);
+  let reviewed = application;
+  for (const claim of application.draft.claims) {
+    reviewed = await store.decide({ applicationId: application.id, claimId: claim.id, expectedRevision: reviewed.revision, decision: "verified" });
+  }
+  const replacement = {
+    ...reviewed.draft,
+    claims: reviewed.draft.claims.map((claim, index) => ({ ...claim, id: `${claim.id}_polished_${index}`, text: `${claim.text} Polished.`, decision: "verified" })),
+  };
+  const regenerated = await store.replaceDraft({ applicationId: application.id, expectedRevision: reviewed.revision }, replacement);
+  assert.equal(regenerated.status, "review_complete");
+  assert.ok(regenerated.draft.claims.every((claim) => claim.decision === "verified"));
+});
+
+test("saved draft versions can be restored and deliberately deleted", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "pro-flow-draft-versions-"));
+  const store = new ApplicationStore(root);
+  const application = buildApplication(intake, profile, new Date(timestamp));
+  await store.saveNew(application);
+  const replacement = {
+    ...application.draft,
+    summary: "A deliberately different tailored summary.",
+    claims: application.draft.claims.map((claim, index) => ({ ...claim, id: `${claim.id}_v2_${index}`, decision: "pending" })),
+  };
+  const regenerated = await store.replaceDraft({ applicationId: application.id, expectedRevision: 1 }, replacement);
+  const restored = await store.restoreDraftVersion(application.id, regenerated.revision, 1);
+  assert.equal(restored.draft.summary, application.draft.summary);
+  assert.ok(restored.draftHistory.some((entry) => entry.draft.summary === replacement.summary));
+  const disposable = restored.draftHistory.find((entry) => entry.draft.summary === replacement.summary);
+  const cleaned = await store.deleteDraftVersion(application.id, restored.revision, disposable.revision);
+  assert.ok(!cleaned.draftHistory.some((entry) => entry.revision === disposable.revision));
+});
+
 test("document sources contain only verified claims and escape untrusted text", () => {
   const application = buildApplication({ ...intake, companyName: "Example & Company" }, profile, new Date(timestamp));
   const reviewed = {

@@ -117,7 +117,27 @@ extension or configure a hosted service.
 See [browser-extension/README.md](browser-extension/README.md) for its privacy
 and permission model.
 
-## 7. Validate
+## 7. Connect Gmail for one-click drafts (optional)
+
+Pro Flow can create complete Gmail drafts without sending them. Open **Gmail**
+at the bottom of the left toolbar and follow the guided setup. Each local user
+creates their own Google Cloud OAuth credential:
+
+1. Enable the Gmail API in a Google Cloud project.
+2. Configure the OAuth consent screen. For a personal local installation, keep
+   the app in testing and add your Gmail address as a test user.
+3. Create a **Web application** OAuth client.
+4. Add `http://localhost:3000/api/integrations/gmail/callback` as an authorized
+   redirect URI. If Pro Flow uses another port, use that port instead.
+5. Paste the client ID and client secret into Pro Flow's Gmail setup page, save,
+   and select **Connect Gmail**.
+
+The client configuration and encrypted refresh token are stored only under the
+gitignored `career-data/` directory. Pro Flow requests the narrow
+`gmail.compose` permission, creates drafts for review, and never automatically
+sends them. Remove the local authorization with **Disconnect Gmail**.
+
+## 8. Validate
 
 ```bash
 cd apps/web
