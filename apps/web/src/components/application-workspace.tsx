@@ -62,6 +62,7 @@ export function ApplicationWorkspace({
   const [directRecipients, setDirectRecipients] = useState<string[]>([]);
   const [emailPackageStatus, setEmailPackageStatus] = useState("");
   const [gmailConnected, setGmailConnected] = useState(false);
+  const [gmailEmail, setGmailEmail] = useState("");
   const [refinementInstructions, setRefinementInstructions] = useState("");
   const [selectedInsightIds, setSelectedInsightIds] = useState<string[]>(availableInsights.slice(0, 1).map((insight) => insight.id));
   const [refinementSuggestions, setRefinementSuggestions] = useState<RefinementSuggestion[]>([]);
@@ -123,7 +124,7 @@ export function ApplicationWorkspace({
     const controller = new AbortController();
     void fetch(`/api/applications/email-package?applicationId=${encodeURIComponent(application.id)}`, { signal: controller.signal })
       .then((response) => response.json())
-      .then((payload) => { setDirectRecipients(Array.isArray(payload.recipients) ? payload.recipients : []); setGmailConnected(payload.gmail?.connected === true); })
+      .then((payload) => { setDirectRecipients(Array.isArray(payload.recipients) ? payload.recipients : []); setGmailConnected(payload.gmail?.connected === true); setGmailEmail(payload.gmail?.email ?? ""); })
       .catch(() => {
         if (!controller.signal.aborted) setDirectRecipients([]);
       });
@@ -637,17 +638,22 @@ export function ApplicationWorkspace({
                 <strong>{readiness.status === "ready" ? "All required checks passed." : "Ready to Submit remains locked."}</strong>
                 <p>{readiness.artifacts.length} private artifact record(s) were written. No document was submitted or exposed publicly.</p>
               </SurfaceCard>
-              {readiness.status === "ready" ? (
-                <SurfaceCard className="readiness-verdict">
+              <SurfaceCard className="readiness-verdict">
                   <SectionHeading
                     eyebrow="Direct application email"
-                    title="Prepare a local email with attachments"
-                    description="Recipients come from saved direct-application research. Pro Flow creates a local .eml draft and never sends it automatically."
+                    title={gmailConnected ? "Create a Gmail draft with attachments" : "Prepare a local email with attachments"}
+                    description="Recipients come from saved direct-application research. Pro Flow creates a reviewable draft and never sends it automatically."
                   />
-                  {directRecipients.length ? (
+                  {readiness.status !== "ready" ? <div className="adapter-note">
+                    <strong>Email drafting is connected but waiting for document readiness.</strong>
+                    <p>{readiness.checks.filter((item) => item.status !== "passed").map((item) => `${item.label}: ${item.detail}`).join(" ")}</p>
+                    <button className="button button--primary" type="button" disabled>Create Gmail draft with attachments</button>
+                  </div> : (
                     <form className="operations-stack-form" onSubmit={gmailConnected ? createApplicationGmailDraft : prepareEmailPackage}>
-                      <label>Verified selection from research
-                        <select name="recipient" required>{directRecipients.map((email) => <option key={email} value={email}>{email}</option>)}</select>
+                      <label>Recipient email
+                        <input name="recipient" type="email" required list="researched-recipient-options" defaultValue={directRecipients[0] ?? ""} placeholder={gmailEmail || "recipient@example.com"} />
+                        <datalist id="researched-recipient-options">{directRecipients.map((email) => <option key={email} value={email} />)}</datalist>
+                        <small>Type or paste any address you have verified. Saved research addresses appear as suggestions; use your connected Gmail address for a safe draft test.</small>
                       </label>
                       <label>Document package
                         <select name="documentStyle" defaultValue="designed">
@@ -658,12 +664,9 @@ export function ApplicationWorkspace({
                       <button className="button button--primary" disabled={busy} type="submit">{gmailConnected ? "Create Gmail draft with attachments" : "Download attached email draft (.eml)"}</button>
                       {!gmailConnected ? <p>For the one-click workflow, <a className="text-link" href="/gmail">connect Gmail</a>. The local .eml remains available until then.</p> : null}
                     </form>
-                  ) : (
-                    <p>No usable email address was found in saved direct-application research for this role. Run “Find direct application options” from the saved job card first.</p>
                   )}
                   {emailPackageStatus ? <p className="save-status save-status--success" role="status">{emailPackageStatus}</p> : null}
-                </SurfaceCard>
-              ) : null}
+              </SurfaceCard>
             </section>
           ) : null}
         </div>
