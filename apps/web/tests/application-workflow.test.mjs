@@ -13,6 +13,7 @@ import { DocumentService, renderDocumentSources } from "../src/server/documents/
 import { OperationsStore } from "../src/server/operations/operations-store.ts";
 import {
   buildOfficialSearchUrl,
+  buildOfficialSearchUrls,
   inspectPortalRuntime,
 } from "../src/server/operations/portal-adapter.ts";
 import { deriveSearchDefaults } from "../src/server/operations/search-defaults.ts";
@@ -186,6 +187,25 @@ test("runtime diagnostics expose only the six U.S. official searches", () => {
   assert.equal(report.portals.length, 6);
   assert.ok(report.portals.every((portal) => portal.status === "ready"));
   assert.ok(report.portals.every((portal) => portal.searchMode === "official_search"));
+});
+
+test("portal groups launch the requested pair or all six without duplicates", () => {
+  const request = { query: "program manager", location: "United States" };
+  assert.deepEqual(
+    buildOfficialSearchUrls({ ...request, group: "linkedin_indeed" }).map((item) => item.portal),
+    ["linkedin-search", "indeed-search"],
+  );
+  assert.deepEqual(
+    buildOfficialSearchUrls({ ...request, group: "usajobs_builtin" }).map((item) => item.portal),
+    ["usajobs-search", "builtin-search"],
+  );
+  assert.deepEqual(
+    buildOfficialSearchUrls({ ...request, group: "wellfound_dice" }).map((item) => item.portal),
+    ["wellfound-search", "dice-search"],
+  );
+  const all = buildOfficialSearchUrls({ ...request, group: "all" });
+  assert.equal(all.length, 6);
+  assert.equal(new Set(all.map((item) => item.portal)).size, 6);
 });
 
 test("search defaults derive roles from career evidence and keep location in the U.S.", () => {

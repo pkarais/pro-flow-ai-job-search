@@ -7,6 +7,20 @@ export const portalIdSchema = z.enum([
   "dice-search", "builtin-search", "wellfound-search",
 ]);
 
+export const portalGroupIdSchema = z.enum([
+  "linkedin_indeed", "usajobs_builtin", "wellfound_dice", "all",
+]);
+
+export const portalGroupPortals = {
+  linkedin_indeed: ["linkedin-search", "indeed-search"],
+  usajobs_builtin: ["usajobs-search", "builtin-search"],
+  wellfound_dice: ["wellfound-search", "dice-search"],
+  all: [
+    "linkedin-search", "indeed-search", "usajobs-search",
+    "builtin-search", "wellfound-search", "dice-search",
+  ],
+} as const satisfies Record<z.infer<typeof portalGroupIdSchema>, readonly z.infer<typeof portalIdSchema>[]>;
+
 export const portalRuntimeStatusSchema = z.enum(["ready", "needs_setup", "unavailable"]);
 
 export const portalRuntimeReportSchema = z.object({
@@ -25,6 +39,12 @@ export const jobSearchRequestSchema = z.object({
   query: nonEmptyTextSchema.max(200),
   location: z.string().trim().max(200).optional(),
   limit: z.number().int().min(1).max(20).default(10),
+}).strict();
+
+export const portalGroupSearchRequestSchema = z.object({
+  group: portalGroupIdSchema,
+  query: nonEmptyTextSchema.max(200),
+  location: z.string().trim().max(200).default("United States"),
 }).strict();
 
 export const searchDefaultsSchema = z.object({
@@ -114,6 +134,8 @@ export const operationsStateSchema = z.object({
 }).strict();
 
 export type PortalId = z.infer<typeof portalIdSchema>;
+export type PortalGroupId = z.infer<typeof portalGroupIdSchema>;
+export type PortalGroupSearchRequest = z.infer<typeof portalGroupSearchRequestSchema>;
 export type PortalRuntimeReport = z.infer<typeof portalRuntimeReportSchema>;
 export type JobSearchRequest = z.infer<typeof jobSearchRequestSchema>;
 export type SearchDefaults = z.infer<typeof searchDefaultsSchema>;

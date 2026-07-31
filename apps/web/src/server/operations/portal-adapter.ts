@@ -1,7 +1,10 @@
 import {
   jobSearchRequestSchema,
+  portalGroupPortals,
+  portalGroupSearchRequestSchema,
   portalRuntimeReportSchema,
   type JobSearchRequest,
+  type PortalGroupSearchRequest,
   type PortalId,
   type PortalRuntimeReport,
 } from "@pro-flow/career-core";
@@ -68,6 +71,20 @@ export function buildOfficialSearchUrl(requestInput: JobSearchRequest): string {
         location,
       });
   }
+}
+
+export function buildOfficialSearchUrls(requestInput: PortalGroupSearchRequest) {
+  const request = portalGroupSearchRequestSchema.parse(requestInput);
+  return portalGroupPortals[request.group].map((portal) => ({
+    portal,
+    label: portalLabels[portal],
+    url: buildOfficialSearchUrl({
+      portal,
+      query: request.query,
+      location: request.location,
+      limit: 10,
+    }),
+  }));
 }
 
 export function inspectPortalRuntime(now = new Date()): PortalRuntimeReport {

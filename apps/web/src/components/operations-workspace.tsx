@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import {
   canTransition,
+  portalGroupPortals,
   type ApplicationStatus,
   type ArchivedApplication,
   type OperationsState,
+  type PortalGroupId,
   type PortalRuntimeReport,
   type SearchDefaults,
 } from "@pro-flow/career-core";
@@ -32,6 +34,8 @@ export function OperationsWorkspace({
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [roleChoice, setRoleChoice] = useState(searchDefaults.roles[0] ?? "__custom__");
+  const [launchMessage, setLaunchMessage] = useState("");
+  const [blockedSearches, setBlockedSearches] = useState<Array<{ label: string; url: string }>>([]);
 
   async function post(endpoint: string, body: unknown) {
     setBusy(true);
@@ -70,6 +74,49 @@ export function OperationsWorkspace({
     }
   }
 
+  async function launchSearches(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    setLaunchMessage("");
+    setBlockedSearches([]);
+    const data = new FormData(event.currentTarget);
+    const group = String(data.get("group")) as PortalGroupId;
+    const expectedCount = portalGroupPortals[group].length;
+    const tabs = Array.from({ length: expectedCount }, () => {
+      const tab = window.open("about:blank", "_blank");
+      if (tab) tab.opener = null;
+      return tab;
+    });
+    try {
+      const response = await fetch("/api/operations/search", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          group,
+          query: data.get("query"),
+          location: data.get("location"),
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error ?? "The grouped search could not be created.");
+      const searches = payload.searches as Array<{ label: string; url: string }>;
+      const blocked: Array<{ label: string; url: string }> = [];
+      searches.forEach((search, index) => {
+        const tab = tabs[index];
+        if (tab) tab.location.href = search.url;
+        else blocked.push(search);
+      });
+      setLaunchMessage(`${searches.length - blocked.length} of ${searches.length} portal searches opened.`);
+      setBlockedSearches(blocked);
+    } catch (launchError) {
+      tabs.forEach((tab) => tab?.close());
+      setError(launchError instanceof Error ? launchError.message : "The grouped search failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const pipelineFor = (application: ArchivedApplication) => state.pipeline.find((item) => item.applicationId === application.id);
   const statusFor = (application: ArchivedApplication): ApplicationStatus =>
     pipelineFor(application)?.status ?? (application.status === "review_complete" ? "document_verification" : "factual_review");
@@ -80,7 +127,7 @@ export function OperationsWorkspace({
         <StatusBadge tone="current">U.S. career search · Guided workflow</StatusBadge>
         <p className="eyebrow">One connected operating loop</p>
         <h1>Search the right U.S. market with less setup.</h1>
-        <p>Choose a U.S. hiring portal, confirm a role drawn from your career evidence, and use the prefilled U.S. location. One click opens the portal’s official recent-job search.</p>
+        <p>Choose a U.S. portal group, confirm a role drawn from your career evidence, and use the prefilled U.S. location. One click runs two or all six official recent-job searches.</p>
       </header>
 
       <section className="operations-section" id="jobs">
@@ -108,15 +155,13 @@ export function OperationsWorkspace({
           <p className="adapter-note">USAJOBS also provides an official API, but it requires approved credentials. The current adapter uses its public official search until those credentials are configured.</p>
         </SurfaceCard>
         <SurfaceCard className="operations-card">
-          <form className="operations-search" action="/api/operations/search" method="get" target="_blank">
-            <label>Portal
-              <select name="portal" defaultValue="linkedin-search">
-                <option value="linkedin-search">LinkedIn</option>
-                <option value="indeed-search">Indeed</option>
-                <option value="usajobs-search">USAJOBS</option>
-                <option value="dice-search">Dice</option>
-                <option value="builtin-search">Built In</option>
-                <option value="wellfound-search">Wellfound</option>
+          <form className="operations-search" onSubmit={(event) => void launchSearches(event)}>
+            <label>Portal group
+              <select name="group" defaultValue="linkedin_indeed">
+                <option value="linkedin_indeed">LinkedIn + Indeed</option>
+                <option value="usajobs_builtin">USAJOBS + Built In</option>
+                <option value="wellfound_dice">Wellfound + Dice</option>
+                <option value="all">Run all six portals</option>
               </select>
             </label>
             <label>Role, skill, or job title
@@ -136,9 +181,17 @@ export function OperationsWorkspace({
               <input name="location" list="career-location-options" required maxLength={200} defaultValue={searchDefaults.locations[0] ?? "United States"} />
               <datalist id="career-location-options">{searchDefaults.locations.map((location) => <option value={location} key={location} />)}</datalist>
             </label>
-            <button className="button button--primary" type="submit">Search recent jobs</button>
+            <button className="button button--primary" type="submit" disabled={busy}>{busy ? "Launching searches…" : "Search recent jobs"}</button>
           </form>
           <p className="adapter-note">Role suggestions come from {searchDefaults.source === "reviewed_profile" ? "your reviewed career evidence" : searchDefaults.source === "import_preview" ? "your connected career-source preview" : "manual selection because no career source is connected yet"}. You can always type a different role or U.S. location.</p>
+          {launchMessage ? <p className="search-launch-message" role="status">{launchMessage}</p> : null}
+          {blockedSearches.length ? (
+            <div className="blocked-searches" role="alert">
+              <strong>Your browser blocked {blockedSearches.length} tab(s).</strong>
+              <p>Allow pop-ups for localhost, or open the remaining searches here:</p>
+              <div>{blockedSearches.map((search) => <a className="text-link" href={search.url} target="_blank" rel="noreferrer" key={search.url}>{search.label}</a>)}</div>
+            </div>
+          ) : null}
         </SurfaceCard>
         {state.jobs.length ? <div className="job-results" aria-label="Previously saved jobs">
           {state.jobs.map((job) => (

@@ -866,6 +866,30 @@ h3 {
   font-size: 0.82rem;
 }
 
+.search-launch-message {
+  margin: var(--space-4) 0 0;
+  color: var(--color-brand);
+  font-weight: 750;
+}
+
+.blocked-searches {
+  margin-top: var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  padding: var(--space-4);
+}
+
+.blocked-searches p {
+  margin: var(--space-2) 0 var(--space-3);
+}
+
+.blocked-searches > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
 .job-results {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

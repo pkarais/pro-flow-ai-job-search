@@ -484,11 +484,15 @@ Implementation:
 - FreeHire and the four Danish skills are disabled so `/scrape` skips them.
 - Operations schema v2 filters legacy non-U.S. jobs while preserving pipeline,
   interview, and outcome records.
-- Role and location fields use editable datalists, retaining manual choice.
+- Role uses a complete dropdown plus custom entry; location uses an editable
+  suggestion list, retaining manual choice.
+- Portal selection is grouped into three pairs plus an all-six option, with
+  concurrent tab launch and explicit popup-blocked fallback links.
 
 Gate:
 
 - Every generated redirect resolves to one of six fixed official HTTPS hosts.
+- Each pair returns exactly two unique destinations and `all` returns six.
 - No Danish or non-U.S. portal ID passes the shared contract.
 - Search defaults contain only reviewed/imported/user-selected role inputs and
   U.S. locations.

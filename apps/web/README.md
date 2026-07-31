@@ -59,6 +59,11 @@ and prior user-selected application titles. Users can type an override.
 Legacy Danish and non-U.S. skills are disabled, and operations schema v2
 filters their old results without altering application history.
 
+Portal searches run as four groups: LinkedIn + Indeed, USAJOBS + Built In,
+Wellfound + Dice, or all six. A single submit launches the selected searches
+concurrently. If the browser blocks one or more tabs, the workspace displays
+direct fallback links and asks the user to allow pop-ups for localhost.
+
 ## Commands
 
 ```powershell
