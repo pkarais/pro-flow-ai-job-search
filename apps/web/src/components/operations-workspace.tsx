@@ -31,6 +31,7 @@ export function OperationsWorkspace({
   const [runtimeReport, setRuntimeReport] = useState(initialRuntimeReport);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [roleChoice, setRoleChoice] = useState(searchDefaults.roles[0] ?? "__custom__");
 
   async function post(endpoint: string, body: unknown) {
     setBusy(true);
@@ -119,8 +120,17 @@ export function OperationsWorkspace({
               </select>
             </label>
             <label>Role, skill, or job title
-              <input name="query" list="career-role-options" required maxLength={200} defaultValue={searchDefaults.roles[0] ?? ""} placeholder="Select or type a role" />
-              <datalist id="career-role-options">{searchDefaults.roles.map((role) => <option value={role} key={role} />)}</datalist>
+              <select
+                name={roleChoice === "__custom__" ? undefined : "query"}
+                value={roleChoice}
+                onChange={(event) => setRoleChoice(event.target.value)}
+              >
+                {searchDefaults.roles.map((role) => <option value={role} key={role}>{role}</option>)}
+                <option value="__custom__">Enter another role…</option>
+              </select>
+              {roleChoice === "__custom__" ? (
+                <input name="query" required maxLength={200} autoFocus placeholder="Type a role, skill, or job title" />
+              ) : null}
             </label>
             <label>U.S. location
               <input name="location" list="career-location-options" required maxLength={200} defaultValue={searchDefaults.locations[0] ?? "United States"} />
