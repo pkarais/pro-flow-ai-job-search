@@ -1,373 +1,639 @@
 <p align="center">
-  <img src="assets/mascot/pip_flight_loop.gif" alt="Pip, the courier bird" width="200">
+  <img src="assets/mascot/pip_flight_loop.gif" alt="Pip, the courier bird from the original AI Job Search project" width="200">
 </p>
 
-# AI Job Search
+# Pro-Flow AI Job Search + Executive Career OS
 
-*The job search that runs on your machine.*
+**A private, local-first career operating system for U.S. job discovery,
+evidence review, application development, document verification, pipeline
+tracking, interview preparation, and outcome learning.**
 
-<p align="center">
-  <a href="https://trendshift.io/repositories/43622?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-43622" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/43622/daily" alt="MadsLorentzen%2Fai-job-search | Trendshift" width="250" height="55"/></a>
-</p>
+[![CI](https://github.com/pkarais/pro-flow-ai-job-search/actions/workflows/ci.yml/badge.svg)](https://github.com/pkarais/pro-flow-ai-job-search/actions/workflows/ci.yml)
 
-[![CI](https://github.com/MadsLorentzen/ai-job-search/actions/workflows/ci.yml/badge.svg)](https://github.com/MadsLorentzen/ai-job-search/actions/workflows/ci.yml)
+This repository is an attributed fork and substantial extension of
+[Mads Lorentzen's AI Job Search](https://github.com/MadsLorentzen/ai-job-search).
+It combines Mads's original agent-driven job-search framework with the
+career-knowledge model and application-generation ideas developed in
+**Executive Career OS**, then adds a persistent, guided Next.js interface and a
+shared, safety-focused domain layer.
 
-An AI-powered job application framework built on [Claude Code](https://claude.com/claude-code). Fork it, fill in your profile, and let Claude evaluate job postings, tailor your CV, write cover letters, and prepare you for interviews.
+The result is not a replacement attribution for the original project. Mads's
+work remains the foundation. The hybrid work adds a new application surface,
+new data contracts, new persistence and verification services, a U.S.-focused
+search experience, and an integration path for Executive Career OS evidence.
 
-> Note: This is an independent open-source project and is not affiliated with, endorsed by, sponsored by, or maintained by Anthropic. Anthropic and Claude Code are referenced only to describe the toolchain this workflow uses.
+> This is an independent open-source project. It is not affiliated with,
+> endorsed by, sponsored by, or maintained by Anthropic, OpenAI, LinkedIn,
+> Indeed, USAJOBS, Dice, Built In, or Wellfound.
 >
-> This project has **no affiliated cryptocurrency, token, or paid sponsorship program**. Anything claiming otherwise is unauthorized and should be treated as a scam. The only ways to support the project are the Ko-fi link below and contributing on GitHub.
+> It does not automatically submit applications, send messages, or contact
+> employers.
 
-## Does it actually work?
+## Credits and project lineage
 
-I'm a geophysicist by training. When my position was cut in late 2025, I built this framework to run my own job search - the same `/scrape`, `/apply`, and `/interview` workflow in this repo, used weekly, on my own career. I was upfront about it with every employer I spoke to, and instead of counting against me, it usually sparked a genuine technical conversation.
+### Original foundation: AI Job Search
 
-Sixty-nine tailored applications, twenty first interviews, and one signed contract later, I started as an AI engineer in June 2026. People kept asking whether this actually works. It got me hired. Now it's yours.
+The original project was created by
+[Mads Lorentzen](https://github.com/MadsLorentzen) and published as
+[MadsLorentzen/ai-job-search](https://github.com/MadsLorentzen/ai-job-search).
 
-*The longer version, including the full application funnel, is on [LinkedIn](https://www.linkedin.com/in/mads-lorentzen/).*
+Mads designed and implemented the foundation that this fork builds upon,
+including:
 
-<p align="center">
-  <i>Did this save you a Sunday of cover-letter writing? Consider a coffee.<br>
-  Did it land you the job? Maybe two.</i> ☕
-</p>
+- the Claude Code career-assistant workflow;
+- `/setup`, `/scrape`, `/rank`, `/apply`, `/interview`, `/outcome`, and the
+  supporting commands;
+- the candidate-profile and job-evaluation methodology;
+- the drafter/reviewer application pattern;
+- LaTeX CV and cover-letter generation;
+- PDF and ATS verification practices;
+- application tracking, interview, follow-up, reporting, and upskilling
+  workflows;
+- the extensible portal-skill and document-template conventions;
+- privacy, security, and contribution guidance;
+- the original Pip mascot and project presentation.
 
-<p align="center">
-  <a href="https://ko-fi.com/madslorentzen">
-    <img src="https://storage.ko-fi.com/cdn/kofi3.png?v=6" alt="Buy me a coffee at ko-fi.com" height="40">
-  </a>
-</p>
+Mads built the framework for his own job search and documented that it helped
+him move from 69 tailored applications and 20 first interviews to a signed
+contract and an AI engineering role. His full account is available through
+[his LinkedIn profile](https://www.linkedin.com/in/mads-lorentzen/).
 
-## What this is
+If the original framework is useful to you, support Mads through
+[Ko-fi](https://ko-fi.com/madslorentzen) or contribute to the
+[upstream repository](https://github.com/MadsLorentzen/ai-job-search).
 
-A structured workflow that turns Claude Code into a full-stack job application assistant. The core workflow (self-profiling, fit evaluation, and the drafter-reviewer application pipeline) is **language- and country-agnostic**. The job portal search skills are built for the Danish market (Jobindex, Jobnet, Akademikernes Jobbank, etc.), but the pattern is designed to be swapped for your local job boards.
+The original README also credits
+[Mikkel Krogholm](https://github.com/mikkelkrogsholm) and his
+[skills repository](https://github.com/mikkelkrogsholm/skills) for job-search
+CLI skill work. That credit is preserved here.
 
+### Executive Career OS contribution
+
+Executive Career OS was developed as a separate private local Next.js
+application by [@pkarais](https://github.com/pkarais). It introduced a curated
+career-knowledge corpus and a seven-part, evidence-grounded application-package
+concept:
+
+- executive summary;
+- tailored résumé;
+- cover letter;
+- ATS analysis;
+- interview talking points;
+- factual audit;
+- missing-information review.
+
+The protected Executive Career OS source project remains independent. This
+hybrid reads only an explicit allowlist of its career knowledge and project
+files. It does not modify that repository.
+
+### Hybrid integration and refinements
+
+The integration work in this fork was developed by
+[@pkarais](https://github.com/pkarais), assisted by OpenAI Codex. It adds:
+
+- a guided, responsive Next.js web application;
+- a shared TypeScript contract package;
+- read-only Executive Career OS evidence import;
+- canonical fact review with provenance and corrections;
+- private atomic storage, revisions, backups, and integrity hashes;
+- a grounded application studio;
+- deterministic fit, claim, and gap analysis;
+- document generation and a fail-closed readiness gate;
+- guarded application-pipeline transitions;
+- grounded interview packs and append-only outcomes;
+- a U.S.-only six-portal search experience;
+- grouped concurrent searches and remembered search preferences;
+- expanded automated tests and integration documentation.
+
+Git remotes preserve the relationship:
+
+```text
+origin    https://github.com/pkarais/pro-flow-ai-job-search.git
+upstream  https://github.com/MadsLorentzen/ai-job-search.git
 ```
-/setup          /scrape              /apply <url>
-  |                |                     |
-  v                v                     v
-Fill in        Search job           Evaluate fit
-your profile   portals              Score & recommend
-  |                |                     |
-  v                v                     v
-Profile        Present matches      Draft CV + Cover Letter
-files ready    with fit ratings     (LaTeX, tailored)
-                   |                     |
-                   v                     v
-               Pick a match         Reviewer agent critiques
-               -> /apply            -> Revise -> Final output
+
+## What the hybrid can do
+
+| Capability | Current behavior |
+|---|---|
+| Career-source connection | Reads 12 explicitly allowlisted Executive Career OS knowledge/project files |
+| Evidence review | Confirms, corrects, or rejects one fact at a time while preserving provenance |
+| Canonical profile | Stores reviewed evidence privately with atomic writes, backups, revisions, and SHA-256 integrity checks |
+| U.S. job search | Opens official searches on LinkedIn, Indeed, USAJOBS, Dice, Built In, and Wellfound |
+| Concurrent portal search | Runs LinkedIn + Indeed, USAJOBS + Built In, Wellfound + Dice, or all six |
+| Guided search inputs | Builds up to 40 role/title/skill suggestions from career evidence and user history |
+| Search memory | Privately remembers the most recent 50 role and U.S. location selections |
+| Opportunity intake | Accepts a company, position, location, and pasted job description |
+| Fit assessment | Shows evidence-supported matches, gaps, terms, and eligibility questions |
+| Application drafting | Produces conservative, deterministic positioning and cover-letter content |
+| Factual review | Requires an explicit decision for every material drafted claim |
+| Private archives | Stores reviewed application packages under stable application IDs |
+| Document generation | Produces escaped LaTeX CV and cover-letter sources from verified claims |
+| PDF verification | Compiles PDFs and checks page count, ATS text, contact text, keywords, and visual review |
+| Pipeline | Enforces safe drafting, review, readiness, applied, interview, offer, rejection, and withdrawal transitions |
+| Interview preparation | Builds stage-specific questions and honest gap bridges from verified claims |
+| Outcomes | Appends outcome history without rewriting prior evidence |
+
+## What it deliberately does not do
+
+- It does not automatically apply for jobs.
+- It does not send email, LinkedIn messages, or employer outreach.
+- It does not scrape portals that lack an approved public candidate-search
+  interface.
+- It does not turn search preferences into verified career facts.
+- It does not place private career data in tracked source files or public web
+  assets.
+- It does not bypass factual, PDF, ATS, or human-review gates.
+- It is not yet a multi-user hosted service with authentication or encrypted
+  remote storage.
+
+## Guided workflow
+
+```text
+Connect evidence
+      |
+      v
+Review and establish canonical career facts
+      |
+      v
+Choose role + U.S. location
+      |
+      v
+Run a portal pair or all six searches
+      |
+      v
+Select a real posting and paste it into Application Studio
+      |
+      v
+Assess fit, supported terms, gaps, and eligibility
+      |
+      v
+Review every drafted claim
+      |
+      v
+Generate CV + cover letter
+      |
+      v
+Pass PDF, ATS, contact, keyword, and visual checks
+      |
+      v
+Track application -> prepare interview -> record outcome
 ```
 
-The framework encodes career guidance best practices, including structured evaluation criteria, forward-looking cover letter framing, and optional salary benchmarking.
+## Main web routes
 
-## Prerequisites
+| Route | Purpose |
+|---|---|
+| `/` | Guided dashboard and workflow orientation |
+| `/career/import-review` | Executive evidence connection and canonical fact review |
+| `/applications/new` | Opportunity intake, fit assessment, drafting, factual review, and documents |
+| `/operations` | U.S. portal search, pipeline, interview preparation, and outcomes |
+| `/api/operations/health` | Read-only six-portal readiness report |
 
-- [Claude Code](https://claude.com/claude-code) (CLI). Using a different agent tool (Codex, Antigravity, Gemini CLI)? Start at [`AGENTS.md`](AGENTS.md) - the portal search skills work there out of the box, and [community forks](https://github.com/MadsLorentzen/ai-job-search/discussions/78) adapt the full workflow.
-- Python 3.10+
-- [Bun](https://bun.sh) (for job search CLI tools)
-- LaTeX distribution with `lualatex` and `xelatex`: [TeX Live](https://tug.org/texlive/), [MacTeX](https://tug.org/mactex/), [TinyTeX](https://yihui.org/tinytex/), or [MiKTeX](https://miktex.org/). The CV compiles with `lualatex` (pdflatex often fails on modern MiKTeX installs with `fontawesome5` font-expansion errors); the cover letter compiles with `xelatex` because `cover.cls` requires `fontspec`. If using a minimal TeX install such as TinyTeX or BasicTeX, install the extra packages listed in [SETUP.md](SETUP.md#minimal-tex-install-tinytexbasictex).
-- Optional: `pdftotext` from [poppler](https://poppler.freedesktop.org/) (macOS: `brew install poppler`, Debian/Ubuntu: `apt install poppler-utils`, Windows: `choco install poppler`) — used by `/apply`'s ATS parseability check on the compiled CV. If missing, the check degrades gracefully to a visual keyword review.
+Local preview:
 
-## Quick start
-
-### 1. Fork and clone
-
-```bash
-gh repo fork MadsLorentzen/ai-job-search --clone
-cd ai-job-search
+```text
+http://localhost:3000
 ```
 
-### 2. Install job search tools
+## U.S.-only portal policy
 
-PowerShell:
+The active web allowlist is:
+
+1. LinkedIn
+2. Indeed
+3. USAJOBS
+4. Dice
+5. Built In
+6. Wellfound
+
+The interface offers four search groups:
+
+- **LinkedIn + Indeed**
+- **USAJOBS + Built In**
+- **Wellfound + Dice**
+- **Run all six portals**
+
+Each search uses a validated, prefilled URL on the portal's official HTTPS
+origin. If the browser blocks multiple tabs, the interface reports the blocked
+searches and provides direct fallback links.
+
+Indeed's documented APIs are oriented toward approved partners, employers, and
+job-posting integrations, so this project does not claim a public Indeed
+candidate-search API or scrape Indeed results.
+
+USAJOBS has an official Search API, but it requires approved credentials. The
+current implementation uses the official public USAJOBS search page until
+credentials are intentionally configured.
+
+The original Danish portal skills and FreeHire source remain in the repository
+for upstream history and rollback, but their `enabled` flags are `false` and
+the active U.S.-only workflow does not expose them.
+
+## Career evidence and source of truth
+
+The integration follows a thin-pointer, single-source-of-truth model.
+
+### Original Pro-Flow inputs
+
+The original workflow specifications remain under:
+
+```text
+CLAUDE.md
+.claude/commands/
+.claude/skills/job-application-assistant/
+.claude/skills/job-scraper/
+```
+
+These files remain the behavioral reference for the legacy agent commands.
+
+### Executive Career OS inputs
+
+The web importer reads an explicit manifest of 12 files from:
+
+```text
+career_os/knowledge/
+career_os/projects/
+```
+
+Imported facts retain:
+
+- source file;
+- source section;
+- intended profile path;
+- verification status;
+- conflict information;
+- usage restrictions.
+
+### Reviewed canonical record
+
+Explicit web-review decisions are stored in:
+
+```text
+career-data/canonical-career.json
+```
+
+`career-data/` is gitignored. Generated compatibility Markdown files are
+derived views, not additional sources of truth. Their revision and SHA-256
+hashes must match the canonical record.
+
+Pending and rejected facts cannot become employer-facing claims.
+
+## Private data layout
+
+```text
+career-data/
+├── canonical-career.json          # Reviewed career evidence
+├── backups/                       # Prior canonical revisions
+├── compatibility/                 # Deterministic generated views + manifest
+├── applications/                  # Private application archives and documents
+└── operations.json                # Search history, pipeline, interviews, outcomes
+```
+
+Other original private locations remain protected by `.gitignore`, including:
+
+```text
+documents/
+job_search_tracker.csv
+gmail_sync/
+reports/
+upskill/
+```
+
+Never commit real CVs, contact information, diplomas, references, application
+documents, API keys, OAuth tokens, or generated personal reports.
+
+## Architecture
+
+```text
+pro-flow-ai-job-search/
+├── apps/
+│   └── web/                       # Next.js 16 guided interface and API routes
+├── packages/
+│   └── career-core/               # Shared Zod schemas and domain contracts
+├── career-data/                   # Private runtime data (gitignored)
+├── .claude/                       # Original Mads workflow specifications
+├── .agents/skills/                # Original/extensible portal skill format
+├── cv/                            # Original CV templates
+├── cover_letters/                 # Original cover-letter templates and fonts
+├── documents/                     # Original private evidence/application layout
+├── tools/                         # Original lint, security, salary, and PDF tools
+├── tests/                         # Original Python regression and security tests
+└── docs/integration/              # Hybrid migration decisions and phase record
+```
+
+### Shared domain layer
+
+`packages/career-core` defines the contracts for:
+
+- imported evidence;
+- canonical evidence;
+- profiles and opportunities;
+- application packages and claims;
+- workflow transitions;
+- document readiness;
+- portal groups and search history;
+- interviews and outcomes.
+
+The browser and server consume these shared contracts instead of maintaining
+competing data shapes.
+
+### Storage safety
+
+Private writes use:
+
+- fixed storage roots;
+- schema validation;
+- server-generated IDs;
+- optimistic revision checks;
+- atomic temporary-file replacement;
+- canonical backups;
+- strict artifact filename allowlists.
+
+Arbitrary browser-supplied filesystem paths and arbitrary shell commands are
+not accepted.
+
+## Document and readiness gate
+
+Only verified application claims can render into document sources.
+
+The document workflow uses fixed commands:
+
+```text
+lualatex
+xelatex
+pdfinfo
+pdftotext
+```
+
+The gate checks:
+
+- expected CV and cover-letter page counts;
+- extractable, non-garbled ATS text;
+- literal email and phone text;
+- survival of supported target keywords;
+- current application revision;
+- human visual inspection.
+
+A missing tool, failed check, stale document, or incomplete visual review keeps
+the application blocked. Readiness cannot be manually forced.
+
+## Application and pipeline safety
+
+Job descriptions are treated as untrusted input. Instructions inside a posting
+do not override application rules.
+
+The application workflow:
+
+1. requires reviewed career evidence;
+2. identifies supported terms and visible gaps;
+3. links every drafted material claim to evidence IDs;
+4. excludes policy records from employer-facing claims;
+5. requires verify/do-not-use decisions;
+6. archives revisions privately;
+7. prevents readiness or application status from bypassing document checks.
+
+Interview packs use only verified submitted claims. Gaps receive honest bridge
+answers instead of invented experience. Outcomes are appended as historical
+records.
+
+## Installation
+
+### Prerequisites
+
+- Node.js 20 or newer
+- npm
+- Python 3.10 or newer
+- Git
+- MiKTeX, TeX Live, MacTeX, or another distribution providing `lualatex` and
+  `xelatex`
+- Poppler tools providing `pdfinfo` and `pdftotext`
+- Bun is optional for retained legacy CLI skills; the current U.S. web search
+  uses official search destinations and does not require Bun
+
+### Clone
 
 ```powershell
-$tools = @("jobbank-search", "jobdanmark-search", "jobindex-search", "jobnet-search", "linkedin-search", "freehire-search")
-foreach ($tool in $tools) {
-  Push-Location ".agents/skills/$tool/cli"
-  bun install
-  Pop-Location
-}
+git clone https://github.com/pkarais/pro-flow-ai-job-search.git
+Set-Location pro-flow-ai-job-search
 ```
 
-Bash / zsh / Git Bash:
+To retain the original project relationship:
 
-```bash
-for tool in jobbank-search jobdanmark-search jobindex-search jobnet-search linkedin-search freehire-search; do
-  (cd .agents/skills/$tool/cli && bun install)
-done
+```powershell
+git remote add upstream https://github.com/MadsLorentzen/ai-job-search.git
 ```
 
-For `linkedin-search` and `freehire-search` the install is optional: both have zero runtime dependencies and run with plain `bun`; `bun install` only pulls TypeScript dev types.
+### Install the web application
 
-### 3. Set up your profile
-
-```bash
-claude
-# Then inside Claude Code:
-/setup
+```powershell
+Set-Location apps/web
+npm install
 ```
 
-`/setup` offers three paths: read your `documents/` folder if you have one populated (CV PDF, LinkedIn export, diplomas, reference letters, past applications), import a single CV pasted in chat, or walk through an interview. It auto-detects what you have and asks. Documents-folder mode is idempotent and safe to re-run as you add more material; see `documents/README.md` for the layout.
+### Connect Executive Career OS
 
-### 4. Search for jobs
+Copy the web environment template:
 
-```bash
-/scrape
+```powershell
+Copy-Item .env.example .env.local
 ```
 
-This searches multiple job portals for positions matching your profile, deduplicates results, and presents them sorted by fit. Pick a match to run `/apply` on it directly — or, when a scrape returns more jobs than you want to eyeball, run `/rank` to batch-score them all against the fit framework and get a ranked shortlist first.
+Set the absolute source path in `apps/web/.env.local`:
 
-### 5. Apply to a job
-
-```bash
-/apply https://jobindex.dk/job/1234567
+```text
+EXECUTIVE_CAREER_OS_PATH=C:\absolute\path\to\executive-career-os
 ```
 
-If the URL can't be fetched (some job portals block automated access), you can paste the job description directly instead:
+Do not place provider keys or personal information in `.env.example`.
 
-```bash
-/apply <paste the full job description here>
+### Start the guided interface
+
+```powershell
+npm run dev
 ```
 
-This runs the full workflow: evaluate fit, draft CV + cover letter, review with a second agent, revise, and present the final output.
+Open:
 
-Postings are treated as untrusted input (the workflow follows no instructions embedded in them and fetches no links from their body), but agentic defenses are instruction-level, not a sandbox - on an unfamiliar job board, skim what was fetched and written before you hit send. Details in [SECURITY.md](SECURITY.md).
-
-## Other commands
-
-`/setup`, `/scrape`, and `/apply` form the core workflow. Ten more commands extend it once your profile is in place:
-
-- **`/interview`** preps you for a scheduled interview on a tracked application. It builds a stage-specific prep pack from the application's archive (the exact posting, the CV and cover letter the interviewer actually read, feedback recorded from earlier rounds), researches the company and interviewers with a verify-before-use rule, maps likely questions to your STAR examples, and offers a mock interview following the roleplay protocol in `07-interview-prep.md`. Gaps get honest bridge answers, never invented experience.
-- **`/outcome`** records what happened to an application - interview stages, offers, rejections, silence. It archives the submitted CV, cover letter, and posting text into `documents/applications/<company>_<role>/`, keeps `outcome.md` in the format `/setup` Path A parses, and updates the tracker. It also owns the stretch before there is an outcome to record: `/outcome followup` surfaces open applications that have gone quiet (default 10 days), drafts a short channel-appropriate follow-up in your writing style using only claims from the materials you already submitted (drafts only, never sends; at most twice per application), and offers a thank-you note in the same turn an interview stage is recorded. Once a few applications resolve, it points you back to `/setup` to calibrate the fit framework from what actually got interviews.
-- **`/notion-sync`** publishes a one-way, read-only view of the pipeline into a Notion database via the official Notion MCP server (OAuth, no API keys) - one row per ranked job plus every tracked application, with a write-once briefing page per row. The repo files stay the system of record: nothing syncs back, and documents sync as filenames only. Complements `/html-report`: that is the deep offline dashboard you regenerate at your desk; this is the glanceable live view from anywhere Notion runs (desktop, web, phone).
-- **`/gmail-sync`** reads your Gmail (via the Gmail connector) for status signals on your open applications - interview invites, assessment links, offers, rejections - and proposes them as a batch for you to approve before anything is written to the tracker or `outcome.md`, citing the source email on every proposed change. Offers stop short of proposing `hired`/`offer_declined` since that's your call; conflicting or unmatched signals get flagged for a manual `/outcome` pass instead of guessed.
-- **`/rank`** bridges `/scrape` and `/apply`: it batch-scores all newly scraped postings against the fit framework (parallel agents fetch each posting and score the five evaluation dimensions) and returns a ranked shortlist with honest per-job strengths and gaps. Deal-breakers veto, deadlines get urgency flags, dead postings get marked expired. Pick a number and it hands off to the full `/apply` workflow.
-- **`/expand`** enriches your profile by scanning public sources you've already linked in it (GitHub repos, portfolio site, Kaggle, Google Scholar) and looking up syllabi for named courses and certifications. Discovered competencies are added to your profile with a source tag. Useful right after `/setup` to surface skills that documents alone don't make explicit.
-- **`/upskill`** analyzes the gap between your profile and your tracked job postings (or a single posting via `/upskill <URL>`). Produces a prioritized heatmap of skill gaps and a learning plan with web-searched study resources and time estimates. Useful for career planning between applications.
-- **`/html-report`** generates a self-contained HTML dashboard from `job_search_tracker.csv` and the application archives — stat cards, status/sector/channel/funnel charts (inline SVG, no external dependencies), and a filterable applications table. Opens directly in a browser, fully offline. Re-run it any time after `/outcome` adds new entries.
-- **`/add-template`** registers your own CV or cover letter template (LaTeX, Typst, or another toolchain) in place of the stock ones. It captures the template's instructions (source extension, compile command, fonts, style rules, page limit), runs a mandatory test compile, and wires the template into `/apply`. See [Custom templates](#custom-templates) below.
-- **`/add-portal`** generates a job-portal search skill for a job board in your market. It investigates the portal (search URL pattern, result structure, access rules), scaffolds the CLI skill from the same structure as the shipped ones, and test-runs a live query before registering. See [Job search tools](#job-search-tools) below.
-
-`/reset` is also available, see [Starting over](#starting-over) below.
-
-## File structure
-
-```
-ai-job-search/
-├── CLAUDE.md                          # Main candidate profile + workflow rules
-├── .claude/
-│   ├── commands/
-│   │   ├── apply.md                   # /apply workflow (drafter-reviewer)
-│   │   ├── setup.md                   # /setup onboarding (documents folder, CV import, or interview)
-│   │   ├── expand.md                  # /expand competency enrichment from documents and online presence
-│   │   ├── add-template.md            # /add-template register custom templates (LaTeX, Typst, ...)
-│   │   ├── add-portal.md              # /add-portal generate a job-portal search skill for your market
-│   │   ├── rank.md                    # /rank triage scraped jobs into a ranked shortlist
-│   │   ├── outcome.md                 # /outcome record application results, archive materials
-│   │   ├── gmail-sync.md              # /gmail-sync auto-detect application status from Gmail
-│   │   ├── interview.md               # /interview stage-specific prep pack + mock interview
-│   │   ├── html-report.md             # /html-report generate application tracker dashboard
-│   │   ├── notion-sync.md             # /notion-sync one-way pipeline view in a Notion database
-│   │   └── reset.md                   # /reset wipe profile data or documents folder
-│   ├── skills/
-│   │   ├── job-application-assistant/  # Core application skill
-│   │   │   ├── SKILL.md               # Skill definition
-│   │   │   ├── 01-candidate-profile.md # Your education, experience, skills
-│   │   │   ├── 02-behavioral-profile.md# PI/DISC/personality assessment
-│   │   │   ├── 03-writing-style.md    # Tone, structure, do's and don'ts
-│   │   │   ├── 04-job-evaluation.md   # Scoring framework for job fit
-│   │   │   ├── 05-cv-templates.md     # LaTeX CV structure + tailoring rules
-│   │   │   ├── 06-cover-letter-templates.md # LaTeX cover letter templates
-│   │   │   └── 07-interview-prep.md   # STAR examples + interview framework
-│   │   ├── job-scraper/               # Job search orchestration
-│   │   └── upskill/                   # /upskill skill gap analysis and learning plan
-│   └── settings.json                  # Claude Code permissions (shared, scoped)
-├── .agents/skills/                    # Job portal CLI tools
-│   ├── jobbank-search/                # Akademikernes Jobbank (Denmark)
-│   ├── jobdanmark-search/             # Jobdanmark.dk (Denmark)
-│   ├── jobindex-search/               # Jobindex.dk (Denmark)
-│   ├── jobnet-search/                 # Jobnet.dk (Denmark, government portal)
-│   ├── linkedin-search/               # LinkedIn public job listings (country-agnostic)
-│   └── freehire-search/               # freehire.me tech job aggregator (multi-market, REST API)
-├── cv/
-│   └── main_example.tex               # moderncv LaTeX template
-├── cover_letters/
-│   ├── cover.cls                      # Custom cover letter LaTeX class
-│   ├── cover_example.tex              # Example cover letter (structural reference + CI smoke test)
-│   └── OpenFonts/                     # Lato + Raleway fonts
-├── templates/                         # Custom templates registered via /add-template
-│   └── README.md                      # Folder layout instructions
-├── documents/                         # Career source materials for /setup Path A and /expand
-│   ├── README.md                      # Folder layout instructions
-│   ├── cv/                            # Master CV (PDF or .tex)
-│   ├── linkedin/                      # LinkedIn profile export (PDF)
-│   ├── diplomas/                      # Degree certificates and transcripts
-│   ├── references/                    # Reference letters
-│   └── applications/                  # Past application records (<company>_<role>/)
-├── .github/workflows/ci.yml           # CI: LaTeX smoke compiles, skill lint, CLI typechecks
-├── salary_lookup.py                   # Salary benchmarking tool (BYO data)
-├── tools/
-│   ├── convert_salary_excel.py        # Convert salary Excel to JSON
-│   ├── lint_skills.py                 # CI lint for skills, commands, settings.json
-│   ├── security_guards.py             # CI guards: permission allowlist, gitignore rules, manifests
-│   └── README_SALARY_TOOL.md          # Salary tool setup instructions
-├── job_scraper/                       # Scraper state (seen jobs, results)
-├── gmail_sync/                        # /gmail-sync state (processed message IDs, last sync date)
-├── upskill/                           # /upskill report output (markdown reports per run)
-├── job_search_tracker.csv             # Application tracking spreadsheet
-└── SETUP.md                           # Detailed setup guide
+```text
+http://localhost:3000
 ```
 
-## How `/apply` works
+## Development and validation
 
-The `/apply` command runs a **drafter-reviewer workflow** with mandatory PDF compilation:
+### Web application
 
-1. **Parse** the job posting (URL or text)
-2. **Evaluate fit** against your profile (skills, experience, culture, location, career alignment)
-3. **Draft** a tailored CV and cover letter in LaTeX
-4. **Spawn a reviewer agent** that researches the company and critiques the drafts
-5. **Revise** based on the reviewer's feedback
-6. **Compile and inspect** both PDFs: lualatex for the CV, xelatex for the cover letter. Claude reads the rendered pages and iterates on the LaTeX until the CV is exactly 2 pages with no orphaned entry titles, and the cover letter is exactly 1 page with the signature visible and fonts consistent.
-7. **ATS-check the CV**: extract the PDF's text layer (`pdftotext`, optional dependency) and verify it the way an ATS parser sees it — contact details present as literal text, no garbled glyphs, sane reading order — then score the posting's keyword coverage against the extraction. Keywords the profile genuinely supports get added; genuine gaps stay visible, never stuffed.
-8. **Present** the final output with a verification checklist
-
-All claims in the CV and cover letter are verified against your actual profile. The system never fabricates skills or experience.
-
-### What makes this workflow different
-
-- **PDF verification loop.** Most LaTeX-resume templates produce "looks fine in the .tex" output that breaks in the PDF: job titles orphan to the next page, cover letters spill onto page 2, bullet fonts silently fall back to the body font. The `/apply` command compiles and visually inspects every PDF and applies targeted fixes (`\needspace`, `\enlargethispage`, font-matching wrappers for list items) until the layout is clean. This runs automatically on every application.
-- **ATS verification on the PDF text layer.** An ATS reads the PDF's embedded text, not the rendered page — and LaTeX can silently produce PDFs whose text extracts as garbage (icon glyphs where the email should be, interleaved lines from multi-column layouts). `/apply` extracts the compiled CV's text layer with `pdftotext` and verifies contact details, reading order, and the posting's keyword coverage against what a parser actually sees. Honesty rule enforced: a keyword the profile doesn't support is acknowledged as a gap, never stuffed in.
-- **Relevance-weighted CV cutting.** When a CV overflows 2 pages, the workflow does not cut mechanically from the "oldest" section. It scores each candidate line by (a) relevance to the target posting, (b) uniqueness in the document, and (c) whether the cover letter depends on it, and cuts the lowest-total-score line first. An older-role bullet that hits posting keywords survives ahead of a recent-role bullet that does not.
-- **Drafter-reviewer separation.** The drafter writes; a second Claude agent, spawned with a fresh context, researches the company and critiques the drafts. The drafter then revises. This catches missed keywords, weak framing, and generic language that a single pass often leaves in.
-- **Token-efficient reviewer dispatch.** The reviewer agent receives drafts inline rather than re-reading them, and the verification checklist runs once at the end of the workflow rather than being duplicated by both agents. Note: the new compile-and-inspect step in Step 5 spends some of those savings on PDF rendering and layout iteration — the workflow trades some end-to-end token cost for a real reduction in broken PDFs reaching the user.
-
-## Customization
-
-### Which files to edit manually
-
-If you prefer editing files directly instead of using `/setup`:
-
-| File | What to change |
-|------|---------------|
-| `CLAUDE.md` | Your full profile (name, education, experience, skills, goals) |
-| `01-candidate-profile.md` | Structured version of your CV data |
-| `02-behavioral-profile.md` | Your behavioral assessment or self-assessment |
-| `04-job-evaluation.md` | Skill match areas, career goals, motivation filters |
-| `05-cv-templates.md` | Profile statement templates for different role types |
-| `07-interview-prep.md` | Your STAR examples from actual experience |
-| `search-queries.md` | Job search queries for your skills and location |
-
-### Updating your search queries
-
-As your priorities evolve, you can reconfigure just the job search without re-running the full profile setup:
-
-```
-/setup --section search
+```powershell
+Set-Location apps/web
+npm run lint
+npm test
+npm run typecheck
+npm run build
 ```
 
-This re-runs the search configuration interview: which roles to target, which skills to search for, which locations, and which portals. It also suggests role types you may not have considered based on your profile.
+### Shared contracts
 
-### Custom templates
-
-The CV uses [moderncv](https://ctan.org/pkg/moderncv) (banking style). The cover letter uses a custom `cover.cls` with Lato/Raleway fonts. Both are LaTeX — the reference engine this repo ships and maintains.
-
-To use your own template instead — LaTeX, [Typst](https://typst.app/), or any other toolchain that compiles to PDF from the command line — run:
-
-```
-/add-template
+```powershell
+Set-Location packages/career-core
+npm test
+npm run typecheck
 ```
 
-Point it at your source file (a `.tex` file plus any `.cls`/`.sty` files or bundled fonts; a `.typ` file plus any local packages; or an equivalent for another toolchain). The command interviews you for the template's instructions — source extension, compile command, fonts and where they live, style rules to preserve, hard page limit — stores everything under `templates/`, runs a mandatory test compile, and activates the template so `/apply` drafts and compiles from it. Templates are stored with `[PLACEHOLDER]` tokens instead of personal data, so they're safe to commit and share.
+### Original Pro-Flow regression suite
 
-- `/add-template --list` shows registered templates
-- `/add-template --use <name>` switches between them
-- `/add-template --use default` reverts to the stock moderncv / cover.cls templates
-
-If you prefer doing it by hand, the manual route still works: update the guidance in `05-cv-templates.md` and `06-cover-letter-templates.md`.
-
-### Job search tools
-
-The four Danish CLI tools in `.agents/skills/` (Jobbank, Jobdanmark, Jobindex, Jobnet) demonstrate the pattern for building a job-portal integration for a specific market. If you're in a different country, run:
-
-```
-/add-portal
+```powershell
+python -m pip install -r requirements-dev.txt
+python -m unittest discover -s tests -v
 ```
 
-Give it your local job board's URL. The command investigates the portal (search-URL pattern, result-page structure, robots.txt/access rules), scaffolds a CLI skill with the same structure, commands, and output contract as the shipped ones, and test-runs a live query before registering anything. Auth-walled portals are declined, and portals with restrictive terms get a prominent personal-use-only warning in the generated skill. The generated skill is market-specific and lives in your fork; the generator itself is the universal part.
+At the completion of the documented Phase 9 work, the validated baseline is:
 
-Maintaining a fork adapted to your market or language? Add it to the [Community forks & adaptations](https://github.com/MadsLorentzen/ai-job-search/discussions/78) thread so others can find it.
+- **132** original Pro-Flow Python tests;
+- **12** shared career-core tests;
+- **30** web workflow tests;
+- passing ESLint;
+- passing TypeScript checks;
+- passing Next.js production build.
 
-For **country-agnostic** starting points outside Denmark, the repo ships two portal skills alongside the Danish demos:
+The protected Executive Career OS baseline separately passed its original
+12-test suite and TypeScript typecheck.
 
-- **`linkedin-search`** — built on LinkedIn's public, unauthenticated `jobs-guest` endpoints. Field-agnostic, **zero runtime dependencies** (runs with just `bun`), and takes the search location as an explicit flag, so it works for any market out of the box (`-l "Berlin, Germany"`, `-l "Mumbai, Maharashtra, India"`, `-l "Remote"`, …). Intended for **personal use only** — automated access is against LinkedIn's Terms of Service, so keep volume low. See `.agents/skills/linkedin-search/SKILL.md`.
-- **`freehire-search`** — queries the [freehire.me](https://freehire.me) aggregator's public REST API (JSON, no API key). Tech-focused (software, data, engineering, DevOps, remote), multi-market via facet flags (`--region`, `--country`, `--remote`), and **zero runtime dependencies**. Unlike the HTML-scraping Danish portals, results come back structured (skills, seniority, category). The backend is MIT-licensed and [self-hostable](https://github.com/strelov1/freehire) — point `FREEHIRE_API_URL` at your own instance if you prefer. See `.agents/skills/freehire-search/SKILL.md`.
+## Legacy agent workflow
 
-### Extending the framework: portals, templates, criteria - and borrowing from other forks
+The guided web application supplements rather than erases Mads's original
+agent-command framework.
 
-Everything above adds up to an extension model, so here it is stated plainly. The framework has three extension points, and none of them require touching upstream:
+Core commands retained from upstream include:
 
-1. **Portal skills** - the module system for job boards. Every `*-search` skill is a self-contained folder under `.agents/skills/` with the same contract (a `search`/`detail` CLI, `--format json|table|plain` output, an `enabled:` flag in its `SKILL.md`, its own tests). `/scrape` auto-discovers any installed skill that follows the contract - nothing to register, nothing to wire up. `/add-portal` generates new ones; the [community portal index](https://github.com/MadsLorentzen/ai-job-search/discussions/78) catalogs the ones other forks have built.
-2. **Document templates** - `/add-template` registers any CV or cover-letter toolchain that compiles to PDF from the command line, LaTeX or otherwise.
-3. **Evaluation criteria** - deal-breakers and preferences in your profile are free-form, and the evaluation rubric scores against whatever you put there. "Strong parental-leave terms", "minimum salary X per my union's scale", "no on-call" - each is one profile line, no code, and it carries real weight in `/rank` and `/apply` fit evaluations.
+| Command | Original purpose |
+|---|---|
+| `/setup` | Build or update the candidate profile |
+| `/scrape` | Search enabled portal skills |
+| `/rank` | Score and shortlist scraped postings |
+| `/apply` | Run the drafter/reviewer application workflow |
+| `/interview` | Prepare for a tracked interview |
+| `/outcome` | Record outcomes and draft follow-ups |
+| `/expand` | Enrich the profile from user-approved public sources |
+| `/upskill` | Analyze recurring skill gaps |
+| `/html-report` | Generate an offline application dashboard |
+| `/notion-sync` | Publish a one-way pipeline view |
+| `/gmail-sync` | Propose status updates from email signals |
+| `/add-template` | Register a custom document toolchain |
+| `/add-portal` | Scaffold a market-specific portal skill |
+| `/reset` | Deliberately reset selected private data |
 
-**Borrowing a portal skill from another fork** is the intended way to get a board that upstream doesn't ship: find it in the [portal index](https://github.com/MadsLorentzen/ai-job-search/discussions/78), open that fork, and copy the one folder into your own `.agents/skills/`. Before you run it:
+Consult the canonical specifications under `.claude/commands/` and
+`.claude/skills/` before modifying legacy behavior.
 
-- **Read the code.** All of it - these CLIs run pre-approved on your machine (`.claude/settings.json` allowlists them) against your career data. Check that the only network calls go to the job board it claims to search, that `package.json` has no `dependencies` and no lifecycle scripts (`postinstall` etc.), and that nothing reads or writes outside its own folder.
-- **Run its tests offline** (`bun test` in the skill's `cli/` directory) - a well-built skill's tests pass with no network access.
-- Check the `enabled:` flag and the skill's own ToS notes.
+## Integration history
 
-The copy step is manual on purpose. Your settings already allow installed portal skills to run without asking each time - so an installer that fetched them from third-party repos for you would skip the one check that matters: you, reading the code first. There isn't one, and that's a security decision rather than a missing feature.
+The hybrid was developed in reversible, test-gated phases:
 
-Market-specific *data sources* (a national salary database, local award-rate tables) follow the same pattern as portals: they belong in a market fork, shared via [#78](https://github.com/MadsLorentzen/ai-job-search/discussions/78), not upstream.
+| Phase | Result |
+|---|---|
+| 0 | Protected both original project baselines |
+| 1 | Added migration documentation and shared contracts |
+| 2 | Added the isolated guided Next.js shell |
+| 3 | Added read-only Executive Career OS evidence import |
+| 4 | Added canonical profile persistence and guided fact review |
+| 5 | Added the grounded application workflow |
+| 6 | Added document generation and readiness verification |
+| 7 | Added search, pipeline, interview, and outcome operations |
+| 8 | Added live adapter diagnostics and integration hardening |
+| 9 | Replaced mixed-market search with guided U.S.-only grouped search and private preference memory |
 
-### Salary benchmarking
+Detailed design decisions, gates, and rollback points are documented in
+[the Executive Career OS migration manifest](docs/integration/executive-career-os-migration.md).
 
-The salary tool works with any salary data you provide (union statistics, Glassdoor exports, personal research, etc.). See `tools/README_SALARY_TOOL.md` for the expected format and setup. If you don't have salary data, the salary step is simply skipped.
+Key hybrid commits include:
 
-### Starting over
-
-To wipe your profile data and start fresh:
-
+```text
+507f808  establish shared career core contracts
+b334a33  add guided Career OS web shell
+e2ae21c  add read-only career evidence review
+4d93c6a  add canonical career review workflow
+0d0f858  add grounded application workflow
+3cece1d  add document readiness gate
+763f729  add career operations workspace
+ed5376b  harden live portal integration
+241cd0a  switch job search to U.S. portals
+6506642  show the complete role dropdown
+9c8205d  add grouped concurrent portal searches
+f2789b7  remember guided search preferences
 ```
-/reset profile    # clears skill files, preserves framework rules
-/reset documents  # deletes files from documents/ folder
-/reset all        # both
-```
 
-`/reset` shows exactly what will be deleted and requires you to type `RESET` to confirm. Nothing is deleted until you do.
+## Current maturity and remaining work
 
-### Staying up to date
+The major product surfaces are implemented, but a real personal acceptance run
+is still required.
 
-Upstream moves fast. Rather than pulling raw `master` and hoping, update your fork to a tagged [release](../../releases) - a vetted checkpoint described in [CHANGELOG.md](CHANGELOG.md). `python3 tools/check_upstream_updates.py` previews exactly which of your personalized files an update touches before you merge. Full walkthrough in [SETUP.md, section 8](SETUP.md#8-pulling-upstream-updates-into-your-fork).
+The next meaningful milestone is:
 
-## Tips for better results
+1. review and save real career evidence into the canonical profile;
+2. run a grouped U.S. search for a genuine target role;
+3. choose a real posting and paste it into Application Studio;
+4. complete fit assessment and claim review;
+5. generate and verify the PDFs;
+6. pass human visual review;
+7. move the application through the guarded pipeline;
+8. generate an interview pack;
+9. record an outcome.
 
-### Profile depth matters
+Additional future work may include:
 
-The single biggest factor in output quality is how much detail you put into your profile. A thin profile produces generic applications; a detailed one enables genuinely tailored results.
+- a safe provider adapter for Executive Career OS-style structured AI
+  generation;
+- direct posting capture that removes manual copy/paste without violating
+  portal rules;
+- internal U.S. result ingestion where an official API permits it;
+- authentication and encrypted remote storage;
+- multi-user deployment and access controls;
+- consolidated documentation that retires superseded historical adapter notes.
 
-- **Role descriptions:** Don't just list job titles. Describe what you actually did in each position: specific projects, tools used, responsibilities, and measurable achievements. The more material you provide, the more precisely the system can reframe your experience for different roles.
-- **Skills in context:** Instead of listing "Python" or "project management," describe how and where you applied them. "Built ML pipelines for customer churn prediction in Python using scikit-learn" gives the system far more to work with than "Python, machine learning."
-- **All onboarding paths work:** Whether you point `/setup` at your `documents/` folder, paste a single CV, or walk through the interview, the principle is the same: richer input produces sharper output.
+## Independence and rollback
 
-### Career path discovery
+- Executive Career OS remains an independently recoverable source repository.
+- The upstream AI Job Search history is preserved through the `upstream`
+  remote and MIT license.
+- Private schemas are versioned and migrated.
+- Original source-project files are not deleted as part of hybrid phases.
+- Legacy non-U.S. portal skills are disabled, not erased.
+- Each integration phase has a discrete commit and rollback point.
 
-The framework supports two distinct modes of job searching:
+## Security and privacy
 
-- **Explicit targeting:** You know which roles or sectors you want. The system helps refine and prioritize based on fit.
-- **Latent opportunity discovery:** By analyzing your full history (not just job titles, but the actual work you did), the system can surface career paths you haven't considered. Transferable skills that map to unexpected industries, patterns in what you enjoyed or excelled at, or emerging roles that combine your domain expertise with new technology.
+Review [SECURITY.md](SECURITY.md) before using unfamiliar job postings,
+third-party portal skills, provider integrations, or external connectors.
 
-To get the most from this, invest time during `/setup` in describing not just your experience, but what energized you, what drained you, and what you'd want more of. This context directly shapes how the system evaluates fit and which roles it surfaces during `/scrape`.
+Important boundaries:
 
-## Contributing
+- postings are untrusted content;
+- secrets stay in environment variables or approved secret stores;
+- provider calls may transmit the supplied prompt context;
+- generated documents remain drafts until reviewed;
+- employer-facing output must not contain internal paths or review metadata;
+- no automated outreach occurs;
+- inspect any borrowed portal skill before enabling it.
 
-Thinking about a PR? Read [CONTRIBUTING.md](CONTRIBUTING.md) first - it explains what gets merged, what lives in forks, and why.
+## Contributing and upstream updates
 
-## Acknowledgements
+For improvements to Mads's general framework, review
+[the upstream contribution guide](https://github.com/MadsLorentzen/ai-job-search/blob/master/CONTRIBUTING.md)
+and consider contributing upstream.
 
-- [Mikkel Krogholm](https://github.com/mikkelkrogsholm) ([skills repo](https://github.com/mikkelkrogsholm/skills)) for the job search CLI skills
-- Built with [Claude Code](https://claude.com/claude-code) by [Anthropic](https://anthropic.com)
+For changes specific to this hybrid, use this repository's
+[CONTRIBUTING.md](CONTRIBUTING.md), preserve the attribution and privacy
+boundaries, and keep migrations small and testable.
+
+When incorporating upstream releases, review changes rather than blindly
+overwriting personalized files or hybrid contracts.
 
 ## License
 
-MIT
+This repository remains available under the
+[MIT License](LICENSE), consistent with Mads Lorentzen's original project.
+
+The license permits use, modification, and distribution while requiring the
+copyright and permission notice to be retained. Attribution in this README is
+provided to make the technical and creative lineage explicit in addition to
+the legal requirements of the license.
