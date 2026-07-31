@@ -65,10 +65,9 @@ export function MobileNavigation() {
 }
 
 export function WorkspaceModeBadge() {
-  const pathname = usePathname();
   return (
     <span className="fixture-pill">
-      {pathname.startsWith("/career") || pathname.startsWith("/applications") ? "Private local workflow" : "Demo data"}
+      Private local workflow
     </span>
   );
 }

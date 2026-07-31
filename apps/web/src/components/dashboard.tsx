@@ -1,171 +1,149 @@
-import {
-  fixturePipeline,
-  fixtureProfile,
-  fixtureReadinessChecks,
-  fixtureWorkflow,
-} from "@/lib/fixtures";
 import Link from "next/link";
+import type { AcceptanceDashboard } from "@/server/acceptance/acceptance-service";
 import { ArrowIcon, CheckIcon, CompassIcon, FileIcon, SparkIcon } from "./icons";
 import { SectionHeading, StatusBadge, SurfaceCard } from "./ui";
 
-const completedChecks = fixtureReadinessChecks.filter(
-  (check) => check.status === "passed",
-).length;
-const completionPercent = Math.round(
-  (completedChecks / fixtureReadinessChecks.length) * 100,
-);
+export function Dashboard({ dashboard }: { dashboard: AcceptanceDashboard }) {
+  const { plan, snapshot, warning } = dashboard;
+  const next = plan.next;
 
-export function Dashboard() {
   return (
     <div className="dashboard" id="home">
       <section className="welcome-grid">
         <div className="welcome-copy">
-          <StatusBadge tone="current">Foundation stage</StatusBadge>
-          <p className="eyebrow">Good morning, {fixtureProfile.identity.fullName.value}</p>
-          <h1>Build your next move on facts you can stand behind.</h1>
+          <StatusBadge tone={plan.percent === 100 ? "complete" : "current"}>
+            Phase 10 guided acceptance
+          </StatusBadge>
+          <p className="eyebrow">Your private career workspace</p>
+          <h1>Move forward with one clear next step.</h1>
           <p className="welcome-lede">
-            One guided workspace for your career story, job search, applications,
-            interviews, and the decisions that connect them.
+            Live progress now connects your reviewed evidence, searches,
+            applications, verified documents, pipeline, interviews, and outcomes.
           </p>
           <div className="welcome-actions">
-            <Link className="button button--primary" href="/career/import-review">
-              Review evidence <ArrowIcon />
+            <Link className="button button--primary" href={next?.href ?? "/operations"}>
+              {next?.action ?? "Review your career progress"} <ArrowIcon />
             </Link>
-            <a className="button button--secondary" href="#workflow">
-              See how it works
+            <a className="button button--secondary" href="#acceptance-path">
+              View the full path
             </a>
           </div>
+          {warning ? <p className="dashboard-warning" role="status">{warning}</p> : null}
         </div>
 
         <SurfaceCard className="next-action-card">
           <div className="next-action-icon"><CompassIcon /></div>
           <div className="next-action-copy">
-            <p className="eyebrow">Your next best action</p>
-            <h2>Complete your career history</h2>
+            <p className="eyebrow">{next ? "Your next best action" : "Acceptance path complete"}</p>
+            <h2>{next?.label ?? "Your complete workflow is connected"}</h2>
             <p>
-              A verified timeline gives fit scoring and application drafts the
-              evidence they need to stay accurate.
+              {next?.detail
+                ?? "Every milestone has real persisted evidence. Continue tracking new opportunities and outcomes."}
             </p>
           </div>
-          <div className="progress-row" aria-label={`${completionPercent}% of profile setup complete`}>
+          <div className="progress-row" aria-label={`${plan.percent}% of acceptance path complete`}>
             <div className="progress-copy">
-              <span>Profile readiness</span>
-              <strong>{completionPercent}%</strong>
+              <span>End-to-end readiness</span>
+              <strong>{plan.percent}%</strong>
             </div>
             <div className="progress-track" aria-hidden="true">
-              <span style={{ width: `${completionPercent}%` }} />
+              <span style={{ width: `${plan.percent}%` }} />
             </div>
           </div>
-          <Link className="text-link" href="/career/import-review">
-            Review imported evidence <ArrowIcon />
+          <Link className="text-link" href={next?.href ?? "/operations"}>
+            {next?.action ?? "Open operations"} <ArrowIcon />
           </Link>
         </SurfaceCard>
       </section>
 
-      <section className="stats-grid" aria-label="Career pipeline summary">
-        {fixturePipeline.map((item) => (
-          <SurfaceCard className="stat-card" key={item.label}>
-            <span>{item.label}</span>
-            <strong>{item.value}</strong>
-            <small>{item.detail}</small>
-          </SurfaceCard>
-        ))}
+      <section className="stats-grid" aria-label="Live career workflow summary">
+        <SurfaceCard className="stat-card">
+          <span>Evidence reviewed</span>
+          <strong>{snapshot.evidenceReviewed}/{snapshot.evidenceTotal}</strong>
+          <small>Canonical career facts</small>
+        </SurfaceCard>
+        <SurfaceCard className="stat-card">
+          <span>Searches</span>
+          <strong>{snapshot.searches}</strong>
+          <small>Grouped U.S. portal launches</small>
+        </SurfaceCard>
+        <SurfaceCard className="stat-card">
+          <span>Applications</span>
+          <strong>{snapshot.applications}</strong>
+          <small>{snapshot.readyDocuments} with verified documents</small>
+        </SurfaceCard>
         <SurfaceCard className="stat-card stat-card--accent">
-          <span>Profile readiness</span>
-          <strong>{completionPercent}%</strong>
-          <small>{completedChecks} of {fixtureReadinessChecks.length} foundations ready</small>
+          <span>Workflow completion</span>
+          <strong>{plan.percent}%</strong>
+          <small>{plan.completed} of {plan.steps.length} milestones complete</small>
         </SurfaceCard>
       </section>
 
       <section className="content-grid">
-        <SurfaceCard className="readiness-card" id="career">
+        <SurfaceCard className="readiness-card" id="acceptance-path">
           <div className="card-header">
             <SectionHeading
-              eyebrow="Career foundation"
+              eyebrow="Live acceptance path"
               title="Know what is ready"
-              description="Every item is checked before it shapes a recommendation or application."
+              description="Each milestone is calculated from private persisted records, never demo data."
             />
-            <StatusBadge tone="current">{completedChecks} of {fixtureReadinessChecks.length}</StatusBadge>
+            <StatusBadge tone={plan.percent === 100 ? "complete" : "current"}>
+              {plan.completed} of {plan.steps.length}
+            </StatusBadge>
           </div>
           <div className="check-list">
-            {fixtureReadinessChecks.map((check) => {
-              const passed = check.status === "passed";
-              return (
-                <div className="check-row" key={check.id}>
-                  <span className={passed ? "check-icon check-icon--passed" : "check-icon"}>
-                    {passed ? <CheckIcon /> : <span aria-hidden="true" />}
-                  </span>
-                  <div>
-                    <strong>{check.label}</strong>
-                    <p>{check.detail}</p>
-                  </div>
-                  <StatusBadge tone={passed ? "complete" : "pending"}>
-                    {passed ? "Ready" : "Needs attention"}
-                  </StatusBadge>
+            {plan.steps.map((step) => (
+              <div className="check-row" key={step.id}>
+                <span className={step.complete ? "check-icon check-icon--passed" : "check-icon"}>
+                  {step.complete ? <CheckIcon /> : <span aria-hidden="true" />}
+                </span>
+                <div>
+                  <strong>{step.label}</strong>
+                  <p>{step.detail}</p>
                 </div>
-              );
-            })}
+                <StatusBadge tone={
+                  step.status === "complete" ? "complete"
+                    : step.status === "current" ? "current" : "pending"
+                }>
+                  {step.status === "complete" ? "Complete"
+                    : step.status === "current" ? "Do this next" : "Up next"}
+                </StatusBadge>
+              </div>
+            ))}
           </div>
-          <Link className="button button--secondary button--full" href="/career/import-review">
-            Open evidence review <ArrowIcon />
+          <Link className="button button--secondary button--full" href={next?.href ?? "/operations"}>
+            {next?.action ?? "Continue in operations"} <ArrowIcon />
           </Link>
         </SurfaceCard>
 
         <SurfaceCard className="principles-card">
           <div className="principles-icon"><SparkIcon /></div>
           <p className="eyebrow">Built-in guidance</p>
-          <h2>You should never have to guess what comes next.</h2>
+          <h2>Progress only counts when the underlying work exists.</h2>
           <p>
-            Pro-Flow separates required decisions from optional improvements,
-            explains why each step matters, and keeps unsupported claims out of
-            employer-facing documents.
+            The dashboard reads your local records without changing them. A
+            generated file does not count as ready until its current revision
+            passes the full document gate.
           </p>
           <ul>
             <li><CheckIcon /> One recommended action at a time</li>
-            <li><CheckIcon /> Evidence shown before claims are approved</li>
-            <li><CheckIcon /> Readiness gates before submission</li>
+            <li><CheckIcon /> Real records instead of fixture statistics</li>
+            <li><CheckIcon /> Current-revision document verification</li>
           </ul>
         </SurfaceCard>
       </section>
 
-      <section className="workflow-section" id="workflow">
-        <SectionHeading
-          eyebrow="The guided path"
-          title="From career foundation to better outcomes"
-          description="The interface reveals complexity only when you need it."
-        />
-        <div className="workflow-grid">
-          {fixtureWorkflow.map((step) => (
-            <article className={`workflow-step workflow-step--${step.status}`} key={step.number}>
-              <div className="workflow-number">{step.number}</div>
-              <StatusBadge tone={step.status === "current" ? "current" : "neutral"}>
-                {step.status === "current" ? "You are here" : "Up next"}
-              </StatusBadge>
-              <h3>{step.label}</h3>
-              <p>{step.detail}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="boundary-card" aria-label="Phase 2 data boundary">
+      <section className="boundary-card" aria-label="Phase 10 privacy boundary">
         <div><FileIcon /></div>
         <div>
-          <strong>Safe fixture boundary</strong>
+          <strong>Read-only orchestration boundary</strong>
           <p>
-            This Phase 2 shell uses neutral demonstration data only. Personal
-            career evidence, AI generation, portal search, and filesystem writes
-            remain disconnected until their dedicated safety gates are complete.
+            This overview reads only the fixed, gitignored career-data store.
+            It cannot submit applications, contact employers, approve claims,
+            or bypass any readiness gate.
           </p>
         </div>
       </section>
-
-      <div className="anchor-targets" aria-hidden="true">
-        <span id="jobs" />
-        <span id="applications" />
-        <span id="interview" />
-        <span id="insights" />
-      </div>
     </div>
   );
 }

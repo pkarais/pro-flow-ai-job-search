@@ -501,6 +501,41 @@ Gate:
 - Successful user-selected roles and normalized U.S. locations are prioritized
   on the next visit without becoming verified career facts.
 
+### Phase 10: Guided end-to-end acceptance
+
+1. Replace the original fixture-only home dashboard with live, read-only
+   workflow progress.
+2. Derive milestones from the canonical profile, grouped search history,
+   application archives, current document manifests, pipeline records,
+   interview packs, and outcomes.
+3. Recommend the first incomplete action while continuing to show later work
+   that already exists.
+4. Keep every write behind its existing dedicated workflow and safety gate.
+
+Implementation:
+
+- The home route loads one fail-safe acceptance snapshot from the fixed,
+  gitignored `career-data` root.
+- Eight milestones cover evidence, search, application creation, factual claim
+  review, document verification, pipeline tracking, interview preparation, and
+  outcome recording.
+- Empty evidence is never treated as complete.
+- Document readiness counts only when a ready manifest matches the current
+  application revision.
+- Read failures produce an actionable warning and a zero-state plan; they do
+  not mutate or repair private data automatically.
+- Fixture statistics and the stale Phase 2 data-boundary message are removed
+  from the active dashboard.
+
+Gate:
+
+- Exactly one first-incomplete milestone is recommended when work remains.
+- A complete persisted workflow reports all eight milestones complete.
+- Later work never bypasses or conceals an earlier incomplete milestone.
+- The dashboard cannot approve evidence, generate applications, transition the
+  pipeline, contact an employer, or submit an application.
+- Web tests, lint, type checking, and production compilation pass.
+
 ## Immediate conflicts to resolve
 
 | Topic | Executive behavior | Pro-Flow behavior | Resolution |

@@ -486,11 +486,11 @@ python -m pip install -r requirements-dev.txt
 python -m unittest discover -s tests -v
 ```
 
-At the completion of the documented Phase 9 work, the validated baseline is:
+At the completion of the documented Phase 10 work, the validated baseline is:
 
 - **132** original Pro-Flow Python tests;
 - **12** shared career-core tests;
-- **30** web workflow tests;
+- **34** web workflow tests;
 - passing ESLint;
 - passing TypeScript checks;
 - passing Next.js production build.
@@ -541,6 +541,7 @@ The hybrid was developed in reversible, test-gated phases:
 | 7 | Added search, pipeline, interview, and outcome operations |
 | 8 | Added live adapter diagnostics and integration hardening |
 | 9 | Replaced mixed-market search with guided U.S.-only grouped search and private preference memory |
+| 10 | Replaced fixture dashboard data with live, read-only end-to-end guidance and next-action readiness |
 
 Detailed design decisions, gates, and rollback points are documented in
 [the Executive Career OS migration manifest](docs/integration/executive-career-os-migration.md).
@@ -564,8 +565,8 @@ f2789b7  remember guided search preferences
 
 ## Current maturity and remaining work
 
-The major product surfaces are implemented, but a real personal acceptance run
-is still required.
+The major product surfaces and the live acceptance dashboard are implemented,
+but a real personal acceptance run is still required.
 
 The next meaningful milestone is:
 

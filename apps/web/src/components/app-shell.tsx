@@ -24,7 +24,7 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
           <ShieldIcon />
           <div>
             <strong>Local-first</strong>
-            <span>Fixture mode is active</span>
+            <span>Private records stay local</span>
           </div>
         </div>
       </aside>

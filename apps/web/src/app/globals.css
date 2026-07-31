@@ -79,6 +79,16 @@ a {
   transform: translateY(0);
 }
 
+.dashboard-warning {
+  max-width: 46rem;
+  margin: var(--space-5) 0 0;
+  border-left: 3px solid var(--color-warning);
+  border-radius: var(--radius-sm);
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+  padding: var(--space-3) var(--space-4);
+}
+
 .app-frame {
   min-height: 100vh;
 }
