@@ -38,3 +38,9 @@ The existing `CLAUDE.md`, `.claude/skills/job-application-assistant/`, and
 master-CV grounding union remain the active inputs for legacy agent commands.
 Do not manually copy web-review decisions into legacy profile files or claim
 that the legacy `/apply` command consumed the canonical record.
+
+Phase 6 document sources, PDFs, ATS text, and readiness manifests remain under
+the private application archive. Only verified claims may render. The
+readiness gate requires fixed-tool compilation, exact page counts, clean ATS
+extraction, literal contact text, supported keyword survival, and explicit
+human visual inspection. Never bypass or manually edit a readiness manifest.

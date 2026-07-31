@@ -3,9 +3,13 @@ import { mkdtemp, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { canonicalCareerProfileSchema } from "../../../packages/career-core/dist/index.js";
+import {
+  canonicalCareerProfileSchema,
+  documentReadinessSchema,
+} from "../../../packages/career-core/dist/index.js";
 import { buildApplication } from "../src/server/applications/application-service.ts";
 import { ApplicationStore } from "../src/server/applications/application-store.ts";
+import { DocumentService, renderDocumentSources } from "../src/server/documents/document-service.ts";
 
 const timestamp = "2026-01-02T03:04:05.000Z";
 const profile = canonicalCareerProfileSchema.parse({
@@ -85,4 +89,62 @@ test("archive persists claim decisions and completes only after review", async (
     expectedRevision: 1,
     decision: "verified",
   }), /revision 2/i);
+});
+
+test("document sources contain only verified claims and escape untrusted text", () => {
+  const application = buildApplication({ ...intake, companyName: "Example & Company" }, profile, new Date(timestamp));
+  const reviewed = {
+    ...application,
+    status: "review_complete",
+    draft: {
+      ...application.draft,
+      claims: application.draft.claims.map((claim) => ({ ...claim, decision: "verified", reviewedAt: timestamp })),
+    },
+  };
+  const sources = renderDocumentSources(reviewed, {
+    fullName: "Alex Example",
+    email: "alex@example.test",
+    phone: "+1 555 0100",
+  });
+  assert.match(sources.cv, /Example \\& Company/);
+  assert.match(sources.cv, /alex@example\.test/);
+  assert.doesNotMatch(sources.cv, /policy_prohibited/);
+});
+
+test("readiness cannot be marked ready while a required check is incomplete", () => {
+  assert.throws(() => documentReadinessSchema.parse({
+    schemaVersion: 1,
+    applicationId: "app_fixture",
+    applicationRevision: 1,
+    status: "ready",
+    artifacts: [],
+    checks: [{ id: "pdf", label: "PDF check", required: true, status: "failed" }],
+    generatedAt: timestamp,
+  }), /Ready requires every mandatory check/);
+});
+
+test("document generation fails closed when required local tools are unavailable", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "pro-flow-documents-"));
+  const application = buildApplication(intake, profile, new Date(timestamp));
+  const reviewed = {
+    ...application,
+    status: "review_complete",
+    draft: {
+      ...application.draft,
+      claims: application.draft.claims.map((claim) => ({ ...claim, decision: "verified", reviewedAt: timestamp })),
+    },
+  };
+  const readiness = await new DocumentService(root).generate(reviewed, {
+    fullName: "Alex Example",
+    email: "alex@example.test",
+    phone: "+1 555 0100",
+  }, new Date(timestamp));
+  assert.equal(readiness.status, "blocked");
+  assert.equal(readiness.checks.find((item) => item.id === "document_tools").status, "failed");
+  assert.ok(readiness.artifacts.some((artifact) => artifact.kind === "cv_source"));
+  assert.ok(readiness.checks.every((item) => item.status !== "passed" || item.id !== "cv_pages"));
+  await assert.rejects(
+    () => new DocumentService(root).confirmVisualReview(application.id, application.revision),
+    /Both PDFs must exist/,
+  );
 });

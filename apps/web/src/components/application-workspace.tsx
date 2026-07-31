@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import type { ArchivedApplication } from "@pro-flow/career-core";
+import type { ArchivedApplication, DocumentReadiness } from "@pro-flow/career-core";
 import { SectionHeading, StatusBadge, SurfaceCard } from "./ui";
 
 export function ApplicationWorkspace() {
   const [application, setApplication] = useState<ArchivedApplication | null>(null);
+  const [readiness, setReadiness] = useState<DocumentReadiness | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -49,6 +50,48 @@ export function ApplicationWorkspace() {
     setBusy(false);
     if (!response.ok) return setError(payload.error ?? "Unable to save the decision.");
     setApplication(payload.application);
+  }
+
+  async function generateDocuments(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!application) return;
+    const data = new FormData(event.currentTarget);
+    setBusy(true);
+    setError("");
+    const response = await fetch("/api/applications/documents", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        applicationId: application.id,
+        identity: {
+          fullName: data.get("fullName"),
+          email: data.get("email"),
+          phone: data.get("phone"),
+        },
+      }),
+    });
+    const payload = await response.json();
+    setBusy(false);
+    if (!response.ok) return setError(payload.error ?? "Unable to generate documents.");
+    setReadiness(payload.readiness);
+  }
+
+  async function confirmVisualReview() {
+    if (!application || !readiness) return;
+    setBusy(true);
+    setError("");
+    const response = await fetch("/api/applications/documents/visual-review", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        applicationId: application.id,
+        applicationRevision: application.revision,
+      }),
+    });
+    const payload = await response.json();
+    setBusy(false);
+    if (!response.ok) return setError(payload.error ?? "Unable to confirm visual review.");
+    setReadiness(payload.readiness);
   }
 
   return (
@@ -114,8 +157,60 @@ export function ApplicationWorkspace() {
           <SurfaceCard className="archive-card">
             <p className="eyebrow">Step 5 · Local archive</p>
             <h2>{application.status === "review_complete" ? "Factual review complete" : "Review is still required"}</h2>
-            <p>Application <code>{application.id}</code> is saved privately at revision {application.revision}. Document verification and “Ready to Submit” remain locked until Phase 6.</p>
+            <p>Application <code>{application.id}</code> is saved privately at revision {application.revision}. “Ready to Submit” remains locked until every document check passes.</p>
+            {application.status === "review_complete" ? (
+              <form className="document-details-form" onSubmit={generateDocuments}>
+                <p>Enter the exact contact text that should appear in both private documents.</p>
+                <label>Full name <input name="fullName" required maxLength={200} /></label>
+                <label>Email <input name="email" required type="email" maxLength={320} /></label>
+                <label>Phone <input name="phone" required maxLength={80} /></label>
+                <button className="button button--primary" disabled={busy}>
+                  {busy ? "Running document checks…" : "Generate and verify documents"}
+                </button>
+              </form>
+            ) : null}
           </SurfaceCard>
+
+          {readiness ? (
+            <section className="application-section readiness-workspace">
+              <SectionHeading
+                eyebrow="Phase 6 · Readiness gate"
+                title={readiness.status === "ready" ? "Ready to submit" : "Documents are blocked"}
+                description="Every mandatory check must pass. Pending or failed checks cannot be overridden here."
+              />
+              <div className="readiness-checks">
+                {readiness.checks.map((item) => (
+                  <SurfaceCard className="readiness-check-card" key={item.id}>
+                    <StatusBadge tone={item.status === "passed" ? "complete" : item.status === "failed" ? "danger" : "pending"}>{item.status}</StatusBadge>
+                    <div><strong>{item.label}</strong><p>{item.detail}</p></div>
+                  </SurfaceCard>
+                ))}
+              </div>
+              <div className="artifact-actions" aria-label="Private document artifacts">
+                {readiness.artifacts.map((artifact) => (
+                  <a
+                    className="button button--secondary"
+                    href={`/api/applications/artifacts/${application.id}/${artifact.kind}`}
+                    key={artifact.kind}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    Open {artifact.kind.replaceAll("_", " ")}
+                  </a>
+                ))}
+              </div>
+              {readiness.checks.find((item) => item.id === "visual_review")?.status === "pending"
+                && readiness.checks.every((item) => item.id === "visual_review" || item.status === "passed") ? (
+                  <button className="button button--primary" disabled={busy} onClick={confirmVisualReview}>
+                    I inspected both PDFs and they look correct
+                  </button>
+                ) : null}
+              <SurfaceCard className={`readiness-verdict readiness-verdict--${readiness.status}`}>
+                <strong>{readiness.status === "ready" ? "All required checks passed." : "Ready to Submit remains locked."}</strong>
+                <p>{readiness.artifacts.length} private artifact record(s) were written. No document was submitted or exposed publicly.</p>
+              </SurfaceCard>
+            </section>
+          ) : null}
         </div>
       )}
       {error ? <p className="form-error" role="alert">{error}</p> : null}

@@ -379,15 +379,37 @@ Gate:
 
 ### Phase 6: Documents and readiness
 
-1. Connect CV and cover-letter templates.
-2. Compile PDFs.
-3. Run page-count, visual, and ATS checks.
-4. Implement the readiness gate.
+Status: **Implementation complete; local tool acceptance pending**
+
+Completed:
+
+- Added validated structured contact input rather than inferring contact data
+  from narrative evidence.
+- Added deterministic, escaped two-page CV and one-page cover-letter LaTeX
+  source rendering from verified claims only.
+- Added fixed-command compilation through `lualatex` and `xelatex`.
+- Added exact PDF page-count checks through `pdfinfo`.
+- Added ATS text extraction, garbled-text detection, literal email/phone
+  checks, and supported-keyword survival checks through `pdftotext`.
+- Added private, allowlisted artifact viewing with no arbitrary path input.
+- Added cleanup of compiler intermediates while preserving source, PDF, ATS
+  text, and readiness records.
+- Added a required human visual-review checkpoint after all mechanical checks
+  pass.
+- Added a strict readiness schema that rejects `ready` whenever any mandatory
+  check is pending or failed.
+- Added responsive readiness progress, artifact, blocked, and ready states.
 
 Gate:
 
 - Pro-Flow's mandatory PDF/ATS requirements remain intact.
-- Failed checks block "Ready to Submit."
+- Pending, failed, stale, or visually unreviewed output blocks "Ready to
+  Submit."
+- Neutral tests prove rejected/pending claims cannot render and unavailable
+  tools fail closed.
+- The current host does not expose `lualatex`, `xelatex`, `pdfinfo`, or
+  `pdftotext`; live PDF compilation and visual acceptance therefore remain
+  pending rather than being reported as passed.
 
 ### Phase 7: Search, pipeline, interview, and outcomes
 
@@ -457,6 +479,6 @@ The integration is considered seamless when:
 
 ## Next action
 
-Complete the Phase 5 live acceptance gate with a user-selected real posting,
-then proceed to Phase 6 document rendering, PDF/ATS checks, and the locked
-"Ready to Submit" readiness gate.
+Install/enable the Phase 6 document tools and complete the Phase 5/6 live
+acceptance gate with a user-selected posting. Then proceed to Phase 7 search,
+pipeline, interview, and outcome workflows.

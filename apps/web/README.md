@@ -30,6 +30,13 @@ draft, requires a decision on every material claim, and archives the workflow
 under `career-data/applications/`. It does not call an AI provider, submit an
 application, or create final CV/PDF artifacts.
 
+Phase 6 adds private LaTeX source generation, fixed-tool PDF compilation,
+page-count checks, ATS text extraction, keyword/contact checks, allowlisted
+artifact viewing, and a mandatory human visual-review confirmation. Install
+`lualatex`, `xelatex`, `pdfinfo`, and `pdftotext` on the host to run the
+complete gate. Missing tools produce a blocked readiness result; checks cannot
+be bypassed in the UI.
+
 ## Commands
 
 ```powershell

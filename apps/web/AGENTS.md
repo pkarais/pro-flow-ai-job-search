@@ -20,3 +20,9 @@ providers. Phase 5 application archives must remain under the fixed
 `career-data/applications` root, use validated server-generated IDs and
 optimistic revisions, and derive claims only from reviewed employer-facing
 evidence. Policy records must never be drafted as claims.
+
+Phase 6 may execute only the fixed document tools `lualatex`, `xelatex`,
+`pdfinfo`, and `pdftotext` with server-generated filenames inside the fixed
+application archive. Artifact reads are restricted to validated application
+IDs and an explicit kind-to-filename map. Failed, pending, or stale checks must
+keep readiness blocked.

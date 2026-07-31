@@ -70,3 +70,17 @@ Phase 5 application workflow tests also use temporary archives. To exercise the
 live workflow, confirm at least one employer-facing evidence item at
 `/career/import-review`, then open `/applications/new`. Live application
 archives remain ignored under `career-data/applications/`.
+
+Phase 6 document verification requires these commands on `PATH`:
+
+```powershell
+lualatex --version
+xelatex --version
+pdfinfo -v
+pdftotext -v
+```
+
+The current environment may run in fail-closed mode when they are absent.
+Generated sources and readiness manifests still remain private under the
+application archive; no readiness status can become `ready` until compilation,
+page-count, ATS/contact/keyword, and human visual checks all pass.

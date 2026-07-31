@@ -2,6 +2,7 @@ export * from "./application.js";
 export * from "./application-workflow.js";
 export * from "./canonical.js";
 export * from "./common.js";
+export * from "./documents.js";
 export * from "./evidence.js";
 export * from "./opportunity.js";
 export * from "./profile.js";
