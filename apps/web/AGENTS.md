@@ -26,3 +26,12 @@ Phase 6 may execute only the fixed document tools `lualatex`, `xelatex`,
 application archive. Artifact reads are restricted to validated application
 IDs and an explicit kind-to-filename map. Failed, pending, or stale checks must
 keep readiness blocked.
+
+Phase 7 may execute only the six fixed portal adapters under `.agents/skills`
+through Bun, with user input passed as process arguments rather than shell
+commands. Normalize and deduplicate results before persistence, isolate portal
+failures, and keep operations data under `career-data/operations.json`.
+Pipeline transitions must use `career-core`; readiness-dependent transitions
+must verify the matching Phase 6 manifest. Interview packs use verified claims
+only, outcomes append history, and no route may submit an application or
+contact an employer.

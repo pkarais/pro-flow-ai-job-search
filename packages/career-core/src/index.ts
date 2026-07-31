@@ -5,6 +5,7 @@ export * from "./common.js";
 export * from "./documents.js";
 export * from "./evidence.js";
 export * from "./opportunity.js";
+export * from "./operations.js";
 export * from "./profile.js";
 export * from "./services.js";
 export * from "./workflow.js";

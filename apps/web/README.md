@@ -37,6 +37,13 @@ artifact viewing, and a mandatory human visual-review confirmation. Install
 complete gate. Missing tools produce a blocked readiness result; checks cannot
 be bypassed in the UI.
 
+Phase 7 adds `/operations`, a guided workspace for fixed-adapter job search,
+normalized ranking and deduplication, guarded application tracking, grounded
+interview preparation, and append-only outcomes. The six portal CLIs require
+`bun` on the host. If Bun or one portal fails, that search fails explicitly
+without corrupting stored operations. The workspace never submits applications
+or contacts employers.
+
 ## Commands
 
 ```powershell

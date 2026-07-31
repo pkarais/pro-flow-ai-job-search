@@ -749,6 +749,157 @@ h3 {
   padding: var(--space-4);
 }
 
+.operations-page {
+  width: min(100%, var(--content-width));
+  margin: 0 auto;
+  padding: clamp(var(--space-8), 5vw, var(--space-16))
+    clamp(var(--space-5), 4vw, var(--space-12))
+    calc(var(--space-16) + env(safe-area-inset-bottom));
+}
+
+.operations-hero {
+  max-width: 68rem;
+}
+
+.operations-hero h1 {
+  max-width: 15ch;
+  margin-top: var(--space-5);
+  font-size: clamp(2.75rem, 5vw, 5.2rem);
+}
+
+.operations-hero > p:last-child {
+  max-width: 52rem;
+  margin-top: var(--space-6);
+  color: var(--color-ink-muted);
+  font-size: 1.08rem;
+}
+
+.operations-section {
+  scroll-margin-top: var(--space-8);
+  margin-top: var(--space-16);
+}
+
+.operations-card {
+  margin-top: var(--space-8);
+  padding: clamp(var(--space-5), 3vw, var(--space-8));
+}
+
+.operations-search {
+  display: grid;
+  grid-template-columns: minmax(10rem, 0.7fr) minmax(14rem, 1.3fr) minmax(12rem, 1fr) auto;
+  align-items: end;
+  gap: var(--space-4);
+}
+
+.operations-search label,
+.operations-stack-form label,
+.pipeline-card label {
+  display: grid;
+  gap: var(--space-2);
+  color: var(--color-ink-muted);
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.operations-search input,
+.operations-search select,
+.operations-stack-form input,
+.operations-stack-form select,
+.operations-stack-form textarea,
+.pipeline-card input,
+.pipeline-card select {
+  min-height: var(--touch-target);
+  width: 100%;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  background: var(--color-white);
+  color: var(--color-ink);
+  padding: var(--space-3);
+}
+
+.adapter-note {
+  margin: var(--space-5) 0 0;
+  color: var(--color-ink-muted);
+  font-size: 0.82rem;
+}
+
+.job-results {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+
+.job-result-card {
+  padding: var(--space-5);
+}
+
+.job-result-card > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.job-result-card h3 {
+  margin-top: var(--space-5);
+}
+
+.job-result-card p,
+.pipeline-card p {
+  color: var(--color-ink-muted);
+}
+
+.pipeline-list {
+  display: grid;
+  gap: var(--space-4);
+  margin-top: var(--space-8);
+}
+
+.pipeline-card {
+  display: grid;
+  grid-template-columns: minmax(15rem, 0.7fr) minmax(20rem, 1.3fr);
+  gap: var(--space-8);
+  padding: var(--space-6);
+}
+
+.pipeline-card h3 {
+  margin-top: var(--space-4);
+}
+
+.pipeline-card form {
+  display: grid;
+  grid-template-columns: minmax(10rem, 0.7fr) minmax(12rem, 1.3fr) auto;
+  align-items: end;
+  gap: var(--space-3);
+}
+
+.operations-two-column {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
+}
+
+.operations-two-column .operations-card {
+  margin-top: 0;
+}
+
+.operations-stack-form {
+  display: grid;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+
+.interview-summary {
+  margin-top: var(--space-8);
+  border-top: 1px solid var(--color-line);
+  padding-top: var(--space-5);
+}
+
+.interview-summary ul {
+  color: var(--color-ink-muted);
+}
+
 .review-safety-card {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -1513,6 +1664,22 @@ h3 {
   .application-page {
     padding-top: var(--space-8);
     padding-bottom: calc(var(--mobile-nav-height) + var(--space-8) + env(safe-area-inset-bottom));
+  }
+
+  .operations-page {
+    padding-top: var(--space-8);
+    padding-bottom: calc(var(--mobile-nav-height) + var(--space-8) + env(safe-area-inset-bottom));
+  }
+
+  .operations-search,
+  .pipeline-card,
+  .pipeline-card form,
+  .operations-two-column {
+    grid-template-columns: 1fr;
+  }
+
+  .job-results {
+    grid-template-columns: 1fr;
   }
 
   .application-form,

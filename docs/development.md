@@ -84,3 +84,17 @@ The current environment may run in fail-closed mode when they are absent.
 Generated sources and readiness manifests still remain private under the
 application archive; no readiness status can become `ready` until compilation,
 page-count, ATS/contact/keyword, and human visual checks all pass.
+
+### Phase 7 operations workspace
+
+Open `/operations` for search, pipeline, interview, and outcome workflows.
+Portal search uses only the installed CLIs under `.agents/skills` and requires:
+
+```powershell
+bun --version
+```
+
+When Bun is unavailable, search reports a scoped runtime error and does not
+write partial results. Pipeline, interview, and outcome features remain
+available for existing application archives. All operational state is private
+and gitignored at `career-data/operations.json`.

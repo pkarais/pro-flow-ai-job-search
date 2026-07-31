@@ -44,3 +44,11 @@ the private application archive. Only verified claims may render. The
 readiness gate requires fixed-tool compilation, exact page counts, clean ATS
 extraction, literal contact text, supported keyword survival, and explicit
 human visual inspection. Never bypass or manually edit a readiness manifest.
+
+Phase 7 operational records remain in the private, gitignored
+`career-data/operations.json` store. Portal execution is restricted to the six
+fixed `.agents/skills` adapters and must fail in isolation. Pipeline changes
+must follow the shared transition contract; readiness-dependent states cannot
+bypass the Phase 6 gate. Interview answers may use only verified claims, and
+outcomes are append-only historical records. The web application never submits
+applications or contacts employers automatically.

@@ -418,11 +418,23 @@ Gate:
 3. Add application state transitions.
 4. Add interview preparation and outcome feedback.
 
+Implementation:
+
+- Added a single `/operations` workspace with inline guidance and next actions.
+- Wrapped six existing portal CLIs behind fixed, normalized Bun adapters.
+- Added evidence-aware ranking, cross-portal URL/content deduplication, and
+  private revisioned storage.
+- Added contract-validated pipeline transitions with a Phase 6 readiness gate.
+- Added verified-claim interview packs and append-only outcome history.
+- Kept portal failures isolated and prohibited automatic submission/outreach.
+
 Gate:
 
 - Portal failures are isolated.
 - State transitions are validated.
 - Submitted artifacts remain immutable historical evidence.
+- Neutral automated tests, lint, type checking, and production build pass.
+- Live portal acceptance remains pending until Bun is installed on the host.
 
 ## Immediate conflicts to resolve
 
@@ -479,6 +491,7 @@ The integration is considered seamless when:
 
 ## Next action
 
-Install/enable the Phase 6 document tools and complete the Phase 5/6 live
-acceptance gate with a user-selected posting. Then proceed to Phase 7 search,
-pipeline, interview, and outcome workflows.
+Install Bun and run one live search per configured portal, then complete the
+Phase 5/6 document acceptance gate with a user-selected posting. Use the
+resulting application to verify the full Phase 7 pipeline, interview, and
+outcome journey in `/operations`.

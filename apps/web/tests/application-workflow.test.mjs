@@ -10,6 +10,13 @@ import {
 import { buildApplication } from "../src/server/applications/application-service.ts";
 import { ApplicationStore } from "../src/server/applications/application-store.ts";
 import { DocumentService, renderDocumentSources } from "../src/server/documents/document-service.ts";
+import { OperationsStore } from "../src/server/operations/operations-store.ts";
+import { PortalUnavailableError, searchPortal } from "../src/server/operations/portal-adapter.ts";
+import {
+  createInterviewPack,
+  recordOutcome,
+  transitionPipeline,
+} from "../src/server/operations/operations-service.ts";
 
 const timestamp = "2026-01-02T03:04:05.000Z";
 const profile = canonicalCareerProfileSchema.parse({
@@ -147,4 +154,67 @@ test("document generation fails closed when required local tools are unavailable
     () => new DocumentService(root).confirmVisualReview(application.id, application.revision),
     /Both PDFs must exist/,
   );
+});
+
+test("portal runtime failure is isolated and does not create operations state", async () => {
+  const previousPath = process.env.PATH;
+  process.env.PATH = "";
+  try {
+    await assert.rejects(
+      () => searchPortal({ portal: "freehire-search", query: "product strategy", limit: 5 }, profile),
+      (error) => error instanceof PortalUnavailableError && /no search was attempted/i.test(error.message),
+    );
+  } finally {
+    process.env.PATH = previousPath;
+  }
+});
+
+test("pipeline rejects unsafe skips and readiness bypasses", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "pro-flow-pipeline-"));
+  const application = buildApplication(intake, profile, new Date(timestamp));
+  await new ApplicationStore(root).saveNew(application);
+  await assert.rejects(() => transitionPipeline(root, {
+    applicationId: application.id,
+    expectedRevision: 0,
+    to: "applied",
+  }), /Unsafe transition/);
+  const drafting = await transitionPipeline(root, {
+    applicationId: application.id,
+    expectedRevision: 0,
+    to: "drafting",
+  });
+  assert.equal(drafting.pipeline[0].status, "drafting");
+  assert.equal(drafting.pipeline[0].events.length, 1);
+});
+
+test("interview packs stay consistent with verified claims and outcomes append", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "pro-flow-operations-"));
+  const application = buildApplication(intake, profile, new Date(timestamp));
+  const reviewed = {
+    ...application,
+    status: "review_complete",
+    draft: {
+      ...application.draft,
+      claims: application.draft.claims.map((claim) => ({ ...claim, decision: "verified", reviewedAt: timestamp })),
+    },
+  };
+  await new ApplicationStore(root).saveNew(reviewed);
+  const withInterview = await createInterviewPack(root, {
+    applicationId: reviewed.id,
+    stage: "technical",
+  });
+  assert.deepEqual(withInterview.interviews[0].consistencyClaims, reviewed.draft.claims.map((claim) => claim.text));
+  const withOutcome = await recordOutcome(root, {
+    applicationId: reviewed.id,
+    status: "in_progress",
+    note: "Technical interview scheduled.",
+  });
+  const final = await recordOutcome(root, {
+    applicationId: reviewed.id,
+    status: "rejected",
+    note: "Employer selected a candidate with deeper domain experience.",
+  });
+  assert.equal(withOutcome.outcomes.length, 1);
+  assert.equal(final.outcomes.length, 2);
+  assert.equal((await new OperationsStore(root).load()).outcomes[0].note, "Technical interview scheduled.");
 });
