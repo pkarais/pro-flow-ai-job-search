@@ -265,6 +265,12 @@ Imported facts retain:
 - conflict information;
 - usage restrictions.
 
+Executive Career OS is an optional evidence adapter, not a requirement for the
+long-term product. Future public onboarding paths—including resume/CV upload,
+guided manual entry, and existing-profile import—must converge on the same
+staged-evidence and explicit-review boundary before any fact becomes verified
+or employer-facing.
+
 ### Reviewed canonical record
 
 Explicit web-review decisions are stored in:

@@ -536,6 +536,18 @@ Gate:
   pipeline, contact an employer, or submit an application.
 - Web tests, lint, type checking, and production compilation pass.
 
+Forward-compatibility requirement:
+
+- Phase 10 progress depends only on canonical and operational records, never on
+  Executive Career OS file names or directory structure.
+- Executive Career OS remains one evidence-source adapter.
+- Future resume upload, guided manual entry, existing-profile import, and other
+  approved onboarding paths must converge on staged evidence with provenance.
+- Every onboarding path must pass through explicit fact review before data can
+  become canonical, verified, or employer-facing.
+- Private source documents and incomplete onboarding state must remain under
+  the fixed, gitignored `career-data` root.
+
 ## Immediate conflicts to resolve
 
 | Topic | Executive behavior | Pro-Flow behavior | Resolution |

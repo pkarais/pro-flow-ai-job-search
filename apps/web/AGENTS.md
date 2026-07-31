@@ -50,3 +50,13 @@ origins. Searches without public candidate APIs use official prefilled search
 pages, never scraping. Operations schema v3 removes legacy non-U.S. jobs while
 preserving workflow history and retains at most 50 private search selections.
 Never promote those selections to verified career evidence.
+
+Future onboarding work must remain source-neutral. Executive Career OS is one
+read-only evidence adapter, not a required user data model. Resume/CV upload,
+guided manual entry, existing Pro-Flow import, and future approved sources must
+all produce staged evidence with provenance and pass through explicit user
+review before entering the canonical profile. Never promote extracted,
+inferred, uploaded, or search-preference data directly to verified evidence.
+Keep source documents and onboarding progress under the fixed, gitignored
+`career-data` root; do not place personal information in tracked fixtures,
+source code, logs, URLs, or client bundles.
