@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import {
@@ -49,4 +50,14 @@ test("fixture source paths cannot point at personal-data directories", () => {
   assert.ok(evidence.every((item) => item.sourcePath.startsWith("fixtures/")));
   assert.ok(evidence.every((item) => !item.sourcePath.includes("career-data/")));
   assert.ok(evidence.every((item) => !item.sourcePath.includes("documents/")));
+});
+
+test("grouped searches open validated redirect routes without blank placeholder tabs", async () => {
+  const workspace = await readFile(
+    new URL("../src/components/operations-workspace.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.equal(workspace.includes('window.open("about:blank"'), false);
+  assert.ok(workspace.includes("/api/operations/search?"));
+  assert.ok(workspace.includes("window.open(search.url"));
 });

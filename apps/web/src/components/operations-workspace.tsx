@@ -82,36 +82,41 @@ export function OperationsWorkspace({
     setBlockedSearches([]);
     const data = new FormData(event.currentTarget);
     const group = String(data.get("group")) as PortalGroupId;
-    const expectedCount = portalGroupPortals[group].length;
-    const tabs = Array.from({ length: expectedCount }, () => {
-      const tab = window.open("about:blank", "_blank");
-      if (tab) tab.opener = null;
-      return tab;
+    const query = String(data.get("query") ?? "");
+    const location = String(data.get("location") ?? "United States");
+    const labels = new Map(runtimeReport.portals.map((portal) => [portal.portal, portal.label]));
+    const redirects = portalGroupPortals[group].map((portal) => {
+      const params = new URLSearchParams({ portal, query, location });
+      return {
+        label: labels.get(portal) ?? portal,
+        url: `/api/operations/search?${params.toString()}`,
+      };
     });
+    const blocked = redirects.filter((search) => {
+      const tab = window.open(search.url, "_blank");
+      if (tab) tab.opener = null;
+      return !tab;
+    });
+    setBlockedSearches(blocked);
     try {
       const response = await fetch("/api/operations/search", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           group,
-          query: data.get("query"),
-          location: data.get("location"),
+          query,
+          location,
         }),
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error ?? "The grouped search could not be created.");
       const searches = payload.searches as Array<{ label: string; url: string }>;
-      const blocked: Array<{ label: string; url: string }> = [];
-      searches.forEach((search, index) => {
-        const tab = tabs[index];
-        if (tab) tab.location.href = search.url;
-        else blocked.push(search);
-      });
-      setLaunchMessage(`${searches.length - blocked.length} of ${searches.length} portal searches opened. This role and U.S. location were saved privately for your next search.`);
-      setBlockedSearches(blocked);
+      setLaunchMessage(`${redirects.length - blocked.length} of ${redirects.length} portal searches opened. This role and U.S. location were saved privately for your next search.`);
+      if (searches.length !== redirects.length) {
+        setError("The saved search group did not match the requested portal count.");
+      }
     } catch (launchError) {
-      tabs.forEach((tab) => tab?.close());
-      setError(launchError instanceof Error ? launchError.message : "The grouped search failed.");
+      setError(`${launchError instanceof Error ? launchError.message : "The grouped search could not be saved."} Any portal tabs already opened are safe to use.`);
     } finally {
       setBusy(false);
     }

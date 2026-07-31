@@ -496,7 +496,7 @@ At the completion of the documented Phase 10 work, the validated baseline is:
 
 - **132** original Pro-Flow Python tests;
 - **12** shared career-core tests;
-- **34** web workflow tests;
+- **35** web workflow tests;
 - passing ESLint;
 - passing TypeScript checks;
 - passing Next.js production build.
