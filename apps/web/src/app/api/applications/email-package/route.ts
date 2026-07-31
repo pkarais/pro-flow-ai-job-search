@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     if (!loaded.application) return Response.json({ error: "Application not found." }, { status: 404 });
     return Response.json({
       recipients: extractDirectApplicationEmails(loaded.application, loaded.operations),
-      ready: loaded.readiness?.status === "ready",
+      ready: Boolean(loaded.readiness && loaded.readiness.applicationRevision === loaded.application.revision),
       gmail: await gmailStatus(loaded.dataRoot),
     }, { headers: { "cache-control": "private, no-store" } });
   } catch {
@@ -45,10 +45,11 @@ export async function POST(request: Request) {
     const input = requestSchema.parse(await request.json());
     const loaded = await context(input.applicationId);
     if (!loaded.application) return Response.json({ error: "Application not found." }, { status: 404 });
-    if (loaded.readiness?.status !== "ready") return Response.json({ error: "Documents must pass readiness and visual review first." }, { status: 409 });
-    const recipients = extractDirectApplicationEmails(loaded.application, loaded.operations);
-    if (!recipients.includes(input.recipient.toLowerCase())) {
-      return Response.json({ error: "Select an email address found in the saved direct-application research." }, { status: 400 });
+    const requiredKinds = input.documentStyle === "designed"
+      ? ["designed_resume_pdf", "designed_cover_letter_pdf"]
+      : ["cv_pdf", "cover_letter_pdf"];
+    if (!loaded.readiness || loaded.readiness.applicationRevision !== loaded.application.revision || requiredKinds.some((kind) => !loaded.readiness?.artifacts.some((artifact) => artifact.kind === kind))) {
+      return Response.json({ error: "Generate the selected current document files before preparing an email draft." }, { status: 409 });
     }
     const contact = await resolveCandidateContact(loaded.dataRoot, loaded.profile);
     const message = await createApplicationEmailPackage({

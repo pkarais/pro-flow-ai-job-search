@@ -47,6 +47,9 @@ per-file diff commands.
 - Archive views refresh when refocused, display the latest generated palette
   and timestamp, and use generation-specific artifact links to prevent stale
   browser PDF reuse.
+- Email drafting now accepts typed or pasted recipients and requires only that
+  the selected current attachments exist; page-count and visual-review checks
+  remain visible without blocking `.eml` or Gmail draft creation.
 
 ## [0.2.0-beta.1] - 2026-07-31
 

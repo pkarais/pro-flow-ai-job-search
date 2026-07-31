@@ -3,7 +3,7 @@ import { careerDataRoot, loadCanonicalProfile } from "@/server/canonical/review-
 import { resolveCandidateContact } from "@/server/canonical/candidate-contact-service";
 import { ApplicationStore } from "@/server/applications/application-store";
 import { DocumentService } from "@/server/documents/document-service";
-import { createApplicationEmailPackage, extractDirectApplicationEmails } from "@/server/documents/email-package-service";
+import { createApplicationEmailPackage } from "@/server/documents/email-package-service";
 import { createGmailDraft } from "@/server/integrations/gmail-service";
 import { OperationsStore } from "@/server/operations/operations-store";
 
@@ -41,8 +41,12 @@ export async function POST(request: Request) {
       raw = interviewMessage(contact.email, application.opportunity.companyName, application.opportunity.positionTitle, pack);
     } else {
       const readiness = await new DocumentService(dataRoot).load(input.applicationId);
-      if (readiness?.status !== "ready") return Response.json({ error: "Documents must pass readiness and visual review first." }, { status: 409 });
-      if (!extractDirectApplicationEmails(application, operations).includes(input.recipient.toLowerCase())) return Response.json({ error: "Select an email address found in saved direct-application research." }, { status: 400 });
+      const requiredKinds = input.documentStyle === "designed"
+        ? ["designed_resume_pdf", "designed_cover_letter_pdf"]
+        : ["cv_pdf", "cover_letter_pdf"];
+      if (!readiness || readiness.applicationRevision !== application.revision || requiredKinds.some((kind) => !readiness.artifacts.some((artifact) => artifact.kind === kind))) {
+        return Response.json({ error: "Generate the selected current document files before creating an email draft." }, { status: 409 });
+      }
       const contact = await resolveCandidateContact(dataRoot, profile);
       raw = (await createApplicationEmailPackage({ dataRoot, application, recipient: input.recipient, documentStyle: input.documentStyle, senderName: input.senderName, senderEmail: contact.email })).contents;
     }

@@ -134,6 +134,12 @@ export function ApplicationWorkspace({
   const previewReady = Boolean(
     identity.fullName.trim() && identity.email.includes("@") && identity.phone.trim(),
   );
+  const emailArtifactsAvailable = Boolean(application && readiness
+    && readiness.applicationRevision === application.revision
+    && readiness.artifacts.some((artifact) => artifact.kind === "cv_pdf")
+    && readiness.artifacts.some((artifact) => artifact.kind === "cover_letter_pdf")
+    && readiness.artifacts.some((artifact) => artifact.kind === "designed_resume_pdf")
+    && readiness.artifacts.some((artifact) => artifact.kind === "designed_cover_letter_pdf"));
 
   async function create(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -644,12 +650,12 @@ export function ApplicationWorkspace({
                     title={gmailConnected ? "Create a Gmail draft with attachments" : "Prepare a local email with attachments"}
                     description="Recipients come from saved direct-application research. Pro Flow creates a reviewable draft and never sends it automatically."
                   />
-                  {readiness.status !== "ready" ? <div className="adapter-note">
-                    <strong>Email drafting is connected but waiting for document readiness.</strong>
-                    <p>{readiness.checks.filter((item) => item.status !== "passed").map((item) => `${item.label}: ${item.detail}`).join(" ")}</p>
+                  {!emailArtifactsAvailable ? <div className="adapter-note">
+                    <strong>Email drafting is connected but the current attachment files have not been generated.</strong>
                     <button className="button button--primary" type="button" disabled>Create Gmail draft with attachments</button>
                   </div> : (
                     <form className="operations-stack-form" onSubmit={gmailConnected ? createApplicationGmailDraft : prepareEmailPackage}>
+                      {readiness.status !== "ready" ? <p className="adapter-note">Document-readiness warnings remain visible for your review, but page-count and visual-review checks do not block creation of an email draft.</p> : null}
                       <label>Recipient email
                         <input name="recipient" type="email" required list="researched-recipient-options" defaultValue={directRecipients[0] ?? ""} placeholder={gmailEmail || "recipient@example.com"} />
                         <datalist id="researched-recipient-options">{directRecipients.map((email) => <option key={email} value={email} />)}</datalist>

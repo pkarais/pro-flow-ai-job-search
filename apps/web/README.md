@@ -116,3 +116,6 @@ the extension checks in with the local service.
 scope. Pro Flow can create reviewable Gmail drafts or downloadable `.eml`
 packages with selected documents attached, but it never sends email. OAuth
 configuration and encrypted tokens remain in ignored `career-data` files.
+Email drafts require the selected current files to exist, but page-count and
+visual-readiness checks are advisory for email attachment and do not block the
+draft. Recipient addresses remain editable; research results are suggestions.

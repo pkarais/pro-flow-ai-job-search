@@ -168,7 +168,7 @@ upstream  https://github.com/MadsLorentzen/ai-job-search.git
 | Employer research | Separately saves cited company overviews and verified direct-application routes without guessing contact details |
 | Compensation analysis | Tests title/pay alignment against the complete posting, company/site scope, responsibilities, geography, and comparable market roles |
 | Portable case files | Downloads documents, research, interview preparation, pipeline, outcomes, and manifests together or as individual Markdown/JSON assets |
-| Email preparation | Downloads reviewable `.eml` packages or creates Gmail drafts through optional local OAuth; Pro Flow never presses Send |
+| Email preparation | Accepts a typed, pasted, or research-suggested recipient and downloads reviewable `.eml` packages or creates Gmail drafts through optional local OAuth; page-count warnings do not block attachment of generated current files, and Pro Flow never presses Send |
 | Outcomes | Appends outcome history without rewriting prior evidence |
 
 ## What it deliberately does not do

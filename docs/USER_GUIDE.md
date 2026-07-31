@@ -301,6 +301,11 @@ reuse an older document under the same filename.
   own Google OAuth web client and authorizing only `gmail.compose`.
 - Gmail integration creates a draft in the connected account. It never sends
   the message automatically.
+- Page-count and visual-readiness checks remain visible quality warnings, but
+  they do not block `.eml` or Gmail draft creation once the selected current
+  attachment files exist.
+- The recipient field is always editable. Research addresses appear only as
+  suggestions; users may type or paste another independently verified address.
 - OAuth configuration and the encrypted refresh token are stored under the
   ignored `career-data/` directory. Disconnect Gmail to remove authorization.
 
