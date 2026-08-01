@@ -268,6 +268,45 @@ application; generating again replaces those current artifact filenames.
 The designed résumé and cover letter share the same structured, verified
 content. The ATS résumé remains a separate single-column artifact.
 
+### How the AI produces the polished package
+
+Pro Flow does not ask the model to decorate a block of copied profile text. It
+builds a job-specific writing context from:
+
+1. the complete captured posting, including responsibilities and scope;
+2. confirmed or corrected employer-facing career evidence;
+3. the current structured résumé sections and cover-letter draft;
+4. voice and prohibited-claim constraints;
+5. only the newest matching company-overview insight when final polish is
+   requested; and
+6. the user's selected blend of AI emphasis suggestions or custom direction.
+
+The model returns structured prose with evidence IDs. Pro Flow rejects unknown
+evidence references, unsupported insight IDs, internal policy language, and
+unreviewed candidate claims. Company research may guide what verified
+experience deserves emphasis, but it can never become evidence that the
+candidate performed something.
+
+The final structured résumé can contain contact links, target positioning,
+professional summary, competency groups, employment history, achievements,
+projects and systems, education and credentials, verified metrics, and
+optional visual components. The selected renderer then determines hierarchy
+and layout. The ATS export stays conservative and single-column; designed
+HTML/PDF/DOCX exports can use modern typography, restrained icons, grids, and
+theme color. Changing the palette changes presentation, not the approved facts.
+
+### Work with versions without repeating factual review
+
+- Initial material claims require one explicit factual review.
+- Editorial regeneration after that review carries forward approval for the
+  same evidence-grounded claims.
+- A rejected claim must be removed by regeneration before documents can pass.
+- Draft history keeps prior writing versions for comparison or restoration.
+- **Regenerate all files for this version** replaces the current physical
+  artifacts while Archive retains the application history and case records.
+- Generate interview preparation again after choosing a new final version if
+  you want the questions and talking points to reflect that version.
+
 ## 10. Insights, interviews, and archives
 
 - Every saved-job card shows whether documents, company insights, and direct
@@ -308,6 +347,54 @@ reuse an older document under the same filename.
   suggestions; users may type or paste another independently verified address.
 - OAuth configuration and the encrypted refresh token are stored under the
   ignored `career-data/` directory. Disconnect Gmail to remove authorization.
+
+### Email a résumé and cover letter
+
+1. Generate the current document files in **Application Studio**.
+2. In the application card's email section, choose the ATS or designed pair.
+3. Type or paste any independently verified recipient address. A public
+   recruiting address found by direct-application research may be selected,
+   but it is never required.
+4. Choose **Create Gmail draft with attachments** when Gmail is connected, or
+   download the `.eml` package for another desktop email application.
+5. Pro Flow creates a draft containing the message and both PDFs. It does not
+   send it.
+6. Open the draft, verify the recipient, subject, prose, résumé, and cover
+   letter, then select **Send** yourself.
+
+There is no one-page email restriction. Document-readiness warnings remain
+visible, but a draft can attach any selected current files that were actually
+generated. This makes warnings advisory for emailing without concealing them.
+
+### Email the interview brief to yourself for a phone interview
+
+1. Open **Interview** from the left toolbar.
+2. Select the application, choose **Phone screen** (or another stage), add the
+   scheduled time if known, and choose **Create interview pack**.
+3. Review the generated likely questions, grounded bridge answers, questions
+   to ask, and verified talking points. The pack combines verified application
+   claims with relevant saved company insights.
+4. Under **Use this brief on your phone**, confirm the displayed recipient is
+   your saved candidate email.
+5. The most reliable option is **Create Gmail draft**. Pro Flow writes the
+   complete brief directly into Gmail Drafts using the connected account.
+6. Review the draft and send it to yourself. Open that message on your phone
+   before the call and keep it available as a reference.
+
+Alternative delivery options are included for different setups:
+
+- **Open Gmail draft** or **Open Outlook Web draft** uses a browser compose
+  URL when the brief is short enough for reliable URL transport.
+- **Use default email app** opens the operating system's configured mail app.
+- **Copy full brief** places the complete text on the clipboard.
+- **Download brief (.txt)** creates a phone-friendly plain-text copy.
+- **Offline .eml fallback** creates a complete local email draft that can be
+  opened in a compatible mail application.
+
+Long interview packs deliberately hide browser-URL draft buttons because URLs
+have practical length limits; the connected Gmail draft, text download, copy,
+and `.eml` routes retain the complete report. Pro Flow never sends the email
+or calls the candidate automatically.
 
 Deleting a saved job also removes its active pipeline, interview, outcome, and
 company-insight records while dismissing related application archives.
@@ -399,7 +486,12 @@ npm run typecheck
 npm run lint
 npm test
 npm run build
+npm run audit:themes -- <application-id> [output-directory]
 ```
+
+The theme audit is optional and application-specific. Copy an application ID
+from its Archive artifact URL; do not publish that private ID or the generated
+audit output with personal data.
 
 Shared contracts:
 
@@ -427,6 +519,7 @@ cd ../../packages/career-core && npm audit --audit-level=moderate
 
 ## 14. Updating a fork
 
+If you forked Pro Flow, configure this maintained repository as `upstream`.
 Commit or stash your work first, then review upstream changes:
 
 ```bash

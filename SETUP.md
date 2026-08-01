@@ -114,6 +114,9 @@ or database installation is required.
 5. Open `chrome://extensions` or `edge://extensions` and enable Developer mode.
 6. Select **Load unpacked** and choose the extracted folder.
 7. Pin the extension and keep Pro Flow running on the configured local port.
+8. Open one individual supported job posting—not a search-results page—and
+   click the pinned extension once. An `OK` badge confirms capture, Pro Flow
+   opens the saved-job workspace, and the left-toolbar status turns green.
 
 The generator accepts localhost addresses only. It does not publish an
 extension or configure a hosted service.
@@ -140,6 +143,16 @@ The client configuration and encrypted refresh token are stored only under the
 gitignored `career-data/` directory. Pro Flow requests the narrow
 `gmail.compose` permission, creates drafts for review, and never automatically
 sends them. Remove the local authorization with **Disconnect Gmail**.
+
+After connection, test both draft workflows:
+
+- generate current résumé and cover-letter files, enter or paste a recipient
+  in Application Studio, and create a Gmail draft with both PDFs attached;
+- create an interview pack, choose **Create Gmail draft** under **Use this
+  brief on your phone**, review it, and send it to yourself for the call.
+
+The complete instructions and non-Gmail fallbacks are in the
+[user guide](docs/USER_GUIDE.md#email-the-interview-brief-to-yourself-for-a-phone-interview).
 
 ## 8. Validate
 

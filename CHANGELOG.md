@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- Reconciled the public README and web-application README with the completed
+  end-to-end local-first workflow and independent repository status.
+- Expanded the user guide with the grounded AI writing model, refinement and
+  version behavior, ATS versus designed exports, application email packages,
+  and complete phone-interview brief delivery through Gmail, web compose,
+  clipboard, text, and `.eml` options.
+- Expanded extension setup and stale-capture troubleshooting guidance.
+- Added a comprehensive functional/code audit with verification evidence,
+  security boundaries, residual risks, and public-beta release recommendation.
+
 All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).

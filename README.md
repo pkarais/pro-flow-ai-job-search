@@ -16,6 +16,7 @@ tracking, interview preparation, and outcome learning.**
 > publish the private `career-data` directory.
 
 [Quick setup](SETUP.md) · [Complete user and fork guide](docs/USER_GUIDE.md) ·
+[Functional and code audit](docs/FUNCTIONAL_AUDIT.md) ·
 [Security](SECURITY.md) · [Privacy](PRIVACY.md) · [Third-party notices](THIRD_PARTY_NOTICES.md) ·
 [Contributing](CONTRIBUTING.md) · [Release checklist](docs/RELEASE_CHECKLIST.md)
 
@@ -132,12 +133,32 @@ and rendering. Except for the cited Indeed Hiring Lab dataset, their source
 code was not incorporated. Exact relationships and detected licenses are
 documented in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-Git remotes preserve the relationship:
+Pro Flow is now maintained as an independent repository. Its history and the
+notices above preserve attribution; the original project is not a configured
+runtime dependency and does not need to be added as a Git remote. People who
+fork Pro Flow should use this repository—not the historical foundation—as
+their upstream.
 
-```text
-origin    https://github.com/pkarais/pro-flow-ai-job-search.git
-upstream  https://github.com/MadsLorentzen/ai-job-search.git
-```
+## Why Pro Flow is different
+
+Most job-search tools solve one isolated task: collect links, rewrite a résumé,
+or track an application. Pro Flow treats an application as a connected,
+auditable case file. One reviewed career record feeds job comparison,
+evidence-grounded writing, company and compensation research, document design,
+email preparation, interview preparation, pipeline history, and outcomes.
+
+The result is not an unchecked keyword rewrite. Pro Flow separates four kinds
+of information that must not be confused:
+
+- **candidate evidence** supports claims about the applicant;
+- **job-posting text** defines the employer's requested scope;
+- **company insights** provide cited context for emphasis and questions;
+- **policy constraints** control wording but never appear as résumé claims.
+
+AI decides emphasis, sequencing, compression, and persuasive prose within
+those boundaries. Deterministic validation checks evidence IDs, document
+artifacts, ATS text, contact details, revisions, and readiness. The user makes
+the factual decision, inspects the final layout, and sends every application.
 
 ## What the hybrid can do
 
@@ -217,6 +238,17 @@ Pass PDF, ATS, contact, keyword, and visual checks
       v
 Track application -> prepare interview -> record outcome
 ```
+
+The optional browser extension replaces manual field-by-field copying: open
+one individual posting and click the extension once. After intake, a saved-job
+card is the launch point for company insights, direct-application research,
+application writing, and pipeline work. Completed research is read from
+**Insights**, interview packs and outcomes from **Interview**, and every
+portable generation from **Archive**.
+
+For a step-by-step walkthrough—including extension installation, AI final
+polish, document themes, Gmail drafts, and emailing an interview brief to your
+phone—see the [complete user guide](docs/USER_GUIDE.md).
 
 ## Main web routes
 
@@ -563,39 +595,29 @@ ed5376b  harden live portal integration
 f2789b7  remember guided search preferences
 ```
 
-## Current maturity and remaining work
+## Current maturity and verified workflow
 
-The major product surfaces and the live acceptance dashboard are implemented,
-but a real personal acceptance run is still required.
+Pro Flow is a local-first public beta. A complete personal workflow has been
+manually exercised from extension capture through AI insights, refined résumé
+and cover-letter generation, document review, archive download, Gmail draft
+creation, interview-pack generation, emailing the brief to the candidate, and
+outcome recording. Automated tests cover the shared contracts, canonical
+storage, application workflow, structured résumé, extension packaging,
+artifact bundles, shell behavior, security guards, and retained tools.
 
-The next meaningful milestone is:
+The beta label remains important. Job-board markup, AI-provider behavior,
+browser policies, and local PDF toolchains can change. Users must review facts,
+citations, recipient addresses, attachments, and visual output before acting.
 
-1. review and save real career evidence into the canonical profile;
-2. run a grouped U.S. search for a genuine target role;
-3. choose a real posting and paste it into Application Studio;
-4. complete fit assessment and claim review;
-5. generate and verify the PDFs;
-6. pass human visual review;
-7. move the application through the guarded pipeline;
-8. generate an interview pack;
-9. record an outcome.
-
-Additional future work may include:
-
-- a safe provider adapter for Executive Career OS-style structured AI
-  generation;
-- direct posting capture that removes manual copy/paste without violating
-  portal rules;
-- internal U.S. result ingestion where an official API permits it;
-- authentication and encrypted remote storage;
-- multi-user deployment and access controls;
-- consolidated documentation that retires superseded historical adapter notes.
+Future work may include authentication, encrypted remote storage, multi-user
+deployment, store-published browser extensions, and deeper integrations where
+official public APIs and their terms permit them.
 
 ## Independence and rollback
 
-- Executive Career OS remains an independently recoverable source repository.
-- The upstream AI Job Search history is preserved through the `upstream`
-  remote and MIT license.
+- Pro Flow is its own source of truth and has no predecessor runtime dependency.
+- Historical attribution is preserved in Git history, this README, the MIT
+  license, and `THIRD_PARTY_NOTICES.md`.
 - Private schemas are versioned and migrated.
 - Original source-project files are not deleted as part of hybrid phases.
 - Legacy non-U.S. portal skills are disabled, not erased.
@@ -624,18 +646,15 @@ See [docs/USER_GUIDE.md](docs/USER_GUIDE.md) for backup and deletion procedures
 and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for incorporated and
 inspiration-only sources.
 
-## Contributing and upstream updates
+## Contributing and updates
 
-For improvements to Mads's general framework, review
-[the upstream contribution guide](https://github.com/MadsLorentzen/ai-job-search/blob/master/CONTRIBUTING.md)
-and consider contributing upstream.
-
-For changes specific to this hybrid, use this repository's
+For Pro Flow changes, use this repository's
 [CONTRIBUTING.md](CONTRIBUTING.md), preserve the attribution and privacy
 boundaries, and keep migrations small and testable.
 
-When incorporating upstream releases, review changes rather than blindly
-overwriting personalized files or hybrid contracts.
+Fork maintainers should configure this Pro Flow repository as their upstream,
+review changes before merging, and never overwrite private data or weaken the
+ignore and evidence-safety rules.
 
 ## License
 
