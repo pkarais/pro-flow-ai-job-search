@@ -24,12 +24,28 @@ export async function POST(request: Request) {
     const state = await new OperationsStore(careerDataRoot()).load();
     const job = state.jobs.find((item) => item.id === jobId);
     if (!job) return Response.json({ error: "Saved job not found." }, { status: 404 });
+    const pending = await findResearchRequest(jobId, kind);
+    const pendingAge = pending ? Date.now() - Date.parse(pending.startedAt) : Number.POSITIVE_INFINITY;
+    if (pending && Number.isFinite(pendingAge) && pendingAge < 30 * 60_000) {
+      return Response.json({
+        message: `Resuming the company research already running for ${job.company}.`,
+        jobId,
+        responseId: pending.responseId,
+        status: "in_progress",
+        kind,
+        startedAt: pending.startedAt,
+        resumed: true,
+      }, { status: 202 });
+    }
+    if (pending) await forgetResearchRequest(jobId, kind);
     const research = await startCompanyResearch(job, kind);
-    await rememberResearchRequest({ jobId, kind, responseId: research.responseId, startedAt: new Date().toISOString() });
+    const startedAt = new Date().toISOString();
+    await rememberResearchRequest({ jobId, kind, responseId: research.responseId, startedAt });
     return Response.json({
       message: `Company research for ${job.company} started.`,
       jobId,
       ...research,
+      startedAt,
     }, { status: 202 });
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "Company research could not be started." }, { status: 503 });

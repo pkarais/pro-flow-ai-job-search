@@ -5,16 +5,18 @@ import { OperationsStore } from "@/server/operations/operations-store";
 import { inspectPortalRuntime } from "@/server/operations/portal-adapter";
 import { loadUsAiMarketInsight } from "@/server/operations/market-insights";
 import { deriveSearchDefaults } from "@/server/operations/search-defaults";
+import { listResearchRequests } from "@/server/ai/research-request-store";
 
 export const dynamic = "force-dynamic";
 
 export default async function OperationsPage() {
-  const [state, applications, runtimeReport, profile, aiMarketInsight] = await Promise.all([
+  const [state, applications, runtimeReport, profile, aiMarketInsight, pendingResearch] = await Promise.all([
     new OperationsStore(careerDataRoot()).load(),
     listApplications(careerDataRoot()),
     inspectPortalRuntime(),
     loadCanonicalProfile(),
     loadUsAiMarketInsight(),
+    listResearchRequests(),
   ]);
   const visibleApplications = applications.filter((application) => !state.dismissedApplicationIds.includes(application.id));
   const searchDefaults = deriveSearchDefaults(
@@ -31,6 +33,7 @@ export default async function OperationsPage() {
       initialApplications={visibleApplications}
       initialRuntimeReport={runtimeReport}
       initialState={state}
+      initialResearch={pendingResearch}
       searchDefaults={searchDefaults}
       aiMarketInsight={aiMarketInsight}
       view="discovery"

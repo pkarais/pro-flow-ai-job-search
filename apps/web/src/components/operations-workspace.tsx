@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import {
   canTransition,
   portalGroupPortals,
@@ -20,9 +20,12 @@ const statuses: ApplicationStatus[] = [
   "interviewing", "offer", "rejected", "withdrawn",
 ];
 
+const researchKey = (jobId: string, kind: "company_overview" | "direct_application") => `${jobId}:${kind}`;
+
 export function OperationsWorkspace({
   initialApplications,
   initialState,
+  initialResearch,
   initialRuntimeReport,
   searchDefaults,
   aiMarketInsight,
@@ -33,6 +36,7 @@ export function OperationsWorkspace({
 }: {
   initialApplications: ArchivedApplication[];
   initialState: OperationsState;
+  initialResearch: Array<{ jobId: string; kind: "company_overview" | "direct_application"; startedAt: string }>;
   initialRuntimeReport: PortalRuntimeReport;
   searchDefaults: SearchDefaults;
   aiMarketInsight: AiMarketInsight | null;
@@ -51,6 +55,10 @@ export function OperationsWorkspace({
   const [launchMessage, setLaunchMessage] = useState("");
   const [searchLinks, setSearchLinks] = useState<Array<{ label: string; url: string }>>([]);
   const [insightMessage, setInsightMessage] = useState("");
+  const [activeResearch, setActiveResearch] = useState<Record<string, string>>(() => Object.fromEntries(
+    initialResearch.map((item) => [researchKey(item.jobId, item.kind), item.startedAt]),
+  ));
+  const pollingResearch = useRef(new Set<string>());
   const [jobSaved, setJobSaved] = useState(false);
   const [marketViews, setMarketViews] = useState(["ai-demand"]);
 
@@ -93,39 +101,56 @@ export function OperationsWorkspace({
     }
   }
 
+  const pollCompanyInsight = useCallback(async (jobId: string, kind: "company_overview" | "direct_application") => {
+    const key = researchKey(jobId, kind);
+    if (pollingResearch.current.has(key)) return;
+    pollingResearch.current.add(key);
+    try {
+      const response = await fetch(`/api/operations/company-insights?jobId=${encodeURIComponent(jobId)}&kind=${encodeURIComponent(kind)}`, { cache: "no-store" });
+      const payload = await response.json();
+      if (response.status === 202) return;
+      if (!response.ok) throw new Error(payload.error ?? "Company research could not be generated.");
+      setState(payload.state);
+      setActiveResearch((current) => { const next = { ...current }; delete next[key]; return next; });
+      setInsightMessage(`${payload.message} Open Insights from the left toolbar to view it.`);
+    } catch (insightError) {
+      setActiveResearch((current) => { const next = { ...current }; delete next[key]; return next; });
+      setError(insightError instanceof Error ? insightError.message : "Company research could not be generated.");
+    } finally {
+      pollingResearch.current.delete(key);
+    }
+  }, []);
+
+  useEffect(() => {
+    const poll = () => Object.keys(activeResearch).forEach((key) => {
+      const separator = key.lastIndexOf(":");
+      const jobId = key.slice(0, separator);
+      const kind = key.slice(separator + 1) as "company_overview" | "direct_application";
+      void pollCompanyInsight(jobId, kind);
+    });
+    poll();
+    const interval = window.setInterval(poll, 2_500);
+    return () => window.clearInterval(interval);
+  }, [activeResearch, pollCompanyInsight]);
+
   async function generateCompanyInsight(jobId: string, kind: "company_overview" | "direct_application" = "company_overview") {
-    setBusy(true);
     setError("");
     setInsightMessage("");
     try {
-      let response = await fetch("/api/operations/company-insights", {
+      const response = await fetch("/api/operations/company-insights", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ jobId, kind }),
       });
-      let payload = await response.json();
+      const payload = await response.json();
       if (!response.ok) throw new Error(payload.error ?? "Company research could not be generated.");
       if (typeof payload.responseId !== "string" || !payload.responseId.startsWith("resp")) {
         throw new Error("Company research did not start correctly because no valid response ID was returned. Restart the local server and try again.");
       }
-      setInsightMessage(`${payload.message} You can remain on this page while Pro Flow completes it.`);
-      let pollAttempts = 0;
-      while (response.status === 202 && pollAttempts < 240) {
-        await new Promise((resolve) => window.setTimeout(resolve, 2_500));
-        pollAttempts += 1;
-        response = await fetch(`/api/operations/company-insights?jobId=${encodeURIComponent(jobId)}&responseId=${encodeURIComponent(payload.responseId)}&kind=${encodeURIComponent(kind)}`, {
-          cache: "no-store",
-        });
-        payload = await response.json();
-        if (!response.ok && response.status !== 202) throw new Error(payload.error ?? "Company research could not be generated.");
-      }
-      if (response.status === 202) throw new Error("Company research is still running after ten minutes. Try again shortly.");
-      setState(payload.state);
-      setInsightMessage(`${payload.message} Open Insights from the left toolbar to view it.`);
+      setActiveResearch((current) => ({ ...current, [researchKey(jobId, kind)]: typeof payload.startedAt === "string" ? payload.startedAt : new Date().toISOString() }));
+      setInsightMessage(`${payload.message} The saved-job card will remain marked Research running until the report is saved.`);
     } catch (insightError) {
       setError(insightError instanceof Error ? insightError.message : "Company research could not be generated.");
-    } finally {
-      setBusy(false);
     }
   }
 
@@ -343,6 +368,8 @@ export function OperationsWorkspace({
             const companyOverviewExists = state.companyInsights.some((report) => report.jobId === job.id && report.kind === "company_overview");
             const companyInsightCreated = state.companyInsights.some((report) => report.jobId === job.id && report.kind === "company_overview" && /market compensation estimate/i.test(report.report));
             const directApplicationCreated = state.companyInsights.some((report) => report.jobId === job.id && report.kind === "direct_application");
+            const companyResearchStartedAt = activeResearch[researchKey(job.id, "company_overview")];
+            const directResearchStartedAt = activeResearch[researchKey(job.id, "direct_application")];
             return (
             <SurfaceCard className={`job-result-card${focusedJobId === job.id ? " job-result-card--expanded" : ""}`} key={job.id}>
               <div><StatusBadge tone={job.score >= 60 ? "complete" : "pending"}>{job.score}/100</StatusBadge><small>{job.portal}</small></div>
@@ -361,14 +388,16 @@ export function OperationsWorkspace({
                 <StatusBadge tone={companyInsightCreated ? "complete" : "pending"}>{companyInsightCreated ? "Company insights + salary complete" : companyOverviewExists ? "Salary update needed" : "Company insights needed"}</StatusBadge>
                 <StatusBadge tone={directApplicationCreated ? "complete" : "pending"}>{directApplicationCreated ? "Direct options complete" : "Direct options needed"}</StatusBadge>
               </div>
+              {companyResearchStartedAt ? <p className="search-launch-message" role="status"><strong>Company research running.</strong> Started {new Date(companyResearchStartedAt).toLocaleTimeString()}. Pro Flow is checking for completion and will save the report automatically.</p> : null}
+              {directResearchStartedAt ? <p className="search-launch-message" role="status"><strong>Direct-application research running.</strong> Started {new Date(directResearchStartedAt).toLocaleTimeString()}. Pro Flow is checking for completion and will save the report automatically.</p> : null}
               {existingApplication ? <a className="button button--primary" href={`/applications/new?applicationId=${encodeURIComponent(existingApplication.id)}#application-focus`}>Open application studio &amp; refine</a> : <a className="button button--primary" href={`/applications/new?jobId=${encodeURIComponent(job.id)}#application-focus`}>
                 Create resume &amp; cover letter
               </a>}
-              <button className="button button--secondary" type="button" disabled={busy || companyInsightCreated} onClick={() => void generateCompanyInsight(job.id)}>
-                {companyInsightCreated ? "AI company insights + salary generated" : companyOverviewExists ? "Update insights with salary analysis" : "Generate AI company insights"}
+              <button className="button button--secondary" type="button" disabled={busy || companyInsightCreated || Boolean(companyResearchStartedAt)} onClick={() => void generateCompanyInsight(job.id)}>
+                {companyResearchStartedAt ? "Company research running…" : companyInsightCreated ? "AI company insights + salary generated" : companyOverviewExists ? "Update insights with salary analysis" : "Generate AI company insights"}
               </button>
-              <button className="button button--secondary" type="button" disabled={busy || directApplicationCreated} onClick={() => void generateCompanyInsight(job.id, "direct_application")}>
-                {directApplicationCreated ? "Direct application options found" : "Find direct application options"}
+              <button className="button button--secondary" type="button" disabled={busy || directApplicationCreated || Boolean(directResearchStartedAt)} onClick={() => void generateCompanyInsight(job.id, "direct_application")}>
+                {directResearchStartedAt ? "Direct-application research running…" : directApplicationCreated ? "Direct application options found" : "Find direct application options"}
               </button>
               {(companyOverviewExists || directApplicationCreated) ? <a className="text-link" href="/insights">View saved research</a> : null}
               {existingApplication ? <form className="operations-stack-form" onSubmit={(event) => {

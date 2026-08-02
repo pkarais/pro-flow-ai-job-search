@@ -42,6 +42,10 @@ export async function findResearchRequest(jobId: string, kind: CompanyResearchKi
   return (await load()).find((item) => item.jobId === jobId && item.kind === kind) ?? null;
 }
 
+export async function listResearchRequests() {
+  return load();
+}
+
 export async function forgetResearchRequest(jobId: string, kind: CompanyResearchKind) {
   const current = await load();
   await save(current.filter((item) => item.jobId !== jobId || item.kind !== kind));

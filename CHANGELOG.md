@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Made company-research state persistent and visible on each saved-job card,
+  including start time, disabled duplicate actions, refresh-safe polling, and
+  explicit completion or failure messages.
+- Reused active background research on repeated clicks and normalized missing
+  web-citation titles so completed cited reports can be validated and saved.
 - Reconciled the public README and web-application README with the completed
   end-to-end local-first workflow and independent repository status.
 - Expanded the user guide with the grounded AI writing model, refinement and

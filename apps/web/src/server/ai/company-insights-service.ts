@@ -102,7 +102,7 @@ export async function pollCompanyResearch(
       .map((annotation) => ({
         startIndex: textOffset + annotation.start_index,
         endIndex: textOffset + annotation.end_index,
-        title: annotation.title,
+        title: annotation.title?.trim() || new URL(annotation.url).hostname,
         url: annotation.url,
       })));
     textOffset += item.text.length + 2;

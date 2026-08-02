@@ -327,6 +327,13 @@ theme color. Changing the palette changes presentation, not the approved facts.
   can be restored. Permanent deletion removes the private record and generated
   artifacts and cannot be undone.
 
+Company and direct-application research runs in the provider's background.
+While a report is active, its saved-job card displays **Research running**, the
+start time, and a disabled action button. That status is loaded from local
+storage after refresh or navigation, and Pro Flow continues polling until the
+report is saved or an explicit error is shown. Repeated starts for the same job
+and report type resume the active request instead of creating duplicate work.
+
 Archive refreshes when it regains browser focus and identifies the palette and
 generation time of the latest saved document set. Artifact links include the
 current revision and generation timestamp so a browser PDF viewer does not
@@ -543,9 +550,11 @@ overwriting your private data or weakening ignore rules.
 
 ### Company Insights remains in progress
 
-The background research can take several minutes. Keep the Operations page
-open. If it ultimately fails, the page displays the provider error and no
-partial report is saved.
+Background research can take several minutes. The application card remains
+marked **Research running** and shows when it started, including after a page
+refresh. Pro Flow continues checking the persisted request and saves the report
+when complete. If it fails, the page displays the provider or validation error
+instead of silently returning the button to its idle state.
 
 ### PDF tools are reported missing
 

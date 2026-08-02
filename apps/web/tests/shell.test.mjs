@@ -80,6 +80,22 @@ test("grouped searches expose user-initiated redirect links without opening tabs
   assert.ok(workspace.includes("/applications/new?jobId="));
 });
 
+test("repeated company research clicks resume the active background request", async () => {
+  const route = await readFile(
+    new URL("../src/app/api/operations/company-insights/route.ts", import.meta.url),
+    "utf8",
+  );
+  const workspace = await readFile(
+    new URL("../src/components/operations-workspace.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.ok(route.includes("findResearchRequest(jobId, kind)"));
+  assert.ok(route.includes("resumed: true"));
+  assert.ok(route.includes("pendingAge < 30 * 60_000"));
+  assert.ok(workspace.includes("Company research running."));
+  assert.ok(workspace.includes("initialResearch"));
+});
+
 test("the application studio can prefill a selected saved job", async () => {
   const page = await readFile(
     new URL("../src/app/applications/new/page.tsx", import.meta.url),

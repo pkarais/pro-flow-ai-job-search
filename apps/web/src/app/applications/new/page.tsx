@@ -9,6 +9,7 @@ import { loadCanonicalProfile } from "@/server/canonical/review-service";
 import Link from "next/link";
 import { DocumentService } from "@/server/documents/document-service";
 import { resolveCandidateContact } from "@/server/canonical/candidate-contact-service";
+import { listResearchRequests } from "@/server/ai/research-request-store";
 
 export default async function NewApplicationPage({
   searchParams,
@@ -19,11 +20,12 @@ export default async function NewApplicationPage({
   const requestedJobId = query.jobId;
   const jobId = typeof requestedJobId === "string" ? requestedJobId : undefined;
   const applicationId = typeof query.applicationId === "string" ? query.applicationId : undefined;
-  const [operations, applications, runtime, profile] = await Promise.all([
+  const [operations, applications, runtime, profile, pendingResearch] = await Promise.all([
     new OperationsStore(careerDataRoot()).load(),
     listApplications(careerDataRoot()),
     inspectPortalRuntime(),
     loadCanonicalProfile(),
+    listResearchRequests(),
   ]);
   const visibleApplications = applications.filter((application) => !operations.dismissedApplicationIds.includes(application.id));
   const job = operations.jobs.find((item) => item.id === jobId);
@@ -52,7 +54,7 @@ export default async function NewApplicationPage({
   return (
     <>
       <div className="application-archive-link"><Link className="button button--secondary" href="/applications/archive">Manage application archives</Link></div>
-      <OperationsWorkspace initialApplications={visibleApplications} initialRuntimeReport={runtime} initialState={operations} searchDefaults={defaults} aiMarketInsight={null} view="applications" focusedJobId={focusedJob?.id} focusedApplicationId={selectedApplication?.id} expandedContent={studio} />
+      <OperationsWorkspace initialApplications={visibleApplications} initialRuntimeReport={runtime} initialState={operations} initialResearch={pendingResearch} searchDefaults={defaults} aiMarketInsight={null} view="applications" focusedJobId={focusedJob?.id} focusedApplicationId={selectedApplication?.id} expandedContent={studio} />
       {studio && !focusedJob ? studio : null}
       {!studio ? <div className="application-archive-link"><p>Select <strong>Create résumé &amp; cover letter</strong> or <strong>Open application studio &amp; refine</strong> on a saved opportunity above.</p></div> : null}
     </>
