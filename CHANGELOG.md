@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Serialized pending-research mutations and added bounded Windows/OneDrive
+  rename retries, overwrite fallback, and temporary-file cleanup.
 - Made company-research state persistent and visible on each saved-job card,
   including start time, disabled duplicate actions, refresh-safe polling, and
   explicit completion or failure messages.

@@ -96,6 +96,17 @@ test("repeated company research clicks resume the active background request", as
   assert.ok(workspace.includes("initialResearch"));
 });
 
+test("pending company research writes tolerate Windows file locks and serialize mutations", async () => {
+  const store = await readFile(
+    new URL("../src/server/ai/research-request-store.ts", import.meta.url),
+    "utf8",
+  );
+  assert.ok(store.includes('"EPERM", "EACCES", "EBUSY"'));
+  assert.ok(store.includes("mutationQueue.then"));
+  assert.ok(store.includes("await copyFile(temporary, target)"));
+  assert.ok(store.includes("await unlink(temporary).catch"));
+});
+
 test("the application studio can prefill a selected saved job", async () => {
   const page = await readFile(
     new URL("../src/app/applications/new/page.tsx", import.meta.url),
