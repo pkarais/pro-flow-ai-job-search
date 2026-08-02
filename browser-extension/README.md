@@ -37,7 +37,10 @@ refresh the tab if necessary, and click once. The extension performs a fresh
 extraction on every click; it does not intentionally cache the prior job.
 
 The capture code is generic and reads Schema.org `JobPosting` JSON-LD first,
-then visible page fields. The local server currently accepts LinkedIn, Indeed,
+then compares it with portal-specific visible description containers and keeps
+the richest available text while preserving paragraph and list boundaries.
+Recapturing the same URL upgrades the saved record when the new page exposes a
+materially longer description. The local server currently accepts LinkedIn, Indeed,
 USAJOBS, Dice, Built In, and Wellfound. A future board requires an explicit
 portal ID and host mapping in Pro Flow before persistence.
 

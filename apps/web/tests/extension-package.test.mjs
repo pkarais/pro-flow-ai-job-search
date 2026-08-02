@@ -13,6 +13,9 @@ test("fork users can generate a named extension for their localhost port", async
   assert.deepEqual(manifest.host_permissions, ["http://127.0.0.1:4310/*"]);
   assert.match(background, /http:\/\/127\.0\.0\.1:4310/);
   assert.doesNotMatch(background, /http:\/\/localhost:3000/);
+  assert.match(background, /textCandidates/);
+  assert.match(background, /decodedHtmlText/);
+  assert.match(background, /sort\(\(left, right\) => right\.length - left\.length\)/);
   assert.ok(files["pro-flow-job-capture/CONFIGURATION.md"]);
 });
 

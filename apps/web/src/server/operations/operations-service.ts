@@ -216,7 +216,28 @@ export async function importJob(dataRoot: string, input: JobImportRequest, profi
   }
   const store = new OperationsStore(dataRoot);
   const state = await store.load();
-  if (state.jobs.some((job) => job.url === url.toString())) return state;
+  const existing = state.jobs.find((job) => job.url === url.toString());
+  if (existing) {
+    const currentDescription = existing.description?.trim() ?? "";
+    const capturedDescription = request.description?.trim() ?? "";
+    const hasRicherDescription = capturedDescription.length > currentDescription.length + 100;
+    const hasMissingLocation = !existing.location && Boolean(request.location);
+    const hasMissingPostedAt = !existing.postedAt && Boolean(request.postedAt);
+    if (!hasRicherDescription && !hasMissingLocation && !hasMissingPostedAt) return state;
+    const description = hasRicherDescription ? capturedDescription : currentDescription;
+    const refreshed = {
+      ...existing,
+      location: existing.location || request.location || undefined,
+      description: description || undefined,
+      postedAt: existing.postedAt || request.postedAt || undefined,
+      ...scoreJob({ ...request, description }, profile),
+      riskReview: assessRisk(description, existing.postedAt || request.postedAt),
+    };
+    return store.save({
+      ...state,
+      jobs: state.jobs.map((job) => job.id === existing.id ? refreshed : job),
+    }, state.revision);
+  }
   const duplicate = state.jobs.find((job) =>
     job.title.toLowerCase() === request.title.toLowerCase()
     && job.company.toLowerCase() === request.company.toLowerCase()

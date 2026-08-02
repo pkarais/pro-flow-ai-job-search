@@ -57,7 +57,7 @@ chrome.action.onClicked.addListener(async (tab) => {
 });
 
 async function captureVisibleJob() {
-  await new Promise((resolve) => setTimeout(resolve, 650));
+  await new Promise((resolve) => setTimeout(resolve, 1_000));
   const browserUrl = window.location.href;
   const isIndeed = /(^|\.)indeed\.com$/.test(window.location.hostname);
   const browserParams = new URL(browserUrl).searchParams;
@@ -91,19 +91,38 @@ async function captureVisibleJob() {
     }
     return postings.at(-1) || {};
   }
-  function text(selectors) {
+  function normalizedText(value) {
+    return String(value || "")
+      .replace(/\r/g, "")
+      .replace(/[ \t\f\v]+/g, " ")
+      .replace(/ *\n */g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+  }
+  function decodedHtmlText(value) {
+    if (!value) return "";
+    const container = document.createElement("div");
+    container.innerHTML = String(value)
+      .replace(/<\s*br\s*\/?>/gi, "\n")
+      .replace(/<\/(p|div|li|ul|ol|h[1-6]|section)>/gi, "\n");
+    return normalizedText(container.textContent);
+  }
+  function textCandidates(selectors) {
+    const candidates = [];
     for (const selector of selectors) {
       const elements = [...document.querySelectorAll(selector)];
-      const visible = elements.filter((element) =>
-        element.getAttribute("aria-hidden") !== "true"
-        && element.getClientRects().length > 0
-      );
-      for (const element of [...visible].reverse()) {
-        const value = element.textContent?.replace(/\s+/g, " ").trim();
-        if (value) return value;
+      for (const element of elements) {
+        if (element.getAttribute("aria-hidden") === "true") continue;
+        const rendered = normalizedText(element.innerText);
+        const complete = normalizedText(element.textContent);
+        if (rendered) candidates.push(rendered);
+        if (complete && complete !== rendered) candidates.push(complete);
       }
     }
-    return "";
+    return candidates;
+  }
+  function text(selectors) {
+    return textCandidates(selectors).sort((left, right) => right.length - left.length)[0] || "";
   }
   const data = jobPostingJson();
   const organization = typeof data.hiringOrganization === "object" ? data.hiringOrganization?.name : "";
@@ -135,22 +154,35 @@ async function captureVisibleJob() {
     '[data-testid*="location"]',
     '[class*="location"]'
   ]);
-  const visibleDescription = text([
+  const visibleDescriptions = textCandidates([
     "#jobDescriptionText",
+    "#job-details",
+    ".jobs-description__content",
+    ".jobs-box__html-content",
+    '[data-testid="job-description"]',
+    '[data-testid="jobDescription"]',
+    '[data-testid="jobsearch-jobDescriptionText"]',
+    '[data-testid="job-details"]',
+    '[data-automation="jobDescription"]',
+    '[data-cy="job-description"]',
+    '[class*="job-description"]',
     '[itemprop="description"]',
     '[data-testid*="description"]',
     '[class*="jobDescription"]',
     '[class*="description"]'
   ]);
   const structuredDescription = data.description
-    ? String(data.description).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()
+    ? decodedHtmlText(data.description)
     : "";
+  const description = [...visibleDescriptions, structuredDescription]
+    .filter(Boolean)
+    .sort((left, right) => right.length - left.length)[0] || "";
   return {
     url: currentUrl,
     title: isIndeed ? visibleTitle || data.title : data.title || visibleTitle,
     company: isIndeed ? visibleCompany || organization : organization || visibleCompany,
     location: isIndeed ? visibleLocation || locationText : locationText || visibleLocation,
-    description: isIndeed ? visibleDescription || structuredDescription : structuredDescription || visibleDescription,
+    description: description.slice(0, 50_000),
     postedAt: data.datePosted || undefined
   };
 }

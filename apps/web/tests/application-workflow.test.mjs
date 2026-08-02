@@ -678,6 +678,34 @@ test("user-selected imports are scored, risk-reviewed, and deduplicated locally"
   assert.equal(afterDelete.jobs[0].duplicateOf, undefined);
 });
 
+test("recapturing the same posting upgrades an incomplete saved description", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "pro-flow-job-recapture-"));
+  const url = "https://www.indeed.com/viewjob?jk=recapture";
+  const initial = await importJob(root, {
+    portal: "indeed-search",
+    title: "Facilities Director",
+    company: "Example Campus",
+    url,
+    description: "Short preview of the role.",
+  }, profile);
+  const jobId = initial.jobs[0].id;
+  const fullDescription = "Lead facilities, construction, capital planning, compliance, and vendor operations across a complex campus. ".repeat(8);
+  const refreshed = await importJob(root, {
+    portal: "indeed-search",
+    title: "Facilities Director",
+    company: "Example Campus",
+    location: "New York, NY",
+    url,
+    description: fullDescription,
+    postedAt: "2026-07-31",
+  }, profile);
+  assert.equal(refreshed.jobs.length, 1);
+  assert.equal(refreshed.jobs[0].id, jobId);
+  assert.equal(refreshed.jobs[0].description, fullDescription.trim());
+  assert.equal(refreshed.jobs[0].location, "New York, NY");
+  assert.equal(refreshed.jobs[0].postedAt, "2026-07-31");
+});
+
 test("job deletion cascades through workflow records and dismisses its application lineage", async () => {
   const root = await mkdtemp(path.join(tmpdir(), "pro-flow-delete-cascade-"));
   const url = "https://www.indeed.com/viewjob?jk=cascade";
