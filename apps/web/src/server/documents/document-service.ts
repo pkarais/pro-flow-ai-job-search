@@ -21,6 +21,7 @@ import { renderDesignedCoverLetterHtml } from "./cover-letter-renderer.ts";
 import { renderCoverLetterDocx, renderDesignedPdf, renderResumeDocx } from "./resume-export-service.ts";
 import { buildStructuredResume } from "./structured-resume-service.ts";
 import { formatUsPhone } from "./phone-format.ts";
+import { loadCandidateBannerDataUri, loadCandidateSignatureDataUri } from "./candidate-signature.ts";
 
 const execute = promisify(execFile);
 const REQUIRED_TOOLS = ["lualatex", "xelatex", "pdfinfo", "pdftotext"] as const;
@@ -198,6 +199,17 @@ export function renderDocumentSources(
   ) {
     throw new Error("Regenerate the AI draft after rejecting a claim so excluded language cannot remain in the final documents.");
   }
+  if (profile) {
+    const currentEvidenceIds = new Set(profile.records
+      .filter((record) => effectiveEvidenceValue(record) !== null)
+      .map((record) => record.id));
+    const unavailableEvidenceIds = [...new Set(claims
+      .flatMap((claim) => claim.evidenceIds)
+      .filter((id) => !currentEvidenceIds.has(id)))];
+    if (unavailableEvidenceIds.length) {
+      throw new Error("Regenerate the AI draft because one or more supporting career records were corrected or removed.");
+    }
+  }
   const title = escapeLatex(cleanRoleTitle(application.opportunity.positionTitle));
   const fullName = escapeLatex(identity.fullName);
   const email = escapeLatex(identity.email);
@@ -363,13 +375,15 @@ export class DocumentService {
     if (profile) {
       try {
         const structured = buildStructuredResume(application, profile, identity, themeId, paletteOverride);
-        const designedHtml = renderDesignedResumeHtml(structured);
-        const designedCoverHtml = renderDesignedCoverLetterHtml(structured, application.draft.coverLetter);
+        const bannerDataUri = await loadCandidateBannerDataUri(this.dataRoot);
+        const designedHtml = renderDesignedResumeHtml(structured, bannerDataUri);
+        const signatureDataUri = await loadCandidateSignatureDataUri(this.dataRoot);
+        const designedCoverHtml = renderDesignedCoverLetterHtml(structured, application.draft.coverLetter, signatureDataUri);
         const [designedPdf, resumeDocx, designedCoverPdf, coverLetterDocx] = await Promise.all([
           renderDesignedPdf(designedHtml),
           renderResumeDocx(structured),
           renderDesignedPdf(designedCoverHtml),
-          renderCoverLetterDocx(structured, application.draft.coverLetter),
+          renderCoverLetterDocx(structured, application.draft.coverLetter, signatureDataUri),
         ]);
         await Promise.all([
           atomicWrite(path.join(directory, "designed-resume.html"), designedHtml),

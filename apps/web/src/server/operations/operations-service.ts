@@ -170,6 +170,10 @@ function assessRisk(description: string, postedAt?: string) {
   return { score, level: score >= 60 ? "high" as const : score >= 25 ? "medium" as const : "low" as const, signals };
 }
 
+function hasEmbeddedPageCode(description: string) {
+  return /@layer\s+htmlcontent|#react-native-html-content|bounding\s+client\s+rect(?:angle|anble)|font-family:\s*["']?indeedsans|padding-(?:top|bottom):\s*\d+px/i.test(description);
+}
+
 function scoreJob(request: JobImportRequest, profile: CanonicalCareerProfile | null) {
   const evidence = profile?.records.flatMap((record) => {
     const value = effectiveEvidenceValue(record);
@@ -220,14 +224,21 @@ export async function importJob(dataRoot: string, input: JobImportRequest, profi
   if (existing) {
     const currentDescription = existing.description?.trim() ?? "";
     const capturedDescription = request.description?.trim() ?? "";
-    const hasRicherDescription = capturedDescription.length > currentDescription.length + 100;
-    const hasMissingLocation = !existing.location && Boolean(request.location);
+    const replacesPollutedDescription = hasEmbeddedPageCode(currentDescription)
+      && capturedDescription.length >= 250
+      && !hasEmbeddedPageCode(capturedDescription);
+    const hasRicherDescription = capturedDescription.length > currentDescription.length + 100 || replacesPollutedDescription;
+    const hasCorrectedTitle = request.title !== existing.title;
+    const hasCorrectedCompany = request.company !== existing.company;
+    const hasCorrectedLocation = Boolean(request.location) && request.location !== existing.location;
     const hasMissingPostedAt = !existing.postedAt && Boolean(request.postedAt);
-    if (!hasRicherDescription && !hasMissingLocation && !hasMissingPostedAt) return state;
+    if (!hasRicherDescription && !hasCorrectedTitle && !hasCorrectedCompany && !hasCorrectedLocation && !hasMissingPostedAt) return state;
     const description = hasRicherDescription ? capturedDescription : currentDescription;
     const refreshed = {
       ...existing,
-      location: existing.location || request.location || undefined,
+      title: request.title,
+      company: request.company,
+      location: request.location || existing.location || undefined,
       description: description || undefined,
       postedAt: existing.postedAt || request.postedAt || undefined,
       ...scoreJob({ ...request, description }, profile),

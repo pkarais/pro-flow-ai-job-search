@@ -5,6 +5,7 @@ import {
   BorderStyle,
   Document,
   HeadingLevel,
+  ImageRun,
   Packer,
   Paragraph,
   TextRun,
@@ -98,9 +99,11 @@ export async function renderResumeDocx(resume: StructuredResume): Promise<Buffer
   return Packer.toBuffer(document);
 }
 
-export async function renderCoverLetterDocx(resume: StructuredResume, letter: string): Promise<Buffer> {
+export async function renderCoverLetterDocx(resume: StructuredResume, letter: string, signatureDataUri?: string | null): Promise<Buffer> {
   const accent = docxAccent(resume);
-  const paragraphs = letter.split(/\n\s*\n/).map((item) => item.trim()).filter(Boolean);
+  const paragraphs = letter.split(/\n\s*\n/).map((item) => item.trim())
+    .filter((item) => item && !/^dear hiring manager,?$/i.test(item) && !/^sincerely,?$/i.test(item) && item !== "[Your name]");
+  const signature = signatureDataUri?.match(/^data:image\/png;base64,(.+)$/)?.[1];
   const document = new Document({
     sections: [{
       properties: { page: { size: { width: 12240, height: 15840 }, margin: { top: 900, right: 950, bottom: 900, left: 950 } } },
@@ -109,7 +112,11 @@ export async function renderCoverLetterDocx(resume: StructuredResume, letter: st
         new Paragraph(`${resume.identity.email} | ${formatUsPhone(resume.identity.phone)}`),
         new Paragraph({ spacing: { before: 300 }, border: { bottom: { color: accent, style: BorderStyle.SINGLE, size: 8, space: 4 } }, children: [new TextRun({ text: resume.targetPositioning.employer, bold: true, color: accent })] }),
         new Paragraph(resume.targetPositioning.location),
+        new Paragraph({ text: "Dear Hiring Manager,", spacing: { before: 240 } }),
         ...paragraphs.map((item) => new Paragraph({ text: item.replace("[Your name]", resume.identity.fullName), spacing: { before: 160 } })),
+        new Paragraph({ text: "Sincerely,", spacing: { before: 240 } }),
+        ...(signature ? [new Paragraph({ children: [new ImageRun({ data: Buffer.from(signature, "base64"), transformation: { width: 205, height: 64 }, type: "png" })] })] : []),
+        new Paragraph({ children: [new TextRun({ text: resume.identity.fullName, bold: true, color: accent })] }),
       ],
     }],
   });

@@ -5,6 +5,7 @@ import { careerDataRoot, loadCanonicalProfile } from "@/server/canonical/review-
 import { renderDesignedResumeHtml } from "@/server/documents/html-resume-renderer";
 import { renderDesignedCoverLetterHtml } from "@/server/documents/cover-letter-renderer";
 import { buildStructuredResume } from "@/server/documents/structured-resume-service";
+import { loadCandidateBannerDataUri, loadCandidateSignatureDataUri } from "@/server/documents/candidate-signature";
 
 export const runtime = "nodejs";
 
@@ -22,10 +23,12 @@ export async function POST(request: Request) {
     const profile = await loadCanonicalProfile();
     if (!profile) return NextResponse.json({ error: "Canonical career evidence is unavailable." }, { status: 409 });
     const resume = buildStructuredResume(application, profile, input.identity, input.themeId, input.paletteOverride);
+    const signatureDataUri = await loadCandidateSignatureDataUri(careerDataRoot());
+    const bannerDataUri = await loadCandidateBannerDataUri(careerDataRoot());
     return NextResponse.json({
       resume,
-      html: renderDesignedResumeHtml(resume),
-      coverHtml: renderDesignedCoverLetterHtml(resume, application.draft.coverLetter),
+      html: renderDesignedResumeHtml(resume, bannerDataUri),
+      coverHtml: renderDesignedCoverLetterHtml(resume, application.draft.coverLetter, signatureDataUri),
       contentSource: application.draft.generation?.method ?? "template",
     });
   } catch (error) {

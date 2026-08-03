@@ -6,6 +6,7 @@ import { renderDesignedCoverLetterHtml } from "../src/server/documents/cover-let
 import { renderCoverLetterDocx, renderResumeDocx } from "../src/server/documents/resume-export-service.ts";
 import { resumeIconNames } from "../src/server/documents/design/icon-registry.ts";
 import { formatUsPhone } from "../src/server/documents/phone-format.ts";
+import { formatJobLocation } from "../src/server/documents/location-format.ts";
 
 const resume = structuredResumeSchema.parse({
   schemaVersion: 1,
@@ -51,6 +52,11 @@ test("U.S. phone numbers use the employer-facing display format", () => {
   assert.equal(formatUsPhone("2125550100"), "(212) 555-0100");
   assert.equal(formatUsPhone("1-201-856-1173"), "(201) 856-1173");
   assert.equal(formatUsPhone("(201) 856-1173"), "(201) 856-1173");
+});
+
+test("job locations omit captured commute-time metadata", () => {
+  assert.equal(formatJobLocation("60 min·Branchville, NJ"), "Branchville, NJ");
+  assert.equal(formatJobLocation("1 hr - New York, NY"), "New York, NY");
 });
 
 test("editable DOCX export is a valid Office zip package", async () => {

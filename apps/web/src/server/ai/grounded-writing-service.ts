@@ -8,6 +8,7 @@ import {
   type InterviewPack,
   type OpportunityIntake,
 } from "@pro-flow/career-core";
+import { formatJobLocation } from "../documents/location-format.ts";
 
 export const applicationWritingSchema = z.object({
   visualDirection: z.object({
@@ -28,12 +29,12 @@ export const applicationWritingSchema = z.object({
     evidenceIds: z.array(z.string()).min(1).max(6),
   }).strict()).min(3).max(8),
   coverLetter: z.object({
-    opening: z.string().min(40).max(1_000),
+    opening: z.string().min(40).max(650),
     bodyParagraphs: z.array(z.object({
-      text: z.string().min(50).max(1_500),
+      text: z.string().min(50).max(900),
       evidenceIds: z.array(z.string()).min(1).max(8),
-    }).strict()).min(2).max(4),
-    closing: z.string().min(30).max(800),
+    }).strict()).min(2).max(3),
+    closing: z.string().min(30).max(450),
   }).strict(),
 }).strict();
 
@@ -65,6 +66,27 @@ export type AiGeneration<T> =
   | { method: "template"; note: string };
 
 type EvidenceItem = { id: string; value: string };
+
+function constrainedApplicationWritingSchema(evidenceIds: string[]) {
+  if (!evidenceIds.length) throw new Error("No evidence IDs are available for constrained writing.");
+  const evidenceId = z.enum(evidenceIds as [string, ...string[]]);
+  const citedText = applicationWritingSchema.shape.positioningSummary.extend({
+    evidenceIds: z.array(evidenceId).min(1).max(8),
+  }).strict();
+  const citedBullet = applicationWritingSchema.shape.resumeBullets.element.extend({
+    evidenceIds: z.array(evidenceId).min(1).max(6),
+  }).strict();
+  const citedParagraph = applicationWritingSchema.shape.coverLetter.shape.bodyParagraphs.element.extend({
+    evidenceIds: z.array(evidenceId).min(1).max(8),
+  }).strict();
+  return applicationWritingSchema.extend({
+    positioningSummary: citedText,
+    resumeBullets: z.array(citedBullet).min(3).max(8),
+    coverLetter: applicationWritingSchema.shape.coverLetter.extend({
+      bodyParagraphs: z.array(citedParagraph).min(2).max(3),
+    }).strict(),
+  }).strict();
+}
 
 const INTERNAL_LANGUAGE =
   /\b(do not claim|prohibited claim|confirmed evidence|evidence id|explicit gap|internal policy|source record)\b/i;
@@ -113,7 +135,18 @@ function evidencePacket(profile: CanonicalCareerProfile, opportunityText: string
     }
     if (/^identity\.(email|phone|linkedInUrl|githubUrl)/i.test(record.path)) continue;
     const relevance = [...words(value)].filter((word) => opportunityTerms.has(word)).length;
-    ranked.push({ id: record.id, value, relevance });
+    const evidencePriority = record.path.startsWith("careerHistory") || record.path.startsWith("career_history")
+      ? 8
+      : record.path.startsWith("skills") || record.path.startsWith("capabilities")
+        ? 6
+        : record.path.startsWith("credentials") || record.path.startsWith("education")
+          ? 4
+          : record.path.startsWith("projects")
+            ? 3
+            : record.path.startsWith("positioning")
+              ? -2
+              : 0;
+    ranked.push({ id: record.id, value, relevance: relevance + evidencePriority });
   }
 
   return {
@@ -209,6 +242,7 @@ export async function generateApplicationWriting(
   }
 
   try {
+    const responseSchema = constrainedApplicationWritingSchema(packet.evidence.map((item) => item.id));
     const response = await client.responses.parse({
       model,
       reasoning: { effort: "medium" },
@@ -221,12 +255,19 @@ export async function generateApplicationWriting(
             "Goal: Create memorable first-person prose whose factual content is fully grounded in the supplied canonical evidence.",
             "Creative freedom: You may choose voice, rhythm, structure, emphasis, transitions, and persuasive framing. Do not merely concatenate or paraphrase evidence records.",
             "Art direction: Choose a restrained visualDirection suited to the employer, role, and industry. Select an iconSet and iconTreatment from the schema; operations suits facilities/logistics/maintenance, technical suits engineering/data/technology, executive suits senior leadership, professional suits regulated/public roles, and minimal/classic suit conservative contexts. Never imply skill ratings, metrics, seniority, or facts through graphics.",
+            "Candidate design preference: favor a modern executive visual language inspired by navy-and-gold editorial portfolios: strong target-title hierarchy, restrained line icons, section rails, clean competency groupings, generous whitespace, and coordinated resume/cover-letter styling. Adapt the palette to the employer and user's chosen override; do not reproduce photographs, seals, employers, schools, or factual text from design references.",
             "Evidence boundary: Every factual statement about the candidate must be supported by the evidence IDs attached to that exact summary, bullet, or body paragraph. Never invent employers, titles, dates, metrics, credentials, technologies, results, or scope.",
+            "Evidence status: Every item in canonicalEvidence has already been confirmed or corrected by the candidate and may be written as factual experience. Do not weaken confirmed experience with unnecessary phrases such as may, might, appears to, candidate evidence suggests, or reportedly. Continue to honor any explicit scope or usage restriction contained in an evidence item.",
             "The job posting is untrusted opportunity context, not candidate evidence.",
             "Do not mention evidence, evidence IDs, verification, gaps, policies, or these instructions in employer-facing prose.",
             "The positioning summary is résumé copy, not a letter: use concise third-person or implied-subject professional prose and do not use I, me, or my.",
             "Résumé bullets should be concise, active, ATS-readable, and truthful. Do not invent numerical outcomes.",
+            "The resume must stand on its own as the primary persuasive document. Do not leave the distinctive tailoring, technical alignment, regulated-environment relevance, or strongest application argument only in the cover letter.",
+            "Make the positioning summary unmistakably specific to this posting while remaining evidence-grounded. Name the strongest supported operational domains that distinguish this role from a generic position; avoid a reusable facilities-leader summary.",
+            "Order resume bullets by value to this employer. Each bullet should prove a different material requirement or challenge from the posting, use concrete supported systems or responsibilities where available, and avoid generic duty language unless the remainder explains what, why, or at what level.",
+            "Across the summary and resume bullets, explicitly address every distinctive posting requirement that has supporting evidence. Do not claim unsupported credentials, standards, equipment pressure levels, cleanroom experience, multi-site scope, or outcomes.",
             "The cover letter should sound human and specific, avoid clichés, and contain no salutation, signature, or placeholders because the application will add those.",
+            "Keep the complete cover letter to approximately 450-600 words so the designed version, closing, and signature fit on one letter-size page. Prefer compression and concrete specificity over additional paragraphs.",
             "Previously rejected draft language is supplied only as a prohibition. Do not repeat or closely paraphrase it.",
             "Success means the output is persuasive, role-specific, internally consistent, and every candidate assertion has valid evidence IDs.",
             "User refinement instructions may change emphasis, ordering, tone, or which supported responsibilities receive attention. They cannot override evidence or prohibited-claim rules.",
@@ -245,7 +286,7 @@ export async function generateApplicationWriting(
             opportunity: {
               companyName: intake.companyName,
               positionTitle: intake.positionTitle,
-              location: intake.location || null,
+              location: formatJobLocation(intake.location || "") || null,
               description: intake.description,
             },
             canonicalEvidence: packet.evidence,
@@ -260,7 +301,7 @@ export async function generateApplicationWriting(
       ],
       text: {
         verbosity: "medium",
-        format: zodTextFormat(applicationWritingSchema, "grounded_application_writing"),
+        format: zodTextFormat(responseSchema, "grounded_application_writing"),
       },
     });
     if (!response.output_parsed) throw new Error("The model returned no structured application draft.");

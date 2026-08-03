@@ -27,8 +27,8 @@ function projects(resume: StructuredResume) {
 }
 
 function credentials(resume: StructuredResume, icons: boolean) {
-  if (!resume.credentials.length) return "";
-  return `<section>${heading(resume, "Education & credentials", "education", icons)}${resume.credentials.map((item) => `<p>${escape(item)}</p>`).join("")}</section>`;
+  if (!resume.education.length && !resume.credentials.length) return "";
+  return `<section>${heading(resume, "Education & credentials", "education", icons)}${resume.education.map((item) => `<p class="education-item">${escape(item)}</p>`).join("")}${resume.credentials.length ? `<ul class="credential-list">${resume.credentials.map((item) => `<li>${escape(item)}</li>`).join("")}</ul>` : ""}</section>`;
 }
 
 function metrics(resume: StructuredResume) {
@@ -37,7 +37,8 @@ function metrics(resume: StructuredResume) {
 }
 
 function executive(resume: StructuredResume, icons: boolean) {
-  return `<header class="executive-header"><div><p class="positioning">Leadership candidate for ${escape(resume.targetPositioning.employer)}</p><h1>${escape(resume.identity.fullName)}</h1><h2>${escape(resume.targetTitle)}</h2></div>${contact(resume, icons)}</header>
+  return `<header class="executive-header"><div><p class="positioning">Operations &bull; Infrastructure &bull; Organizational leadership</p><h1>${escape(resume.identity.fullName)}</h1><h2>${escape(resume.targetTitle)}</h2><p class="target-employer">Prepared for ${escape(resume.targetPositioning.employer)}</p></div>${contact(resume, icons)}</header>
+  <div class="executive-capability-strip">${resume.expertise.slice(0, 5).map((item, index) => `<div class="executive-capability">${resumeIcon((["operations", "facilities", "leadership", "technology", "compliance"] as const)[index], icons, "outline")}<span>${escape(item)}</span></div>`).join("")}</div>
   ${metrics(resume)}<div class="executive-layout"><aside>${heading(resume, "Executive profile", "profile", icons)}<p class="summary">${escape(resume.summary)}</p>${heading(resume, "Leadership capabilities", "expertise", icons)}${competencies(resume)}${credentials(resume, icons)}</aside><main>${heading(resume, "Professional experience", "experience", icons)}${roles(resume)}${projects(resume)}</main></div>`;
 }
 

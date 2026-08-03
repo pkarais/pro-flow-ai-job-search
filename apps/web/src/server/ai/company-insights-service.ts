@@ -29,7 +29,13 @@ Other verified public contact route
 Recommended next step
 Verification cautions
 
-Prioritize the employer's official job posting and official careers website. Report an email address only when it is explicitly published by the employer for recruiting, careers, human resources, or job applications. Never infer an email pattern, guess an address, provide a private or personal address, or recommend contacting an unrelated employee. If no qualifying public email exists, say so clearly and provide the official application URL or official contact form instead. Explain whether the role appears on the official employer site. Cite every discovered route inline. Do not submit, email, or contact anyone.`;
+Start with the original posting, including its employer name, street address, location, and any linked employer site. Establish the employer's official domain before following public pages. Then inspect the official job posting, careers/jobs pages, and relevant public contact, about, location, or join-us pages. A clearly identified official applicant-tracking page may also be used.
+
+Report an email address only when it is explicitly published by the employer for recruiting, careers, human resources, the specific job, or job applications. Read visible page content and legitimate public page markup where available, including mailto links, plain or entity-encoded addresses, structured contact data, and addresses revealed normally by the rendered public page. Cite the exact source page and explain the nearby hiring context.
+
+Never infer an email pattern, guess an address, provide a private or personal address, recommend contacting an unrelated employee, or probe SMTP, DNS, undocumented APIs, webhooks, form processors, admin routes, source maps, or leaked configuration. Reject email-input examples such as you@company.com, vendor addresses, and addresses found only in scripts, templates, comments, privacy text, or unrelated domains. A sales, project-consultation, customer-support, or general inquiry form is not a recruiting route; it may be listed only as a clearly labeled low-confidence fallback. A fetch destination or automation webhook is infrastructure, not a contact address.
+
+Rank results in this order: an exact job-specific published application route; a published recruiting/HR address; the official careers or applicant-tracking page; then a clearly labeled general company contact fallback. If no qualifying public email exists, say so clearly rather than manufacturing one. Explain whether the role appears on the official employer site. Cite every discovered route inline. Do not submit a form, send an email, or contact anyone.`;
   return `Research the employer below for a job candidate preparing an application.
 
 Company: ${job.company}

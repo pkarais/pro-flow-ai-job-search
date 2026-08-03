@@ -19,6 +19,7 @@ import {
 } from "../src/server/ai/grounded-writing-service.ts";
 import { zodTextFormat } from "openai/helpers/zod";
 import { DocumentService, renderDocumentSources } from "../src/server/documents/document-service.ts";
+import { tailoredCompetencies, verifiedMetricCallouts } from "../src/server/documents/structured-resume-service.ts";
 import { OperationsStore } from "../src/server/operations/operations-store.ts";
 import {
   buildOfficialSearchUrl,
@@ -678,6 +679,31 @@ test("user-selected imports are scored, risk-reviewed, and deduplicated locally"
   assert.equal(afterDelete.jobs[0].duplicateOf, undefined);
 });
 
+test("structured resumes derive role-specific competencies from verified AI resume claims", () => {
+  const competencies = tailoredCompetencies(
+    "Lead facilities operations, preventive maintenance, boilers, low-pressure steam, compressed air, vendor coordination, regulatory compliance, and CMMS maintenance controls.",
+    ["Generic fallback skill"],
+  );
+  assert.deepEqual(competencies.slice(0, 7), [
+    "Facilities Operations",
+    "Preventive Maintenance",
+    "Vendor & Contractor Management",
+    "Boilers & Steam Systems",
+    "Compressed Air",
+    "Regulatory Compliance",
+    "CMMS & Maintenance Controls",
+  ]);
+  assert.ok(competencies.indexOf("Generic fallback skill") > competencies.indexOf("CMMS & Maintenance Controls"));
+});
+
+test("certification numbers never become visual performance metrics", () => {
+  const claims = [{
+    text: "Support compliance with OSHA 30-Hour Construction Safety and EPA 608 Universal Certification.",
+    evidenceIds: ["credential_record"],
+  }];
+  assert.deepEqual(verifiedMetricCallouts(claims, new Set(["actual_metric_record"])), []);
+});
+
 test("recapturing the same posting upgrades an incomplete saved description", async () => {
   const root = await mkdtemp(path.join(tmpdir(), "pro-flow-job-recapture-"));
   const url = "https://www.indeed.com/viewjob?jk=recapture";
@@ -704,6 +730,57 @@ test("recapturing the same posting upgrades an incomplete saved description", as
   assert.equal(refreshed.jobs[0].description, fullDescription.trim());
   assert.equal(refreshed.jobs[0].location, "New York, NY");
   assert.equal(refreshed.jobs[0].postedAt, "2026-07-31");
+});
+
+test("a clean recapture replaces a longer description polluted by embedded page CSS", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "pro-flow-job-css-recapture-"));
+  const url = "https://www.indeed.com/viewjob?jk=css-recapture";
+  const polluted = `@layer htmlContent { #react-native-html-content { padding-top: 1px; font-family: "IndeedSans"; } This is added to include the bounding client rectanble height. } ${"irrelevant style content ".repeat(30)}`;
+  await importJob(root, {
+    portal: "indeed-search",
+    title: "Facilities Director",
+    company: "Example Campus",
+    url,
+    description: polluted,
+  }, profile);
+  const clean = "Lead facilities operations, construction planning, preventive maintenance, compliance, budgets, vendors, and staff across a complex public campus. ".repeat(3);
+  const refreshed = await importJob(root, {
+    portal: "indeed-search",
+    title: "Facilities Director",
+    company: "Example Campus",
+    url,
+    description: clean,
+  }, profile);
+  assert.equal(refreshed.jobs[0].description, clean.trim());
+  assert.ok(!refreshed.jobs[0].gaps.includes("htmlcontent"));
+  assert.ok(!refreshed.jobs[0].gaps.includes("bounding"));
+});
+
+test("recapturing the same posting corrects stale title and company headers", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "pro-flow-job-header-recapture-"));
+  const url = "https://www.indeed.com/viewjob?jk=header-recapture";
+  const description = "Lead facilities operations, maintenance, compliance, projects, budgets, vendors, and staff across a complex operating environment. ".repeat(3);
+  const initial = await importJob(root, {
+    portal: "indeed-search",
+    title: "Stale sidebar title",
+    company: "Stale sidebar company",
+    location: "Stale City, NJ",
+    url,
+    description,
+  }, profile);
+  const refreshed = await importJob(root, {
+    portal: "indeed-search",
+    title: "Director of Facilities",
+    company: "Correct Employer",
+    location: "New York, NY",
+    url,
+    description,
+  }, profile);
+  assert.equal(refreshed.jobs.length, 1);
+  assert.equal(refreshed.jobs[0].id, initial.jobs[0].id);
+  assert.equal(refreshed.jobs[0].title, "Director of Facilities");
+  assert.equal(refreshed.jobs[0].company, "Correct Employer");
+  assert.equal(refreshed.jobs[0].location, "New York, NY");
 });
 
 test("job deletion cascades through workflow records and dismisses its application lineage", async () => {

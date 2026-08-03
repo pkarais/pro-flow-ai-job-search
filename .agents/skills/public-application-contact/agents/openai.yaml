@@ -1,0 +1,4 @@
+interface:
+  display_name: "Public Application Contact"
+  short_description: "Find verified public job application channels"
+  default_prompt: "Use $public-application-contact to find a verified public application email, careers page, or official contact route for this job."
