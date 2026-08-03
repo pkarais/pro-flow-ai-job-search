@@ -484,6 +484,25 @@ Interview packs use only verified submitted claims. Gaps receive honest bridge
 answers instead of invented experience. Outcomes are appended as historical
 records.
 
+## AI quality and cost controls
+
+Pro Flow reserves the configured flagship writing model for final resume and
+cover-letter authorship. Supporting work such as refinement suggestions,
+interview preparation, company research, and direct-application research can
+use a separate lower-cost model without weakening the final writing pass.
+
+Every completed AI response now records private, gitignored token usage, web
+search calls, and an estimated standard-rate cost in `career-data/ai-usage.json`.
+The Home page summarizes the current month. Prompts are cleaned and bounded,
+outputs and research calls have explicit limits, repeated prompt prefixes are
+cache-keyed, and same-job research starts are serialized to prevent duplicate
+paid background requests. Identical concurrent writing requests share one
+provider operation, and automatic SDK retries are disabled so a failed request
+cannot silently become a second paid generation. An optional
+`OPENAI_MONTHLY_BUDGET_USD` setting stops
+new AI work once the locally recorded estimate reaches the configured limit.
+Provider billing remains authoritative.
+
 ## Installation
 
 Use [SETUP.md](SETUP.md) for the tested quick start. The comprehensive

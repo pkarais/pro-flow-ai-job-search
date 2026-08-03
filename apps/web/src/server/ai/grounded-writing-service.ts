@@ -9,6 +9,9 @@ import {
   type OpportunityIntake,
 } from "@pro-flow/career-core";
 import { formatJobLocation } from "../documents/location-format.ts";
+import { cleanOpportunityText, compactInsight, maxOutputTokens, modelFor, promptCacheKey } from "./ai-policy.ts";
+import { assertAiBudgetAvailable, recordAiUsage } from "./ai-usage-store.ts";
+import { aiRequestKey, singleFlight } from "./ai-single-flight.ts";
 
 export const applicationWritingSchema = z.object({
   visualDirection: z.object({
@@ -91,10 +94,6 @@ function constrainedApplicationWritingSchema(evidenceIds: string[]) {
 const INTERNAL_LANGUAGE =
   /\b(do not claim|prohibited claim|confirmed evidence|evidence id|explicit gap|internal policy|source record)\b/i;
 
-function configuredModel(): string {
-  return process.env.OPENAI_MODEL?.trim() || "gpt-5.6-sol";
-}
-
 function configuredTimeout(): number {
   const configured = Number.parseInt(process.env.OPENAI_REQUEST_TIMEOUT_MS?.trim() || "", 10);
   return Number.isFinite(configured) && configured >= 30_000 && configured <= 300_000
@@ -105,7 +104,7 @@ function configuredTimeout(): number {
 function createClient(): OpenAI | null {
   const apiKey = process.env.OPENAI_API_KEY?.trim();
   if (!apiKey) return null;
-  return new OpenAI({ apiKey, maxRetries: 1, timeout: configuredTimeout() });
+  return new OpenAI({ apiKey, maxRetries: 0, timeout: configuredTimeout() });
 }
 
 function words(value: string): Set<string> {
@@ -149,11 +148,21 @@ function evidencePacket(profile: CanonicalCareerProfile, opportunityText: string
     ranked.push({ id: record.id, value, relevance: relevance + evidencePriority });
   }
 
+  const evidence: EvidenceItem[] = [];
+  const seen = new Set<string>();
+  let evidenceCharacters = 0;
+  for (const item of ranked.sort((left, right) => right.relevance - left.relevance)) {
+    const value = item.value.replace(/\s+/g, " ").trim().slice(0, 2_400);
+    const fingerprint = value.toLowerCase();
+    if (!value || seen.has(fingerprint)) continue;
+    if (evidence.length >= 45 || (evidence.length >= 12 && evidenceCharacters + value.length > 40_000)) break;
+    seen.add(fingerprint);
+    evidence.push({ id: item.id, value });
+    evidenceCharacters += value.length;
+  }
+
   return {
-    evidence: ranked
-      .sort((left, right) => right.relevance - left.relevance)
-      .slice(0, 60)
-      .map(({ id, value }) => ({ id, value })),
+    evidence,
     voiceRules: voiceRules.slice(0, 12),
     prohibitedClaims: prohibitedClaims.slice(0, 20),
   };
@@ -235,17 +244,25 @@ export async function generateApplicationWriting(
 ): Promise<AiGeneration<ApplicationWriting>> {
   const client = createClient();
   if (!client) return { method: "template", note: "OPENAI_API_KEY is not configured." };
-  const model = configuredModel();
-  const packet = evidencePacket(profile, `${intake.positionTitle}\n${intake.description}`);
+  const model = modelFor("application_writing");
+  const cleanDescription = cleanOpportunityText(intake.description);
+  const packet = evidencePacket(profile, `${intake.positionTitle}\n${cleanDescription}`);
   if (!packet.evidence.length) {
     return { method: "template", note: "No employer-facing canonical evidence was available to the AI writer." };
   }
 
   try {
+    await assertAiBudgetAvailable();
     const responseSchema = constrainedApplicationWritingSchema(packet.evidence.map((item) => item.id));
-    const response = await client.responses.parse({
+    const requestKey = aiRequestKey("application_writing", {
+      intake, profileRevision: profile.revision, excludedClaimTexts, refinementInstructions,
+      companyInsightContext, existingDraft,
+    });
+    const response = await singleFlight(requestKey, () => client.responses.parse({
       model,
       reasoning: { effort: "medium" },
+      max_output_tokens: maxOutputTokens("application_writing"),
+      prompt_cache_key: promptCacheKey("application_writing", profile.candidateId),
       store: false,
       input: [
         {
@@ -287,14 +304,17 @@ export async function generateApplicationWriting(
               companyName: intake.companyName,
               positionTitle: intake.positionTitle,
               location: formatJobLocation(intake.location || "") || null,
-              description: intake.description,
+              description: cleanDescription,
             },
             canonicalEvidence: packet.evidence,
             voicePreferences: packet.voiceRules,
             prohibitedClaims: packet.prohibitedClaims,
             rejectedDraftLanguage: excludedClaimTexts.slice(0, 30),
             userRefinementInstructions: refinementInstructions || null,
-            selectedCompanyInsights: companyInsightContext,
+            selectedCompanyInsights: companyInsightContext.map((insight) => ({
+              kind: insight.kind,
+              report: compactInsight(insight.report),
+            })),
             existingApplicationDraft: existingDraft ?? null,
           }),
         },
@@ -303,7 +323,8 @@ export async function generateApplicationWriting(
         verbosity: "medium",
         format: zodTextFormat(responseSchema, "grounded_application_writing"),
       },
-    });
+    }));
+    await recordAiUsage({ response, operation: "application_writing" }).catch(() => undefined);
     if (!response.output_parsed) throw new Error("The model returned no structured application draft.");
     assertRejectedLanguageAbsent(response.output_parsed, excludedClaimTexts);
     return {
@@ -341,12 +362,21 @@ export async function generateRefinementSuggestions(
 ): Promise<AiGeneration<RefinementSuggestion[]>> {
   const client = createClient();
   if (!client) return { method: "template", note: "OPENAI_API_KEY is not configured." };
-  const model = configuredModel();
-  const packet = evidencePacket(profile, `${intake.positionTitle}\n${intake.description}`);
+  const model = modelFor("refinement_suggestions");
+  const cleanDescription = cleanOpportunityText(intake.description);
+  const packet = evidencePacket(profile, `${intake.positionTitle}\n${cleanDescription}`);
   if (!packet.evidence.length) return { method: "template", note: "No confirmed employer-facing evidence is available." };
   try {
-    const response = await client.responses.parse({
-      model, reasoning: { effort: "medium" }, store: false,
+    await assertAiBudgetAvailable();
+    const requestKey = aiRequestKey("refinement_suggestions", {
+      intake, profileRevision: profile.revision, companyInsights, existingDraft,
+    });
+    const response = await singleFlight(requestKey, () => client.responses.parse({
+      model,
+      reasoning: { effort: "low" },
+      max_output_tokens: maxOutputTokens("refinement_suggestions"),
+      prompt_cache_key: promptCacheKey("refinement_suggestions", profile.candidateId),
+      store: false,
       input: [{ role: "developer", content: [
         "Recommend distinct, high-value emphasis strategies for the candidate's next resume and cover-letter draft.",
         "Analyze the full job description, responsibilities, scope, employer context, and confirmed candidate evidence together.",
@@ -358,13 +388,14 @@ export async function generateRefinementSuggestions(
         "Candidate assertions must cite only supplied evidence IDs. Return three to five meaningfully different choices.",
         "Do not expose evidence IDs or internal policy language in user-facing text.",
       ].join("\n") }, { role: "user", content: JSON.stringify({
-        opportunity: intake,
         canonicalEvidence: packet.evidence,
-        companyInsights: companyInsights.map((insight) => ({ ...insight, report: insight.report.slice(0, 16_000) })),
+        opportunity: { ...intake, description: cleanDescription },
+        companyInsights: companyInsights.map((insight) => ({ ...insight, report: compactInsight(insight.report) })),
         existingApplicationDraft: existingDraft ?? null,
       }) }],
       text: { verbosity: "medium", format: zodTextFormat(refinementSuggestionsSchema, "application_refinement_suggestions") },
-    });
+    }));
+    await recordAiUsage({ response, operation: "refinement_suggestions" }).catch(() => undefined);
     if (!response.output_parsed) throw new Error("The model returned no structured emphasis suggestions.");
     const allowedEvidenceIds = new Set(packet.evidence.map((item) => item.id));
     const allowedInsightIds = new Set(companyInsights.map((item) => item.id));
@@ -411,12 +442,18 @@ export async function generateInterviewWriting(
   const verifiedClaims = application.draft.claims.filter((claim) => claim.decision === "verified");
   const allowedEvidenceIds = [...new Set(verifiedClaims.flatMap((claim) => claim.evidenceIds))];
   if (!verifiedClaims.length) return { method: "template", note: "No verified application claims were available." };
-  const model = configuredModel();
+  const model = modelFor("interview_writing");
 
   try {
-    const response = await client.responses.parse({
+    await assertAiBudgetAvailable();
+    const requestKey = aiRequestKey("interview_writing", {
+      applicationId: application.id, revision: application.revision, stage, companyInsightContext,
+    });
+    const response = await singleFlight(requestKey, () => client.responses.parse({
       model,
       reasoning: { effort: "medium" },
+      max_output_tokens: maxOutputTokens("interview_writing"),
+      prompt_cache_key: promptCacheKey("interview_writing", application.id),
       store: false,
       input: [
         {
@@ -442,7 +479,7 @@ export async function generateInterviewWriting(
             visibleGaps: application.draft.gaps,
             companyInsights: companyInsightContext.map((insight) => ({
               kind: insight.kind,
-              report: insight.report.slice(0, 16_000),
+              report: compactInsight(insight.report),
             })),
           }),
         },
@@ -451,7 +488,8 @@ export async function generateInterviewWriting(
         verbosity: "medium",
         format: zodTextFormat(interviewWritingSchema, "grounded_interview_pack"),
       },
-    });
+    }));
+    await recordAiUsage({ response, operation: "interview_writing" }).catch(() => undefined);
     if (!response.output_parsed) throw new Error("The model returned no structured interview pack.");
     return {
       method: "ai",

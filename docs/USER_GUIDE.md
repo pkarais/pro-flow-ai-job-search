@@ -135,8 +135,10 @@ Edit `.env.local`:
 ```text
 OPENAI_API_KEY=your-key-here
 OPENAI_MODEL=gpt-5.6-sol
-OPENAI_INSIGHTS_MODEL=gpt-5.6-sol
+OPENAI_SUPPORT_MODEL=gpt-5.6-terra
+OPENAI_INSIGHTS_MODEL=gpt-5.6-terra
 OPENAI_REQUEST_TIMEOUT_MS=120000
+OPENAI_MONTHLY_BUDGET_USD=25
 
 PRO_FLOW_LUALATEX_PATH=
 PRO_FLOW_XELATEX_PATH=
@@ -148,10 +150,24 @@ PRO_FLOW_CHROME_PATH=
 Notes:
 
 - Never commit `.env.local`.
-- `OPENAI_INSIGHTS_MODEL` is optional and can differ from the writing model.
+- `OPENAI_MODEL` is reserved for final resume and cover-letter authorship by
+  default. Keep `gpt-5.6-sol` here when maximum final-document quality matters.
+- `OPENAI_SUPPORT_MODEL` controls refinement suggestions and interview packs;
+  the cost-conscious default is `gpt-5.6-terra`.
+- `OPENAI_INSIGHTS_MODEL` controls company and direct-application web research;
+  it falls back to the support model and then `gpt-5.6-terra`.
+- `OPENAI_MONTHLY_BUDGET_USD` is optional. When set to a positive amount, Pro
+  Flow stops starting new AI work after locally recorded estimated monthly
+  usage reaches the limit. The OpenAI usage dashboard remains authoritative.
 - AI calls can incur provider charges.
 - Company research uses OpenAI Responses API web search and can take several
   minutes. Pro Flow runs it in background mode and polls until it is saved.
+- The Home page displays locally recorded request, token, search-call, and
+  estimated-cost totals. These begin accumulating after this feature is
+  installed; they cannot reconstruct older provider usage.
+- Pro Flow does not automatically retry failed AI generations. Concurrent
+  identical requests share a single provider call, while company-research
+  polling only retrieves the one background response already started.
 - Contact details and reviewed evidence used to draft an application are sent
   to the configured AI provider when required by that generation task.
 

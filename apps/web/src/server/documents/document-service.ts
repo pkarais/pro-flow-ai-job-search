@@ -134,7 +134,7 @@ function renderCareerContext(
   return [
     capabilities.length ? `\\themesection{${theme.expertiseLabel}}\n${escapeLatex(capabilities.join("; "))}` : "",
     currentHeader ? `\\themesection{Professional experience}\n${currentHeader}` : "",
-    earlierEntries ? `\\newpage\n\\themesection{Earlier career}\n${earlierEntries}` : "",
+    earlierEntries ? `\\pagebreak[2]\n\\themesection{Earlier career}\n${earlierEntries}` : "",
     secondaryExpertise ? `\\themesection{${theme.secondaryLabel}}\n${escapeLatex(secondaryExpertise)}` : "",
     educationText ? `\\themesection{Education}\n${educationText}` : "",
   ].filter(Boolean).join("\n");
@@ -437,7 +437,7 @@ export class DocumentService {
           { kind: "cover_letter_pdf", relativePath: "cover-letter.pdf", mediaType: "application/pdf" },
         );
         checks.push(
-          check("cv_pages", "CV is exactly two pages", cvPageCount === 2 ? "passed" : "failed", `Found ${cvPageCount} page(s).`),
+          check("cv_pages", "ATS resume is exactly two pages", cvPageCount === 2 ? "passed" : "failed", `Found ${cvPageCount} page(s) in the separate ATS resume PDF.`),
           check("cover_pages", "Cover letter is exactly one page", coverPageCount === 1 ? "passed" : "failed", `Found ${coverPageCount} page(s).`),
         );
         const { stdout: atsText } = await executeWithInput(
@@ -509,7 +509,7 @@ export class DocumentService {
       }
     } else {
       checks.push(
-        check("cv_pages", "CV is exactly two pages", "pending", "Install the required tools to compile and inspect the CV."),
+        check("cv_pages", "ATS resume is exactly two pages", "pending", "Install the required tools to compile and inspect the ATS resume."),
         check("cover_pages", "Cover letter is exactly one page", "pending", "Install the required tools to compile and inspect the cover letter."),
         check("ats_text", "CV has a clean ATS text layer", "pending", "Install Poppler to extract and inspect the PDF text layer."),
         check("ats_contact", "Email and phone survive ATS extraction", "pending", "Compile and extract the CV before checking contact fields."),

@@ -432,7 +432,8 @@ test("document sources use confirmed career context instead of résumé padding"
   assert.match(sources.cv, /Example Facilities Organization/);
   assert.match(sources.cv, /Chief Engineer/);
   assert.match(sources.cv, /Education/);
-  assert.match(sources.cv, /\\newpage\s+\\themesection\{Earlier career\}/);
+  assert.match(sources.cv, /\\pagebreak\[2\]\s+\\themesection\{Earlier career\}/);
+  assert.doesNotMatch(sources.cv, /\\newpage/);
 });
 
 test("built-in themes are fixed, coordinated, and recommended from the role title", () => {

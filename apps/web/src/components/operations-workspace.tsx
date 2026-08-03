@@ -368,6 +368,8 @@ export function OperationsWorkspace({
             const companyOverviewExists = state.companyInsights.some((report) => report.jobId === job.id && report.kind === "company_overview");
             const companyInsightCreated = state.companyInsights.some((report) => report.jobId === job.id && report.kind === "company_overview" && /market compensation estimate/i.test(report.report));
             const directApplicationCreated = state.companyInsights.some((report) => report.jobId === job.id && report.kind === "direct_application");
+            const latestDirectApplication = state.companyInsights.filter((report) => report.jobId === job.id && report.kind === "direct_application").at(-1);
+            const directApplicationEmailFound = Boolean(latestDirectApplication?.report.match(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i));
             const companyResearchStartedAt = activeResearch[researchKey(job.id, "company_overview")];
             const directResearchStartedAt = activeResearch[researchKey(job.id, "direct_application")];
             return (
@@ -396,8 +398,8 @@ export function OperationsWorkspace({
               <button className="button button--secondary" type="button" disabled={busy || companyInsightCreated || Boolean(companyResearchStartedAt)} onClick={() => void generateCompanyInsight(job.id)}>
                 {companyResearchStartedAt ? "Company research running…" : companyInsightCreated ? "AI company insights + salary generated" : companyOverviewExists ? "Update insights with salary analysis" : "Generate AI company insights"}
               </button>
-              <button className="button button--secondary" type="button" disabled={busy || directApplicationCreated || Boolean(directResearchStartedAt)} onClick={() => void generateCompanyInsight(job.id, "direct_application")}>
-                {directResearchStartedAt ? "Direct-application research running…" : directApplicationCreated ? "Direct application options found" : "Find direct application options"}
+              <button className="button button--secondary" type="button" disabled={busy || (directApplicationCreated && directApplicationEmailFound) || Boolean(directResearchStartedAt)} onClick={() => void generateCompanyInsight(job.id, "direct_application")}>
+                {directResearchStartedAt ? "Direct-application research running…" : directApplicationCreated && directApplicationEmailFound ? "Direct application options found" : directApplicationCreated ? "Search again for a public application email" : "Find direct application options"}
               </button>
               {(companyOverviewExists || directApplicationCreated) ? <a className="text-link" href="/insights">View saved research</a> : null}
               {existingApplication ? <form className="operations-stack-form" onSubmit={(event) => {

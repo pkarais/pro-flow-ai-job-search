@@ -3,7 +3,16 @@ import type { AcceptanceDashboard } from "@/server/acceptance/acceptance-service
 import { ArrowIcon, CheckIcon, CompassIcon, FileIcon, SparkIcon } from "./icons";
 import { SectionHeading, StatusBadge, SurfaceCard } from "./ui";
 
-export function Dashboard({ dashboard }: { dashboard: AcceptanceDashboard }) {
+type AiUsageSummary = {
+  requestCount: number;
+  inputTokens: number;
+  outputTokens: number;
+  webSearchCalls: number;
+  estimatedCostUsd: number;
+  monthlyBudgetUsd: number | null;
+};
+
+export function Dashboard({ dashboard, aiUsage }: { dashboard: AcceptanceDashboard; aiUsage: AiUsageSummary }) {
   const { plan, snapshot, warning } = dashboard;
   const next = plan.next;
 
@@ -130,6 +139,17 @@ export function Dashboard({ dashboard }: { dashboard: AcceptanceDashboard }) {
             <li><CheckIcon /> Real records instead of fixture statistics</li>
             <li><CheckIcon /> Current-revision document verification</li>
           </ul>
+        </SurfaceCard>
+
+        <SurfaceCard className="principles-card">
+          <div className="principles-icon"><SparkIcon /></div>
+          <p className="eyebrow">Local AI cost controls</p>
+          <h2>${aiUsage.estimatedCostUsd.toFixed(2)} estimated this month</h2>
+          <p>{aiUsage.requestCount} recorded AI responses · {aiUsage.webSearchCalls} web searches · {aiUsage.inputTokens.toLocaleString()} input tokens · {aiUsage.outputTokens.toLocaleString()} output tokens.</p>
+          <p className="adapter-note">
+            Estimates use standard model and tool rates. Your OpenAI usage dashboard remains authoritative.
+            {aiUsage.monthlyBudgetUsd !== null ? ` New calls stop at the configured $${aiUsage.monthlyBudgetUsd.toFixed(2)} monthly limit.` : " Set OPENAI_MONTHLY_BUDGET_USD to enforce a local monthly limit."}
+          </p>
         </SurfaceCard>
       </section>
 

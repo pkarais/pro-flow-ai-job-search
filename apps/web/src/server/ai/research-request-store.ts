@@ -12,6 +12,7 @@ type PendingResearch = {
 
 const filePath = () => path.join(careerDataRoot(), "pending-company-research.json");
 let mutationQueue: Promise<void> = Promise.resolve();
+const startLocks = new Map<string, Promise<unknown>>();
 
 const retryableWindowsError = (error: unknown) => ["EPERM", "EACCES", "EBUSY"].includes((error as NodeJS.ErrnoException).code ?? "");
 const wait = (milliseconds: number) => new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -87,4 +88,16 @@ export async function listResearchRequests() {
 
 export async function forgetResearchRequest(jobId: string, kind: CompanyResearchKind) {
   await mutate((current) => current.filter((item) => item.jobId !== jobId || item.kind !== kind));
+}
+
+export async function withResearchStartLock<T>(jobId: string, kind: CompanyResearchKind, action: () => Promise<T>): Promise<T> {
+  const key = `${jobId}:${kind}`;
+  const prior = startLocks.get(key) ?? Promise.resolve();
+  const current = prior.catch(() => undefined).then(action);
+  startLocks.set(key, current);
+  try {
+    return await current;
+  } finally {
+    if (startLocks.get(key) === current) startLocks.delete(key);
+  }
 }
