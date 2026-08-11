@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { ApplicationStore } from "@/server/applications/application-store";
 import { careerDataRoot, loadCanonicalProfile } from "@/server/canonical/review-service";
 import { DocumentService } from "@/server/documents/document-service";
+import { saveCandidateContact } from "@/server/canonical/candidate-contact-service";
 
 export const runtime = "nodejs";
 
@@ -28,6 +29,7 @@ export async function POST(request: Request) {
       profile,
       input.paletteOverride,
     );
+    await saveCandidateContact(careerDataRoot(), input.identity);
     return NextResponse.json({ readiness });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to generate documents.";

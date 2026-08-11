@@ -524,7 +524,7 @@ export function ApplicationWorkspace({
             </p> : null}
             {application.status === "review_complete" ? (
               <form className="document-details-form" onSubmit={generateDocuments}>
-                <p>Enter the exact contact text that should appear in both private documents.</p>
+                <p>Confirm the contact text for both private documents. Pro Flow saves it locally and prefills it for future applications.</p>
                 <label>Full name <input name="fullName" required maxLength={200} value={identity.fullName} onChange={(event) => setIdentity((current) => ({ ...current, fullName: event.target.value }))} /></label>
                 <label>Email <input name="email" required type="email" maxLength={320} value={identity.email} onChange={(event) => setIdentity((current) => ({ ...current, email: event.target.value }))} /></label>
                 <label>Phone <input name="phone" required maxLength={80} value={identity.phone} onChange={(event) => setIdentity((current) => ({ ...current, phone: event.target.value }))} /></label>

@@ -1,5 +1,6 @@
 import type { StructuredResume } from "@pro-flow/career-core";
 import { formatUsPhone } from "./phone-format.ts";
+import { isCoverLetterNamePlaceholder } from "./cover-letter-signature.ts";
 
 const accents = { navy: "#17324d", teal: "#006d77", plum: "#5a3f75", slate: "#394b59", forest: "#285943", burgundy: "#7a263a" };
 const escape = (value: string) => value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
@@ -9,7 +10,7 @@ export function renderDesignedCoverLetterHtml(resume: StructuredResume, letter: 
   const executive = resume.themeId === "executive";
   const gold = "#b7791f";
   const paragraphs = letter.split(/\n\s*\n/).map((item) => item.trim())
-    .filter((item) => item && !/^dear hiring manager,?$/i.test(item) && !/^sincerely,?$/i.test(item) && item !== "[Your name]");
+    .filter((item) => item && !/^dear hiring manager,?$/i.test(item) && !/^sincerely,?$/i.test(item) && !isCoverLetterNamePlaceholder(item));
   const characterCount = paragraphs.join(" ").length;
   const compact = characterCount > 1_650 || paragraphs.length > 4;
   const tight = characterCount > 2_450;
@@ -22,8 +23,8 @@ export function renderDesignedCoverLetterHtml(resume: StructuredResume, letter: 
   .sheet.compact{padding:.48in .64in}.sheet.compact header{padding-bottom:11px;margin-bottom:18px}.sheet.compact h1{font-size:22pt}.sheet.compact .recipient{margin-bottom:14px}.sheet.compact .letter p{font-size:9.35pt;line-height:1.36;margin-bottom:9px}.sheet.compact .signature{margin-top:14px}
   .sheet.tight{padding:.38in .56in}.sheet.tight .brief-kicker{margin-bottom:12px}.sheet.tight header{margin-bottom:12px;padding-bottom:8px}.sheet.tight h1{font-size:19pt}.sheet.tight header p,.sheet.tight .contact{font-size:8.6pt}.sheet.tight .recipient{margin-bottom:9px;font-size:8.7pt}.sheet.tight .letter p{font-size:8.65pt;line-height:1.28;margin-bottom:7px}.sheet.tight .signature{margin-top:8px}.sheet.tight .signature-image{width:1.55in;max-height:.44in}.sheet.tight .signature strong{font-size:8.5pt;min-width:1.52in}
   ${executive ? `header{margin:0 0 26px;padding:0 0 18px;border-bottom:1px solid ${gold};color:${accent}}header h1{font-family:Georgia,"Times New Roman",serif;color:${accent};letter-spacing:.015em}.sheet.compact header{margin-bottom:18px;padding-bottom:12px}.signature strong{color:${accent}}` : ""}
-  @media(max-width:900px){body{background:#fff}.sheet{width:100%;margin:0;box-shadow:none;padding:32px 24px}header{display:block}.contact{text-align:left;margin-top:12px}}
-  @media print{body{background:#fff}.sheet{margin:0;box-shadow:none}}
+  @media screen and (max-width:900px){body{background:#fff}.sheet{width:100%;margin:0;box-shadow:none;padding:32px 24px}header{display:block}.contact{text-align:left;margin-top:12px}}
+  @media print{html,body{width:100%;background:#fff}.sheet{width:100%;margin:0;box-shadow:none}}
   </style></head><body><main class="sheet${compact ? " compact" : ""}${tight ? " tight" : ""}">${executive ? `<div class="brief-kicker"><span>Executive application letter</span><b>&#9733;</b><span>${escape(resume.targetPositioning.employer)}</span></div>` : ""}<header><div><h1>${escape(resume.identity.fullName)}</h1><p>${escape(resume.targetTitle)}</p></div><div class="contact">${escape(resume.identity.email)}<br>${escape(formatUsPhone(resume.identity.phone))}</div></header>
   <div class="recipient"><strong>${escape(resume.targetPositioning.employer)}</strong><br>${escape(resume.targetPositioning.location)}</div>
   <div class="letter"><p>Dear Hiring Manager,</p>${paragraphs.map((item) => `<p>${escape(item)}</p>`).join("")}</div>

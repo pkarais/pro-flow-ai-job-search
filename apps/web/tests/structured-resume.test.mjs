@@ -7,6 +7,7 @@ import { renderCoverLetterDocx, renderResumeDocx } from "../src/server/documents
 import { resumeIconNames } from "../src/server/documents/design/icon-registry.ts";
 import { formatUsPhone } from "../src/server/documents/phone-format.ts";
 import { formatJobLocation } from "../src/server/documents/location-format.ts";
+import { isCoverLetterNamePlaceholder, personalizeCoverLetterName } from "../src/server/documents/cover-letter-signature.ts";
 
 const resume = structuredResumeSchema.parse({
   schemaVersion: 1,
@@ -36,6 +37,11 @@ const resume = structuredResumeSchema.parse({
   verifiedMetrics: [],
   optionalVisuals: { sectionIcons: true, competencyBlocks: true, metricCallouts: false },
   generatedFromEvidenceIds: ["verified_career_history_001"],
+});
+
+test("cover letter name placeholders accept braces and case variations", () => {
+  assert.equal(isCoverLetterNamePlaceholder("{your Name}"), true);
+  assert.equal(personalizeCoverLetterName("Sincerely,\n\n{your Name}", "Example Candidate"), "Sincerely,\n\nExample Candidate");
 });
 
 test("designed HTML is self-contained, printable, and grounded in the structured resume", () => {

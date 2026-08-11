@@ -14,7 +14,7 @@ function heading(resume: StructuredResume, label: string, section: "profile" | "
 }
 
 function roles(resume: StructuredResume) {
-  return resume.experience.map((role) => `<article class="role"><div class="role-heading"><div><h3>${escape(role.title)}</h3><p>${escape(role.employer)}${role.location ? ` &middot; ${escape(role.location)}` : ""}</p></div><time>${escape(role.dates)}</time></div>${role.highlights.length ? `<ul>${role.highlights.map((item) => `<li>${escape(item)}</li>`).join("")}</ul>` : ""}</article>`).join("");
+  return resume.experience.map((role, index) => `<article class="role${index === 0 ? " role-current" : ""}"><div class="role-heading"><div><h3>${escape(role.title)}</h3><p>${escape(role.employer)}${role.location ? ` &middot; ${escape(role.location)}` : ""}</p></div><time>${escape(role.dates)}</time></div>${role.highlights.length ? `<ul>${role.highlights.map((item) => `<li>${escape(item)}</li>`).join("")}</ul>` : ""}</article>`).join("");
 }
 
 function competencies(resume: StructuredResume, blocks = false) {

@@ -119,6 +119,61 @@ function value(profile: CanonicalCareerProfile, id: string) {
   return record && effective ? { record, value: clean(effective) } : null;
 }
 
+export function reviewedResumeRoles(profile: CanonicalCareerProfile) {
+  const reviewed = profile.records.map((record) => {
+    const effective = effectiveEvidenceValue(record);
+    return effective ? { record, value: clean(effective) } : null;
+  }).filter((item): item is NonNullable<typeof item> => Boolean(item));
+  const heading = /^(experience|employment|career|professional|executive|impact|history)(?:\s*[&/]\s*\w+)*$/i;
+  return reviewed.flatMap((item, index) => {
+    const match = item.value.match(/^(.*?)\s*\|\s*((?:19|20)\d{2}\s*[-–—]\s*(?:(?:19|20)\d{2}|present|current))$/i);
+    if (!match) return [];
+    if (/\b(college|academy|institute|school|university|degree|dean'?s list|education|training|licens|certif)\b/i.test(match[1])) return [];
+    const employer = reviewed.slice(Math.max(0, index - 3), index).reverse().find((candidate) =>
+      candidate.value.length <= 160
+      && !heading.test(candidate.value)
+      && !/\|\s*(?:19|20)\d{2}/.test(candidate.value)
+      && !/^(?:19|20)\d{2}\s*[-–—]/.test(candidate.value),
+    );
+    if (!employer) return [];
+    return [{
+      employer: employer.value,
+      title: match[1].trim(),
+      location: undefined,
+      dates: match[2].replace(/\s*[-–—]\s*/, " - "),
+      evidenceIds: [employer.record.id, item.record.id],
+    }];
+  });
+}
+
+function reviewedResumeEducation(profile: CanonicalCareerProfile): string[] {
+  return profile.records.flatMap((record) => {
+    const effective = effectiveEvidenceValue(record);
+    if (!effective) return [];
+    const normalized = clean(effective);
+    if (!/\b(college|academy|institute|school|university|degree|dean'?s list|education|training|licens|certif)\b/i.test(normalized)) return [];
+    if (!/\|\s*(?:(?:19|20)\d{2})(?:\s*[-–—]\s*(?:19|20)\d{2})?$/i.test(normalized)) return [];
+    return [normalized.replace(/\s*\|\s*/g, " · ")];
+  });
+}
+
+function currentRole(profile: CanonicalCareerProfile) {
+  const legacy = value(profile, "verified_career_history_001");
+  const legacyMatch = legacy?.value.match(/^Title:\s*(.*?)\s+Location:\s*(.*?)\s+Dates:\s*(.*)$/i);
+  if (legacy && legacyMatch) {
+    return {
+      employer: legacy.record.sourceSection || "Current employer",
+      title: legacyMatch[1],
+      location: legacyMatch[2] || undefined,
+      dates: legacyMatch[3],
+      evidenceIds: [legacy.record.id],
+    };
+  }
+
+  const roles = reviewedResumeRoles(profile);
+  return roles.find((role) => /present|current/i.test(role.dates)) ?? roles[0] ?? null;
+}
+
 function valuesByPath(profile: CanonicalCareerProfile, prefix: string) {
   return profile.records
     .filter((record) => record.path.startsWith(prefix))
@@ -168,9 +223,8 @@ export function buildStructuredResume(
   if (verified.some((claim) => claim.evidenceIds.some((id) => !currentEvidenceIds.has(id)))) {
     throw new Error("Regenerate the AI draft because one or more supporting career records were corrected or removed.");
   }
-  const current = value(profile, "verified_career_history_001");
-  const match = current?.value.match(/^Title:\s*(.*?)\s+Location:\s*(.*?)\s+Dates:\s*(.*)$/i);
-  if (!current || !match) throw new Error("Confirmed current-role metadata is incomplete.");
+  const current = currentRole(profile);
+  if (!current) throw new Error("Confirmed current-role metadata is incomplete. Add a current employer and a title with dates through the career evidence review.");
   const posting = `${application.opportunity.positionTitle} ${application.opportunity.description}`.toLowerCase();
   const skills = [
     ...["skills_001", "skills_002", "skills_003"]
@@ -185,7 +239,7 @@ export function buildStructuredResume(
     .sort((left, right) => right.score - left.score);
   const fallbackExpertise = skills.slice(0, 2).flatMap((item) => item.value.split(";"))
     .map((item) => clean(item).replace(/[.;]+$/, "")).filter(Boolean).slice(0, 16);
-  const earlier = ["verified_career_history_018", "verified_career_history_019", "verified_career_history_020"]
+  const legacyEarlier = ["verified_career_history_018", "verified_career_history_019", "verified_career_history_020"]
     .map((id) => value(profile, id))
     .filter((item): item is NonNullable<typeof item> => Boolean(item))
     .map(({ record, value: roleValue }) => {
@@ -198,10 +252,15 @@ export function buildStructuredResume(
         evidenceIds: [record.id],
       };
     });
+  const importedEarlier = reviewedResumeRoles(profile)
+    .filter((role) => !current.evidenceIds.includes(role.evidenceIds.at(-1) ?? ""))
+    .map((role) => ({ ...role, highlights: [] }));
+  const earlier = legacyEarlier.length ? legacyEarlier : importedEarlier;
   const education = [
     value(profile, "education_credentials_001"),
     ...valuesByPath(profile, "education.user_added"),
   ].filter((item): item is NonNullable<typeof item> => Boolean(item));
+  const importedEducation = reviewedResumeEducation(profile);
   const credentials = valuesByPath(profile, "credentials.user_added")
     .flatMap((item) => evidenceList(item.value));
   const resumeClaims = verified.filter((claim) => !claim.kind || claim.kind === "resume_bullet");
@@ -219,7 +278,7 @@ export function buildStructuredResume(
   const linkedInValue = linkedIn ? effectiveEvidenceValue(linkedIn) : null;
   const evidenceIds = [...new Set([
     ...verified.flatMap((claim) => claim.evidenceIds),
-    current.record.id,
+    ...current.evidenceIds,
     ...earlier.flatMap((role) => role.evidenceIds),
     ...skills.slice(0, 2).map((item) => item.record.id),
     ...education.map((item) => item.record.id),
@@ -248,15 +307,18 @@ export function buildStructuredResume(
     expertise,
     competencyGroups: groupCompetencies(expertise),
     experience: [{
-      employer: current.record.sourceSection || "Current employer",
-      title: match[1],
-      location: match[2],
-      dates: match[3],
+      employer: current.employer,
+      title: current.title,
+      ...(current.location ? { location: current.location } : {}),
+      dates: current.dates,
       highlights: roleClaims.map((claim) => clean(claim.text)),
-      evidenceIds: [...new Set(roleClaims.flatMap((claim) => claim.evidenceIds).concat(current.record.id))],
+      evidenceIds: [...new Set(roleClaims.flatMap((claim) => claim.evidenceIds).concat(current.evidenceIds))],
     }, ...earlier],
     secondaryExpertise: (skills[1]?.value ?? "").split(";").map(clean).filter(Boolean),
-    education: education.map((item) => item.value.replace(/^Plaza College:\s*/i, "Plaza College - ")),
+    education: [...new Set([
+      ...education.map((item) => item.value.replace(/^Plaza College:\s*/i, "Plaza College - ")),
+      ...importedEducation,
+    ])],
     projectsAndSystems: relevantProjects(profile, resumeClaims),
     credentials,
     verifiedMetrics: metrics,

@@ -66,7 +66,10 @@ const sectionMatchers: Array<[RegExp, ResumeEvidenceCategory, string]> = [
 ];
 
 function sectionFor(line: string): [ResumeEvidenceCategory, string] | null {
-  const normalized = line.replace(/[:|]+$/, "").trim();
+  const raw = line.replace(/[:|]+$/, "").trim();
+  const normalized = /^(?:[A-Z]\s+){3,}[A-Z]$/.test(raw)
+    ? raw.replace(/\s+/g, "")
+    : raw;
   for (const [matcher, category, section] of sectionMatchers) {
     if (matcher.test(normalized)) return [category, section];
   }

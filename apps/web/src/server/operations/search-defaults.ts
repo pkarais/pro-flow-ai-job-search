@@ -17,6 +17,7 @@ const roleSignal = /\b(role|roles|title|titles|position|positions|headline|targe
 const skillSignal = /\b(skill|skills|capabilit|expertise|competenc|specialt)/i;
 const locationSignal = /\b(location|locations|based|geograph|region|city|state)\b/i;
 const usLocationSignal = /\b(united states|u\.?s\.?a?\.?|remote|alabama|alaska|arizona|arkansas|california|colorado|connecticut|delaware|florida|georgia|hawaii|idaho|illinois|indiana|iowa|kansas|kentucky|louisiana|maine|maryland|massachusetts|michigan|minnesota|mississippi|missouri|montana|nebraska|nevada|new hampshire|new jersey|new mexico|new york|north carolina|north dakota|ohio|oklahoma|oregon|pennsylvania|rhode island|south carolina|south dakota|tennessee|texas|utah|vermont|virginia|washington|west virginia|wisconsin|wyoming|district of columbia)\b/i;
+const jobTitleSignal = /\b(manager|director|engineer|developer|analyst|specialist|coordinator|consultant|administrator|architect|designer|scientist|officer|supervisor|technician|strategist|recruiter|planner|controller|executive|president|founder|owner|team lead|program lead|project lead)\b/i;
 
 function clean(value: string): string {
   return value
@@ -38,6 +39,18 @@ function unique(values: string[], limit: number): string[] {
     if (result.length === limit) break;
   }
   return result;
+}
+
+function resumeTitleCandidates(value: string): string[] {
+  if (value.length > 160 || /[.!?]\s/.test(value)) return [];
+  return value
+    .split(/\s(?:\||•|·|–|—|@)\s/)
+    .map((part) => clean(part)
+      .replace(/\b(?:19|20)\d{2}\b.*$/i, "")
+      .replace(/^(?:current|present)\s*[-–—]\s*/i, "")
+      .trim())
+    .filter((part) => jobTitleSignal.test(part))
+    .filter((part) => part.split(/\s+/).length <= 12 && part.length <= 100);
 }
 
 function factsFromCanonical(profile: CanonicalCareerProfile): SearchFact[] {
@@ -69,6 +82,7 @@ export function deriveSearchDefaults(
   for (const fact of facts) {
     const context = `${fact.path} ${fact.sourceSection ?? ""}`;
     if (roleSignal.test(context)) roles.push(fact.value);
+    roles.push(...resumeTitleCandidates(fact.value));
     if (skillSignal.test(context) || fact.sourceId === "skills") {
       roles.push(...fact.value.split(/[,;|/]/));
     }

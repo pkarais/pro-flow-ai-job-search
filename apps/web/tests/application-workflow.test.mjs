@@ -639,6 +639,25 @@ test("search defaults derive roles from career evidence and keep location in the
   assert.equal(defaults.source, "reviewed_profile");
 });
 
+test("search defaults recognize concise job titles in confirmed resume evidence", () => {
+  const resumeProfile = canonicalCareerProfileSchema.parse({
+    ...profile,
+    records: [{
+      id: "resume_title",
+      sourceId: "resume_upload_example",
+      sourcePath: "resume-upload/resume.pdf",
+      sourceSection: "Resume Overview",
+      path: "additional_evidence.user_added.resume_import",
+      value: "Example Company | Senior Program Manager | 2020 - Present",
+      status: "needs_review",
+      decision: "confirmed",
+      decidedAt: timestamp,
+    }],
+  });
+  const defaults = deriveSearchDefaults(resumeProfile);
+  assert.deepEqual(defaults.roles, ["Senior Program Manager"]);
+});
+
 test("successful grouped searches persist private reusable role and location choices", async () => {
   const root = await mkdtemp(path.join(tmpdir(), "pro-flow-search-history-"));
   const state = await recordSearchRun(root, {

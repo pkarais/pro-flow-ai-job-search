@@ -13,6 +13,7 @@ import {
 import { chromium } from "playwright-core";
 import type { StructuredResume } from "@pro-flow/career-core";
 import { formatUsPhone } from "./phone-format.ts";
+import { isCoverLetterNamePlaceholder } from "./cover-letter-signature.ts";
 
 const DOCX_PALETTES = {
   navy: "17324D",
@@ -102,7 +103,7 @@ export async function renderResumeDocx(resume: StructuredResume): Promise<Buffer
 export async function renderCoverLetterDocx(resume: StructuredResume, letter: string, signatureDataUri?: string | null): Promise<Buffer> {
   const accent = docxAccent(resume);
   const paragraphs = letter.split(/\n\s*\n/).map((item) => item.trim())
-    .filter((item) => item && !/^dear hiring manager,?$/i.test(item) && !/^sincerely,?$/i.test(item) && item !== "[Your name]");
+    .filter((item) => item && !/^dear hiring manager,?$/i.test(item) && !/^sincerely,?$/i.test(item) && !isCoverLetterNamePlaceholder(item));
   const signature = signatureDataUri?.match(/^data:image\/png;base64,(.+)$/)?.[1];
   const document = new Document({
     sections: [{

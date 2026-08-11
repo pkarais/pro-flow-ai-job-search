@@ -19,9 +19,10 @@ import {
 import { renderDesignedResumeHtml } from "./html-resume-renderer.ts";
 import { renderDesignedCoverLetterHtml } from "./cover-letter-renderer.ts";
 import { renderCoverLetterDocx, renderDesignedPdf, renderResumeDocx } from "./resume-export-service.ts";
-import { buildStructuredResume } from "./structured-resume-service.ts";
+import { buildStructuredResume, reviewedResumeRoles } from "./structured-resume-service.ts";
 import { formatUsPhone } from "./phone-format.ts";
 import { loadCandidateBannerDataUri, loadCandidateSignatureDataUri } from "./candidate-signature.ts";
+import { personalizeCoverLetterName } from "./cover-letter-signature.ts";
 
 const execute = promisify(execFile);
 const REQUIRED_TOOLS = ["lualatex", "xelatex", "pdfinfo", "pdftotext"] as const;
@@ -118,14 +119,22 @@ function renderCareerContext(
     .map((item) => item.value);
 
   const currentMatch = current?.value.match(/^Title:\s*(.*?)\s+Location:\s*(.*?)\s+Dates:\s*(.*)$/i);
+  const importedRoles = current ? [] : reviewedResumeRoles(profile);
+  const importedCurrent = importedRoles.find((role) => /present|current/i.test(role.dates)) ?? importedRoles[0];
   const currentHeader = current && currentMatch
     ? `\\textbf{${escapeLatex(currentMatch[1])}} \\hfill ${escapeLatex(currentMatch[3])}\\\\\n${escapeLatex(current.sourceSection || "Current facilities leadership role")} $\\vert$ ${escapeLatex(currentMatch[2])}\n%CURRENT_BULLETS%`
-    : "";
-  const earlierEntries = earlier.map((item) => {
+    : importedCurrent
+      ? `\\textbf{${escapeLatex(importedCurrent.title)}} \\hfill ${escapeLatex(importedCurrent.dates)}\\\\\n${escapeLatex(importedCurrent.employer)}\n%CURRENT_BULLETS%`
+      : "";
+  const legacyEarlierEntries = earlier.map((item) => {
     const parts = item.value.split(/\s+-\s+/);
     if (parts.length < 3) return `\\textbf{${escapeLatex(item.value)}}`;
     return `\\textbf{${escapeLatex(parts[1])}} \\hfill ${escapeLatex(parts.slice(2).join(" - ").replace(/[.;]+$/, ""))}\\\\\n${escapeLatex(parts[0])}`;
-  }).join("\n\n");
+  });
+  const importedEarlierEntries = importedRoles
+    .filter((role) => role !== importedCurrent)
+    .map((role) => `\\textbf{${escapeLatex(role.title)}} \\hfill ${escapeLatex(role.dates)}\\\\\n${escapeLatex(role.employer)}`);
+  const earlierEntries = [...legacyEarlierEntries, ...importedEarlierEntries].join("\n\n");
   const secondaryExpertise = rankedCapabilityRecords.find(({ item }) => item.id !== "skills_001")?.item.value;
   const educationText = education
     ? escapeLatex(education.value.replace(/^Plaza College:\s*/i, "Plaza College - "))
@@ -217,8 +226,7 @@ export function renderDocumentSources(
   const resumeClaims = claims.filter((claim) => !claim.kind || claim.kind === "resume_bullet");
   const items = resumeClaims.map((claim) => `\\item ${escapeLatex(normalizeDisplayText(claim.text))}`).join("\n");
   const summary = escapeLatex(normalizeDisplayText(application.draft.summary));
-  const cover = escapeLatex(normalizeDisplayText(application.draft.coverLetter))
-    .replace("[Your name]", fullName);
+  const cover = escapeLatex(personalizeCoverLetterName(normalizeDisplayText(application.draft.coverLetter), identity.fullName));
   const visualDirection = application.draft.generation?.visualDirection;
   const theme = visualDirection && themeId !== "ats_classic"
     ? { ...THEME_STYLES[themeId], accent: ART_DIRECTION_ACCENTS[paletteOverride ?? visualDirection.palette] }
@@ -262,8 +270,9 @@ async function resolveTool(command: RequiredTool): Promise<string | null> {
   const configured = process.env[TOOL_ENVIRONMENT[command]]?.trim();
   if (configured) {
     const resolved = path.resolve(configured);
-    if (path.basename(resolved).toLowerCase() !== `${command}.exe`) {
-      throw new Error(`${TOOL_ENVIRONMENT[command]} must point to ${command}.exe.`);
+    const expectedNames = process.platform === "win32" ? [`${command}.exe`] : [command, `${command}.exe`];
+    if (!expectedNames.includes(path.basename(resolved).toLowerCase())) {
+      throw new Error(`${TOOL_ENVIRONMENT[command]} must point to ${expectedNames.join(" or ")}.`);
     }
     try {
       const details = await stat(resolved);
@@ -272,7 +281,8 @@ async function resolveTool(command: RequiredTool): Promise<string | null> {
     throw new Error(`${TOOL_ENVIRONMENT[command]} points to a missing executable.`);
   }
   try {
-    const { stdout } = await execute("where.exe", [command], { windowsHide: true });
+    const locator = process.platform === "win32" ? "where.exe" : "which";
+    const { stdout } = await execute(locator, [command], { windowsHide: true });
     return stdout.split(/\r?\n/).map((item) => item.trim()).find(Boolean) ?? null;
   } catch {
     return null;
@@ -437,8 +447,8 @@ export class DocumentService {
           { kind: "cover_letter_pdf", relativePath: "cover-letter.pdf", mediaType: "application/pdf" },
         );
         checks.push(
-          check("cv_pages", "ATS resume is exactly two pages", cvPageCount === 2 ? "passed" : "failed", `Found ${cvPageCount} page(s) in the separate ATS resume PDF.`),
-          check("cover_pages", "Cover letter is exactly one page", coverPageCount === 1 ? "passed" : "failed", `Found ${coverPageCount} page(s).`),
+          check("cv_pages", "ATS resume is between one and four pages", cvPageCount >= 1 && cvPageCount <= 4 ? "passed" : "failed", `Found ${cvPageCount} page(s) in the separate ATS resume PDF.`),
+          check("cover_pages", "Cover letter is one or two pages", coverPageCount >= 1 && coverPageCount <= 2 ? "passed" : "failed", `Found ${coverPageCount} page(s).`),
         );
         const { stdout: atsText } = await executeWithInput(
           tools.pdftotext!,
@@ -478,19 +488,19 @@ export class DocumentService {
           const designedContact = designedText.includes(identity.email) && designedText.includes(formattedPhone);
           const designedCoverContact = designedCoverText.includes(identity.email) && designedCoverText.includes(formattedPhone);
           checks.push(
-            check("designed_pages", "Designed resume is one or two pages", designedPages >= 1 && designedPages <= 2 ? "passed" : "failed", `Found ${designedPages} page(s).`),
+            check("designed_pages", "Designed resume is between one and four pages", designedPages >= 1 && designedPages <= 4 ? "passed" : "failed", `Found ${designedPages} page(s).`),
             check("designed_text", "Designed resume has an extractable text layer", designedText.trim().length >= 100 ? "passed" : "failed", `${designedText.trim().length} text characters extracted.`),
             check("designed_contact", "Contact details survive designed PDF extraction", designedContact ? "passed" : "failed", designedContact ? "Both contact fields appear as literal text." : "Email or phone is missing from the designed PDF text."),
-            check("designed_cover_pages", "Designed cover letter is exactly one page", designedCoverPages === 1 ? "passed" : "failed", `Found ${designedCoverPages} page(s).`),
+            check("designed_cover_pages", "Designed cover letter is one or two pages", designedCoverPages >= 1 && designedCoverPages <= 2 ? "passed" : "failed", `Found ${designedCoverPages} page(s).`),
             check("designed_cover_text", "Designed cover letter has an extractable text layer", designedCoverText.trim().length >= 100 ? "passed" : "failed", `${designedCoverText.trim().length} text characters extracted.`),
             check("designed_cover_contact", "Contact details survive designed cover-letter extraction", designedCoverContact ? "passed" : "failed", designedCoverContact ? "Both contact fields appear as literal text." : "Email or phone is missing from the designed cover-letter PDF text."),
           );
         } else {
           checks.push(
-            check("designed_pages", "Designed resume is one or two pages", "failed", designedExportError || "Designed PDF was not generated."),
+            check("designed_pages", "Designed resume is between one and four pages", "failed", designedExportError || "Designed PDF was not generated."),
             check("designed_text", "Designed resume has an extractable text layer", "failed", designedExportError || "Designed PDF was not generated."),
             check("designed_contact", "Contact details survive designed PDF extraction", "failed", designedExportError || "Designed PDF was not generated."),
-            check("designed_cover_pages", "Designed cover letter is exactly one page", "failed", designedExportError || "Designed cover-letter PDF was not generated."),
+            check("designed_cover_pages", "Designed cover letter is one or two pages", "failed", designedExportError || "Designed cover-letter PDF was not generated."),
             check("designed_cover_text", "Designed cover letter has an extractable text layer", "failed", designedExportError || "Designed cover-letter PDF was not generated."),
             check("designed_cover_contact", "Contact details survive designed cover-letter extraction", "failed", designedExportError || "Designed cover-letter PDF was not generated."),
           );
@@ -509,8 +519,8 @@ export class DocumentService {
       }
     } else {
       checks.push(
-        check("cv_pages", "ATS resume is exactly two pages", "pending", "Install the required tools to compile and inspect the ATS resume."),
-        check("cover_pages", "Cover letter is exactly one page", "pending", "Install the required tools to compile and inspect the cover letter."),
+        check("cv_pages", "ATS resume is between one and four pages", "pending", "Install the required tools to compile and inspect the ATS resume."),
+        check("cover_pages", "Cover letter is one or two pages", "pending", "Install the required tools to compile and inspect the cover letter."),
         check("ats_text", "CV has a clean ATS text layer", "pending", "Install Poppler to extract and inspect the PDF text layer."),
         check("ats_contact", "Email and phone survive ATS extraction", "pending", "Compile and extract the CV before checking contact fields."),
         check("ats_keywords", "Supported posting keywords survive PDF extraction", "pending", "Compile and extract the CV before checking keyword survival."),

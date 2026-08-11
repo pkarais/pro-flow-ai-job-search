@@ -40,8 +40,10 @@ RUN apt-get update \
 WORKDIR /opt/pro-flow
 COPY --from=build /opt/pro-flow /opt/pro-flow
 
-RUN mkdir -p /opt/pro-flow/career-data \
-    && chown -R node:node /opt/pro-flow/career-data
+RUN mkdir -p /opt/pro-flow/career-data /opt/pro-flow/apps/web/.next/cache \
+    && chown -R node:node \
+       /opt/pro-flow/career-data \
+       /opt/pro-flow/apps/web/.next/cache
 
 USER node
 WORKDIR /opt/pro-flow/apps/web
