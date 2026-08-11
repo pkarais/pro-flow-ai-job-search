@@ -1,0 +1,22 @@
+services:
+  pro-flow:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: pro-flow-career-os:local
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+      OPENAI_MODEL: "${OPENAI_MODEL:-gpt-5.6-sol}"
+      OPENAI_SUPPORT_MODEL: "${OPENAI_SUPPORT_MODEL:-gpt-5.6-terra}"
+      OPENAI_INSIGHTS_MODEL: "${OPENAI_INSIGHTS_MODEL:-gpt-5.6-terra}"
+      OPENAI_MONTHLY_BUDGET_USD: "${OPENAI_MONTHLY_BUDGET_USD:-25}"
+      OPENAI_REQUEST_TIMEOUT_MS: "${OPENAI_REQUEST_TIMEOUT_MS:-120000}"
+    volumes:
+      - ./career-data:/opt/pro-flow/career-data
+    init: true
+    security_opt:
+      - no-new-privileges:true
+

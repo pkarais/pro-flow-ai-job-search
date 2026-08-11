@@ -108,3 +108,27 @@ from the private Archive. It is not a zero-argument CI check.
 Set provider and local tool paths in `.env.local` using the template in
 `.env.example`. Never commit `.env.local`, `career-data`, OAuth configuration,
 tokens, source documents, or generated application artifacts.
+
+## Docker Desktop
+
+From the repository root, optionally copy `.env.docker.example` to `.env` and
+add an OpenAI API key. Then build and start the local-only service:
+
+```powershell
+Copy-Item .env.docker.example .env
+docker compose up --build -d
+```
+
+Open <http://localhost:3000>. Private state is persisted in the host's
+gitignored `career-data` directory, so rebuilding or replacing the container
+does not remove it. View status and logs with:
+
+```powershell
+docker compose ps
+docker compose logs -f pro-flow
+```
+
+Stop the service with `docker compose down`. Do not add `-v`: this Compose file
+uses a bind mount, but avoiding that flag reduces the chance of deleting other
+project volumes if the configuration changes later. Keep port 3000 bound to
+`127.0.0.1`; this beta has no authentication and must not be exposed publicly.

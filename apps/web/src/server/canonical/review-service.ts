@@ -166,6 +166,42 @@ export async function addCanonicalEvidence(
   };
 }
 
+export async function importResumeEvidence(input: {
+  expectedRevision: number;
+  fileName: string;
+  items: Array<{ category: keyof typeof addedEvidenceCategories; section: string; value: string }>;
+}): Promise<{ profile: CanonicalCareerProfile; imported: number }> {
+  const repository = store();
+  const current = await repository.load();
+  const timestamp = new Date().toISOString();
+  const sourceId = `resume_upload_${randomUUID().replaceAll("-", "")}`;
+  const safeName = path.basename(input.fileName).replace(/[^a-zA-Z0-9._ -]/g, "_");
+  const records = input.items.map((item) => ({
+    id: `evidence_${randomUUID().replaceAll("-", "")}`,
+    path: `${addedEvidenceCategories[item.category].path}.resume_import`,
+    value: item.value.trim(),
+    sourceId,
+    sourcePath: `resume-upload/${safeName}`,
+    sourceSection: item.section.trim(),
+    status: "needs_review" as const,
+    decision: "confirmed" as const,
+    decisionNote: "Selected and confirmed by the candidate from a transient résumé preview.",
+    decidedAt: timestamp,
+  }));
+  const base: CanonicalCareerProfile = current ?? {
+    schemaVersion: 1,
+    candidateId: "primary_candidate",
+    revision: 1,
+    sourceImportedAt: timestamp,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+    records: [],
+    compatibility: { generatedFromRevision: 0 },
+  };
+  const profile = await repository.save({ ...base, records: [...base.records, ...records] }, input.expectedRevision);
+  return { profile, imported: records.length };
+}
+
 export async function decideCanonicalFact(
   requestInput: EvidenceDecisionRequest,
 ): Promise<{

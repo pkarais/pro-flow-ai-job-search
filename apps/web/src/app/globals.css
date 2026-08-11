@@ -1702,6 +1702,61 @@ h3 {
   margin-bottom: var(--space-5);
 }
 
+.resume-upload-section {
+  max-width: 1180px;
+  margin: 2rem auto 0;
+  padding: 0 2rem;
+}
+
+.resume-upload {
+  margin-top: 1rem;
+}
+
+.resume-upload__privacy,
+.resume-preview__header p {
+  color: var(--color-ink-muted);
+  margin: 0;
+}
+
+.resume-preview {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.resume-preview__header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.resume-preview__items {
+  border: 1px solid var(--color-line);
+  border-radius: 1rem;
+  max-height: 32rem;
+  overflow: auto;
+}
+
+.resume-preview__item {
+  align-items: flex-start;
+  border-bottom: 1px solid var(--color-line);
+  cursor: pointer;
+  display: flex;
+  gap: .8rem;
+  padding: .9rem 1rem;
+}
+
+.resume-preview__item:last-child { border-bottom: 0; }
+.resume-preview__item input { margin-top: .25rem; }
+.resume-preview__item span { display: grid; gap: .25rem; }
+.resume-preview__item small { color: var(--color-ink-muted); font-weight: 700; }
+
+@media (max-width: 700px) {
+  .resume-preview__header { align-items: stretch; flex-direction: column; }
+  .resume-upload-section { padding: 0 1rem; }
+}
+
 .company-insight-report {
   margin-top: var(--space-6);
 }
